@@ -41,19 +41,21 @@ class ScrollablePhotocam(Photocam, Scrollable):
         obj.on_mouse_move_del(self._on_mouse_move)
 
     def _on_mouse_move(self, obj, event):
-        x, y = event.position.canvas
-        dx, dy = self._drag_start_x - x, self._drag_start_y - y
-        x, y, w, h = self._drag_start_region
-        obj.region_show(x + dx, y + dy, w, h)
+        if self._drag_start_geom is None:
+            x, y = event.position.canvas
+            dx, dy = self._drag_start_x - x, self._drag_start_y - y
+            x, y, w, h = self._drag_start_region
+            obj.region_show(x + dx, y + dy, w, h)
 
     # region selector stuff
     def region_selector_show(self):
         self.sel = Edje(self.evas, file='theme.edj', group='sel')
         self.sel.show()
 
-        self.internal_image.on_move_add(self._internal_on_move_resize)
-        self.internal_image.on_resize_add(self._internal_on_move_resize)
-        self._internal_on_move_resize(self.internal_image)
+        internal = self.internal_image
+        internal.on_move_add(self._internal_on_move_resize)
+        internal.on_resize_add(self._internal_on_move_resize)
+        self._internal_on_move_resize(internal)
 
         for part in ('h1','h2','h3','h4','h5','h6','h7','h8','hm'):
             h = self.sel.part_object_get(part)
@@ -70,6 +72,7 @@ class ScrollablePhotocam(Photocam, Scrollable):
 
     def _on_handler_mouse_up(self, obj, event, part):
         obj.on_mouse_move_del(self._on_handler_mouse_move)
+        self._drag_start_geom = None
 
     def _on_handler_mouse_move(self, obj, event, part):
         x, y = event.position.canvas
@@ -101,6 +104,8 @@ class ScrollablePhotocam(Photocam, Scrollable):
         elif part == 'h8':
             x = x + dx
             w = w - dx
+
+        w, h = max(50, w), max(50, h)
 
         # calc new relative pos
         rel1x = float(x - px) / pw
