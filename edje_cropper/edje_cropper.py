@@ -12,6 +12,8 @@ from efl.evas import Rectangle, EXPAND_BOTH, EVAS_CALLBACK_MOUSE_WHEEL, \
     EVAS_EVENT_FLAG_ON_HOLD
 
 
+FADER_COLOR = (0, 0, 0, 100)
+
 class ScrollablePhotocam(Photocam, Scrollable):
     def __init__(self, *args, **kargs):
         Photocam.__init__(self, paused=True, *args, **kargs)
@@ -46,6 +48,15 @@ class ScrollablePhotocam(Photocam, Scrollable):
         self.sel.data['rel2'] = (0.8, 0.8)
         self.sel.show()
 
+        self.sel_fader1 = Rectangle(self.evas, color=FADER_COLOR, pass_events=True)
+        self.sel_fader1.show()
+        self.sel_fader2 = Rectangle(self.evas, color=FADER_COLOR, pass_events=True)
+        self.sel_fader2.show()
+        self.sel_fader3 = Rectangle(self.evas, color=FADER_COLOR, pass_events=True)
+        self.sel_fader3.show()
+        self.sel_fader4 = Rectangle(self.evas, color=FADER_COLOR, pass_events=True)
+        self.sel_fader4.show()
+
         self.internal_image.on_move_add(self._internal_on_move_resize)
         self.internal_image.on_resize_add(self._internal_on_move_resize)
         self._internal_on_move_resize(self.internal_image)
@@ -65,6 +76,20 @@ class ScrollablePhotocam(Photocam, Scrollable):
         y2 = (ph * rel2y) + py
         self.sel.move(x1, y1)
         self.sel.resize(x2 - x1, y2 - y1)
+        self._update_fader()
+
+    def _update_fader(self):
+        sx, sy, sw, sh = self.sel.geometry
+        px, py, pw, ph = self.internal_image.geometry
+        self.sel_fader1.move(px, py)
+        self.sel_fader1.resize(pw, sy - py)
+        self.sel_fader2.move(px, sy + sh)
+        self.sel_fader2.resize(pw, (py + ph) - (sy + sh))
+        self.sel_fader3.move(px, sy)
+        self.sel_fader3.resize(sx - px, sh)
+        self.sel_fader4.move(sx + sw, sy)
+        self.sel_fader4.resize((px + pw) - (sx + sw), sh)
+        
 
     def _on_handler_mouse_down(self, obj, event, part):
         self._drag_start_x, self._drag_start_y = event.position.canvas
@@ -135,6 +160,9 @@ class ScrollablePhotocam(Photocam, Scrollable):
         rel2y = float(y + h - py) / ph
         self.sel.data['rel1'] = (rel1x, rel1y)
         self.sel.data['rel2'] = (rel2x, rel2y)
+
+        # update dark fader
+        self._update_fader()
 
 
 class MainWin(StandardWindow):

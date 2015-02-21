@@ -21,7 +21,7 @@ collections {
          part { name: "bg"; type: RECT;
             repeat_events: 1;
             description { state: "default" 0.0;
-               color: 255 255 255 50;
+               color: 255 255 255 0;
             }
 
             part { name: "h1"; type: RECT;
