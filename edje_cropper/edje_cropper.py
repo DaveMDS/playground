@@ -7,6 +7,8 @@ from efl import elementary
 from efl.elementary.photocam import Photocam
 from efl.elementary.window import StandardWindow
 from efl.elementary.scroller import Scrollable
+
+from efl.ecore import Animator, ECORE_CALLBACK_RENEW
 from efl.edje import Edje
 from efl.evas import Rectangle, EXPAND_BOTH, EVAS_CALLBACK_MOUSE_WHEEL, \
     EVAS_EVENT_FLAG_ON_HOLD
@@ -89,18 +91,17 @@ class ScrollablePhotocam(Photocam, Scrollable):
         self.sel_fader3.resize(sx - px, sh)
         self.sel_fader4.move(sx + sw, sy)
         self.sel_fader4.resize((px + pw) - (sx + sw), sh)
-        
 
     def _on_handler_mouse_down(self, obj, event, part):
         self._drag_start_x, self._drag_start_y = event.position.canvas
         self._drag_start_geom = self.sel.geometry
-        obj.on_mouse_move_add(self._on_handler_mouse_move, part)
+        self._drag_animator = Animator(self._drag_animator_cb, obj, part)
 
     def _on_handler_mouse_up(self, obj, event, part):
-        obj.on_mouse_move_del(self._on_handler_mouse_move)
+        self._drag_animator.delete()
 
-    def _on_handler_mouse_move(self, obj, event, part):
-        x, y = event.position.canvas
+    def _drag_animator_cb(self, obj, part):
+        x, y = obj.evas.pointer_canvas_xy_get()
         dx, dy = x - self._drag_start_x, y - self._drag_start_y
         x, y, w, h = self._drag_start_geom
 
@@ -164,6 +165,7 @@ class ScrollablePhotocam(Photocam, Scrollable):
         # update dark fader
         self._update_fader()
 
+        return ECORE_CALLBACK_RENEW
 
 class MainWin(StandardWindow):
     def __init__(self):
