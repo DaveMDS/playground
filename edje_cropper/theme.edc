@@ -1,0 +1,87 @@
+
+#define DBG_SHOW(_PART, _R, _G, _B) \
+   part { name: "dbg_show"_PART; \
+      type: RECT; mouse_events: 0; \
+      description { state: "default" 0.0; \
+         rel1.to: _PART; rel2.to: _PART; \
+         color: _R _G _B 50; } }
+
+#define FIXED_SIZE(_W, _H) \
+   min: _W _H; max: _W _H;
+
+// images {
+   // image: "bg_radgrad.png" COMP;
+// }
+
+collections {
+
+   group { name: "sel";
+      parts {
+
+         part { name: "bg"; type: RECT;
+            repeat_events: 1;
+            description { state: "default" 0.0;
+               color: 255 255 255 50;
+            }
+
+            part { name: "h1"; type: RECT;
+               description { state: "default" 0.0;
+                  FIXED_SIZE(10, 10)
+                  align: 0.0 0.0;
+               }
+            }
+            part { name: "h2"; type: RECT;
+               description { state: "default" 0.0;
+                  FIXED_SIZE(20, 10)
+                  align: 0.5 0.0;
+               }
+            }
+            part { name: "h3"; type: RECT;
+               description { state: "default" 0.0;
+                  FIXED_SIZE(10, 10)
+                  align: 1.0 0.0;
+               }
+            }
+            part { name: "h4"; type: RECT;
+               description { state: "default" 0.0;
+                  FIXED_SIZE(10, 20)
+                  align: 1.0 0.5;
+               }
+            }
+            part { name: "h5"; type: RECT;
+               description { state: "default" 0.0;
+                  FIXED_SIZE(10, 10)
+                  align: 1.0 1.0;
+               }
+            }
+            part { name: "h6"; type: RECT;
+               description { state: "default" 0.0;
+                  FIXED_SIZE(20, 10)
+                  align: 0.5 1.0;
+               }
+            }
+            part { name: "h7"; type: RECT;
+               description { state: "default" 0.0;
+                  FIXED_SIZE(10, 10)
+                  align: 0.0 1.0;
+               }
+            }
+            part { name: "h8"; type: RECT;
+               description { state: "default" 0.0;
+                  FIXED_SIZE(10, 20)
+                  align: 0.0 0.5;
+               }
+            }
+            part { name: "hm"; type: RECT;
+               description { state: "default" 0.0;
+                  FIXED_SIZE(20, 20)
+                  align: 0.5 0.5;
+               }
+            }
+         }
+
+      }
+    }
+
+}
+
