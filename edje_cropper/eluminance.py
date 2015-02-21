@@ -3,11 +3,14 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
+import re
 
-from efl.evas import EXPAND_BOTH, EVAS_EVENT_FLAG_ON_HOLD
+from efl.evas import EXPAND_BOTH, FILL_BOTH, EVAS_EVENT_FLAG_ON_HOLD
 from efl.edje import Edje
 
 from efl import elementary
+from efl.elementary.box import Box
+from efl.elementary.label import Label
 from efl.elementary.thumb import Thumb
 from efl.elementary.photocam import Photocam, ELM_PHOTOCAM_ZOOM_MODE_AUTO_FIT, \
     ELM_PHOTOCAM_ZOOM_MODE_AUTO_FILL, ELM_PHOTOCAM_ZOOM_MODE_AUTO_FIT_IN, \
@@ -28,6 +31,29 @@ def clamp(low, val, high):
     if val < low: return low
     if val > high: return high
     return val
+
+def file_hum_size(file_path):
+    bytes = float(os.path.getsize(file_path))
+    if bytes >= 1099511627776:
+        terabytes = bytes / 1099511627776
+        size = '%.1fT' % terabytes
+    elif bytes >= 1073741824:
+        gigabytes = bytes / 1073741824
+        size = '%.1fG' % gigabytes
+    elif bytes >= 1048576:
+        megabytes = bytes / 1048576
+        size = '%.1fM' % megabytes
+    elif bytes >= 1024:
+        kilobytes = bytes / 1024
+        size = '%.1fK' % kilobytes
+    else:
+        size = '%.1fb' % bytes
+    return size
+
+def natural_sort(l): 
+   convert = lambda text: int(text) if text.isdigit() else text.lower() 
+   alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)] 
+   return sorted(l, key=alphanum_key)
 
 
 class TreeView(Genlist):
@@ -68,7 +94,7 @@ class TreeView(Genlist):
         item.subitems_clear()
         
     def populate(self, path, parent=None):
-        for f in sorted(os.listdir(path)):
+        for f in natural_sort(os.listdir(path)):
             if f[0] == '.': continue
             fullpath = os.path.join(path, f)
             if os.path.isdir(fullpath):
@@ -84,7 +110,7 @@ class PhotoGrid(Gengrid):
                          *args, **kargs)
         self.callback_selected_add(self._item_selected_cb)
 
-        self.itc = GengridItemClass('default',
+        self.itc = GengridItemClass('thumb',
                                     content_get_func=self._gg_content_get)
 
     def _gg_content_get(self, gg, part, item_data):
@@ -93,10 +119,11 @@ class PhotoGrid(Gengrid):
 
     def _item_selected_cb(self, gg, item):
         self.app.photo.file_set(item.data)
+        self.app.status.file_set(item.data)
 
     def populate(self, path):
         self.clear()
-        for f in os.listdir(path):
+        for f in natural_sort(os.listdir(path)):
             if os.path.splitext(f)[-1].lower() in IMG_EXTS:
                 self.item_append(self.itc, os.path.join(path, f))
 
@@ -214,6 +241,31 @@ class ScrollablePhotocam(Photocam, Scrollable):
         self.sel.message_send(1, (rel1x, rel1y, rel2x, rel2y))
 
 
+class StatusBar(Box):
+    def __init__(self, app, *args, **kargs):
+        self.app = app
+        Box.__init__(self, *args, **kargs)
+
+        self.label = Label(self)
+        self.pack_end(self.label)
+        self.label.show()
+
+        self.file_set(None)
+
+    def file_set(self, image_path):
+        if image_path is None:
+            self.label.text = 'No image selected'
+        else:
+            self.label.text = \
+                '<b>{0}:</b> {1}    <b>{2}:</b> {3}x{4}    <b>{5}:</b> {6}' \
+                .format(
+                    'Name', os.path.basename(image_path),
+                    'Resolution',
+                    self.app.photo.image_size[0], self.app.photo.image_size[1],
+                    'Size', file_hum_size(image_path)
+                )
+
+
 class MainWin(StandardWindow):
     def __init__(self, app):
         self.app = app
@@ -227,17 +279,26 @@ class MainWin(StandardWindow):
         self.resize_object_add(hpanes)
         hpanes.show()
 
-        vpanes = Panes(hpanes, horizontal=True)
-        hpanes.part_content_set('right', vpanes)
+        vbox = Box(hpanes, size_hint_expand=EXPAND_BOTH)
+        hpanes.part_content_set('right', vbox)
+        vbox.show()
+
+        vpanes = Panes(hpanes, horizontal=True, size_hint_expand=EXPAND_BOTH,
+                       size_hint_fill=FILL_BOTH)
+        vbox.pack_end(vpanes)
         vpanes.show()
 
-        self.grid = PhotoGrid(app, hpanes)
-        vpanes.part_content_set('left', self.grid)
-        self.grid.show()
+        self.status = StatusBar(app, vbox)
+        vbox.pack_end(self.status)
+        self.status.show()
 
         self.tree = TreeView(app, hpanes)
         hpanes.part_content_set('left', self.tree)
         self.tree.show()
+
+        self.grid = PhotoGrid(app, hpanes)
+        vpanes.part_content_set('left', self.grid)
+        self.grid.show()
 
         self.photo = ScrollablePhotocam(app, self)
         self.photo.callback_clicked_double_add(self._img_clicked_cb)
@@ -256,6 +317,7 @@ class EphotoApp(object):
         self.tree = self.main_win.tree
         self.grid = self.main_win.grid
         self.photo = self.main_win.photo
+        self.status = self.main_win.status
         self.tree.populate(os.path.expanduser("~"))
 
 
