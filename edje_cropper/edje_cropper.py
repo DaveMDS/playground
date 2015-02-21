@@ -3,15 +3,14 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+
+from efl.evas import EXPAND_BOTH, EVAS_EVENT_FLAG_ON_HOLD
+from efl.edje import Edje
+
 from efl import elementary
 from efl.elementary.photocam import Photocam
 from efl.elementary.window import StandardWindow
 from efl.elementary.scroller import Scrollable
-
-from efl.ecore import Animator, ECORE_CALLBACK_RENEW
-from efl.edje import Edje
-from efl.evas import Rectangle, EXPAND_BOTH, EVAS_CALLBACK_MOUSE_WHEEL, \
-    EVAS_EVENT_FLAG_ON_HOLD
 
 
 def clamp(low, val, high):
@@ -67,13 +66,13 @@ class ScrollablePhotocam(Photocam, Scrollable):
     def _on_handler_mouse_down(self, obj, event, part):
         self._drag_start_x, self._drag_start_y = event.position.canvas
         self._drag_start_geom = self.sel.part_object_get('selector').geometry
-        self._drag_animator = Animator(self._drag_animator_cb, obj, part)
+        obj.on_mouse_move_add(self._on_handler_mouse_move, part)
 
     def _on_handler_mouse_up(self, obj, event, part):
-        self._drag_animator.delete()
+        obj.on_mouse_move_del(self._on_handler_mouse_move)
 
-    def _drag_animator_cb(self, obj, part):
-        x, y = obj.evas.pointer_canvas_xy_get()
+    def _on_handler_mouse_move(self, obj, event, part):
+        x, y = event.position.canvas
         dx, dy = x - self._drag_start_x, y - self._drag_start_y
         x, y, w, h = self._drag_start_geom
         px, py, pw, ph = self.internal_image.geometry
@@ -117,7 +116,7 @@ class ScrollablePhotocam(Photocam, Scrollable):
 
         # send signal to edje with new rels
         self.sel.message_send(1, (rel1x, rel1y, rel2x, rel2y))
-        return ECORE_CALLBACK_RENEW
+
 
 class MainWin(StandardWindow):
     def __init__(self):
