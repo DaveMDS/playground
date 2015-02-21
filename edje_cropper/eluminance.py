@@ -9,12 +9,16 @@ from efl.edje import Edje
 
 from efl import elementary
 from efl.elementary.thumb import Thumb
-from efl.elementary.photocam import Photocam
+from efl.elementary.photocam import Photocam, ELM_PHOTOCAM_ZOOM_MODE_AUTO_FIT, \
+    ELM_PHOTOCAM_ZOOM_MODE_AUTO_FILL, ELM_PHOTOCAM_ZOOM_MODE_AUTO_FIT_IN, \
+    ELM_PHOTOCAM_ZOOM_MODE_MANUAL
 from efl.elementary.window import StandardWindow
 from efl.elementary.scroller import Scrollable
 from efl.elementary.panes import Panes
-from efl.elementary.genlist import Genlist, GenlistItemClass, ELM_GENLIST_ITEM_TREE
-from efl.elementary.gengrid import Gengrid, GengridItemClass
+from efl.elementary.genlist import Genlist, GenlistItemClass, \
+    ELM_GENLIST_ITEM_TREE
+from efl.elementary.gengrid import Gengrid, GengridItemClass, \
+    ELM_OBJECT_SELECT_MODE_ALWAYS
 from efl.elementary.icon import Icon
 
 
@@ -76,7 +80,8 @@ class PhotoGrid(Gengrid):
     def __init__(self, app, *args, **kargs):
         self.app = app
 
-        Gengrid.__init__(self, *args, **kargs)
+        Gengrid.__init__(self, select_mode=ELM_OBJECT_SELECT_MODE_ALWAYS,
+                         *args, **kargs)
         self.callback_selected_add(self._item_selected_cb)
 
         self.itc = GengridItemClass('default',
@@ -87,7 +92,7 @@ class PhotoGrid(Gengrid):
             return Thumb(gg, file=item_data, size_hint_min=(128,128))
 
     def _item_selected_cb(self, gg, item):
-        self.app.photo.file = item.data
+        self.app.photo.file_set(item.data)
 
     def populate(self, path):
         self.clear()
@@ -99,15 +104,22 @@ class PhotoGrid(Gengrid):
 class ScrollablePhotocam(Photocam, Scrollable):
     def __init__(self, app, *args, **kargs):
         self.app = app
-        Photocam.__init__(self, paused=True, *args, **kargs)
+        Photocam.__init__(self, paused=True,
+                          zoom_mode=ELM_PHOTOCAM_ZOOM_MODE_AUTO_FIT,
+                          *args, **kargs)
         self.on_mouse_wheel_add(self._on_mouse_wheel)
         self.on_mouse_down_add(self._on_mouse_down)
         self.on_mouse_up_add(self._on_mouse_up)
         self._drag_start_geom = None
 
+    def file_set(self, file):
+        self.zoom_mode = ELM_PHOTOCAM_ZOOM_MODE_AUTO_FIT
+        Photocam.file_set(self, file)
+        
     # mouse wheel: zoom
     def _on_mouse_wheel(self, obj, event):
         event.event_flags |= EVAS_EVENT_FLAG_ON_HOLD
+        self.zoom_mode = ELM_PHOTOCAM_ZOOM_MODE_MANUAL
         obj.zoom *= 1.1 if event.z == 1 else 0.9
 
     # mouse drag: pan
@@ -205,7 +217,7 @@ class ScrollablePhotocam(Photocam, Scrollable):
 class MainWin(StandardWindow):
     def __init__(self, app):
         self.app = app
-        h = "wheel to zoom, drag to pan, doubleclick to crop"
+        h = "eluminance - wheel to zoom, drag to pan, doubleclick to crop"
         StandardWindow.__init__(self, 'edje_cropper', h,
                                 autodel=True, size=(800,600))
         self.callback_delete_request_add(lambda o: elementary.exit())
