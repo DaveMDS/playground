@@ -25,6 +25,7 @@ class ScrollablePhotocam(Photocam, Scrollable):
         self.on_mouse_wheel_add(self._on_mouse_wheel)
         self.on_mouse_down_add(self._on_mouse_down)
         self.on_mouse_up_add(self._on_mouse_up)
+        self._drag_start_geom = None
 
     # mouse wheel: zoom
     def _on_mouse_wheel(self, obj, event):
@@ -125,7 +126,8 @@ class ScrollablePhotocam(Photocam, Scrollable):
 
 class MainWin(StandardWindow):
     def __init__(self):
-        StandardWindow.__init__(self, 'edje_cropper', 'Edje Cropper',
+        h = "wheel to zoom, drag to pan, doubleclick to crop"
+        StandardWindow.__init__(self, 'edje_cropper', h,
                                 autodel=True, size=(800,600))
         self.callback_delete_request_add(lambda o: elementary.exit())
 
