@@ -1,17 +1,24 @@
 #!/usr/bin/env python
 # encoding: utf-8
-
 from __future__ import absolute_import, print_function, unicode_literals
 
+import os
 
 from efl.evas import EXPAND_BOTH, EVAS_EVENT_FLAG_ON_HOLD
 from efl.edje import Edje
 
 from efl import elementary
+from efl.elementary.thumb import Thumb
 from efl.elementary.photocam import Photocam
 from efl.elementary.window import StandardWindow
 from efl.elementary.scroller import Scrollable
+from efl.elementary.panes import Panes
+from efl.elementary.genlist import Genlist, GenlistItemClass, ELM_GENLIST_ITEM_TREE
+from efl.elementary.gengrid import Gengrid, GengridItemClass
+from efl.elementary.icon import Icon
 
+
+IMG_EXTS = ('.jpg', '.jpeg', '.png')
 
 def clamp(low, val, high):
     if val < low: return low
@@ -19,8 +26,79 @@ def clamp(low, val, high):
     return val
 
 
+class TreeView(Genlist):
+    def __init__(self, app, *args, **kargs):
+        self.app = app
+
+        Genlist.__init__(self, *args, **kargs)
+        self.callback_selected_add(self._item_selected_cb)
+        self.callback_expand_request_add(self._item_expand_request_cb)
+        self.callback_expanded_add(self._item_expanded_cb)
+        self.callback_contract_request_add(self._item_contract_request_cb)
+        self.callback_contracted_add(self._item_contracted_cb)
+        self.callback_clicked_double_add(self._item_expand_request_cb)
+
+        self.itc = GenlistItemClass('one_icon',
+                                    text_get_func=self._gl_text_get,
+                                    content_get_func=self._gl_content_get)
+
+    def _gl_text_get(self, gl, part, item_data):
+        return os.path.basename(item_data)
+
+    def _gl_content_get(self, gl, part, item_data):
+        return Icon(gl, standard='folder')
+
+    def _item_selected_cb(self, gl, item):
+        self.app.grid.populate(item.data)
+
+    def _item_expand_request_cb(self, gl, item):
+        item.expanded = True
+
+    def _item_expanded_cb(self, gl, item):
+        self.populate(item.data, item)
+
+    def _item_contract_request_cb(self, gl, item):
+        item.expanded = False
+
+    def _item_contracted_cb(self, gl, item):
+        item.subitems_clear()
+        
+    def populate(self, path, parent=None):
+        for f in sorted(os.listdir(path)):
+            if f[0] == '.': continue
+            fullpath = os.path.join(path, f)
+            if os.path.isdir(fullpath):
+                self.item_append(self.itc, fullpath, parent,
+                                 flags=ELM_GENLIST_ITEM_TREE)
+
+
+class PhotoGrid(Gengrid):
+    def __init__(self, app, *args, **kargs):
+        self.app = app
+
+        Gengrid.__init__(self, *args, **kargs)
+        self.callback_selected_add(self._item_selected_cb)
+
+        self.itc = GengridItemClass('default',
+                                    content_get_func=self._gg_content_get)
+
+    def _gg_content_get(self, gg, part, item_data):
+        if part == 'elm.swallow.icon':
+            return Thumb(gg, file=item_data, size_hint_min=(128,128))
+
+    def _item_selected_cb(self, gg, item):
+        self.app.photo.file = item.data
+
+    def populate(self, path):
+        self.clear()
+        for f in os.listdir(path):
+            if os.path.splitext(f)[-1].lower() in IMG_EXTS:
+                self.item_append(self.itc, os.path.join(path, f))
+
+
 class ScrollablePhotocam(Photocam, Scrollable):
-    def __init__(self, *args, **kargs):
+    def __init__(self, app, *args, **kargs):
+        self.app = app
         Photocam.__init__(self, paused=True, *args, **kargs)
         self.on_mouse_wheel_add(self._on_mouse_wheel)
         self.on_mouse_down_add(self._on_mouse_down)
@@ -125,16 +203,34 @@ class ScrollablePhotocam(Photocam, Scrollable):
 
 
 class MainWin(StandardWindow):
-    def __init__(self):
+    def __init__(self, app):
+        self.app = app
         h = "wheel to zoom, drag to pan, doubleclick to crop"
         StandardWindow.__init__(self, 'edje_cropper', h,
                                 autodel=True, size=(800,600))
         self.callback_delete_request_add(lambda o: elementary.exit())
 
-        img = ScrollablePhotocam(self, file='photo.jpg')
-        img.callback_clicked_double_add(self._img_clicked_cb)
-        self.resize_object_add(img)
-        img.show()
+        hpanes = Panes(self, content_left_size=0.0, content_left_min_size=200,
+                       size_hint_expand=EXPAND_BOTH)
+        self.resize_object_add(hpanes)
+        hpanes.show()
+
+        vpanes = Panes(hpanes, horizontal=True)
+        hpanes.part_content_set('right', vpanes)
+        vpanes.show()
+
+        self.grid = PhotoGrid(app, hpanes)
+        vpanes.part_content_set('left', self.grid)
+        self.grid.show()
+
+        self.tree = TreeView(app, hpanes)
+        hpanes.part_content_set('left', self.tree)
+        self.tree.show()
+
+        self.photo = ScrollablePhotocam(app, self)
+        self.photo.callback_clicked_double_add(self._img_clicked_cb)
+        vpanes.part_content_set('right', self.photo)
+        self.photo.show()
 
         self.show()
 
@@ -142,8 +238,18 @@ class MainWin(StandardWindow):
         img.region_selector_show()
 
 
+class EphotoApp(object):
+    def __init__(self):
+        self.main_win = MainWin(self)
+        self.tree = self.main_win.tree
+        self.grid = self.main_win.grid
+        self.photo = self.main_win.photo
+        self.tree.populate(os.path.expanduser("~"))
+
+
 if __name__ == '__main__':
     elementary.init()
-    MainWin()
+    elementary.need_ethumb()
+    EphotoApp()
     elementary.run()
     elementary.shutdown()
