@@ -16,6 +16,11 @@ from efl.evas import Rectangle, EXPAND_BOTH, EVAS_CALLBACK_MOUSE_WHEEL, \
 
 SHADER_COLOR = (0, 0, 0, 100)
 
+def clamp(low, val, high):
+    if val < low: return low
+    if val > high: return high
+    return val
+
 class ScrollablePhotocam(Photocam, Scrollable):
     def __init__(self, *args, **kargs):
         Photocam.__init__(self, paused=True, *args, **kargs)
@@ -69,20 +74,24 @@ class ScrollablePhotocam(Photocam, Scrollable):
             h.on_mouse_up_add(self._on_handler_mouse_up, part)
 
     def _internal_on_move_resize(self, obj):
-        px, py, pw, ph = obj.geometry
+        self._update_selection()
+
+    def _update_selection(self):
+        px, py, pw, ph = self.internal_image.geometry
+
         rel1x, rel1y = self.sel.data['rel1']
         rel2x, rel2y = self.sel.data['rel2']
-        x1 = (pw * rel1x) + px
-        y1 = (ph * rel1y) + py
-        x2 = (pw * rel2x) + px
-        y2 = (ph * rel2y) + py
-        self.sel.move(x1, y1)
-        self.sel.resize(x2 - x1, y2 - y1)
-        self._update_shader()
+        x1 = int((pw * rel1x) + px)
+        y1 = int((ph * rel1y) + py)
+        x2 = int((pw * rel2x) + px)
+        y2 = int((ph * rel2y) + py)
 
-    def _update_shader(self):
-        sx, sy, sw, sh = self.sel.geometry
-        px, py, pw, ph = self.internal_image.geometry
+        # selection geometry
+        sx, sy, sw, sh = x1, y1, x2-x1, y2-y1
+        self.sel.move(sx, sy)
+        self.sel.resize(sw, sh)
+
+        # shaders geometry
         self.sel_shader1.move(px, py)
         self.sel_shader1.resize(pw, sy - py)
         self.sel_shader2.move(px, sy + sh)
@@ -104,8 +113,9 @@ class ScrollablePhotocam(Photocam, Scrollable):
         x, y = obj.evas.pointer_canvas_xy_get()
         dx, dy = x - self._drag_start_x, y - self._drag_start_y
         x, y, w, h = self._drag_start_geom
+        px, py, pw, ph = self.internal_image.geometry
 
-        # calc new gemetry
+        # calc new selection gemetry
         if part == 'hm':
             x, y = x + dx, y + dy
         elif part == 'h1':
@@ -130,47 +140,29 @@ class ScrollablePhotocam(Photocam, Scrollable):
             x = x + dx
             w = w - dx
 
-        # constrain inside photo geometry
-        px, py, pw, ph = self.internal_image.geometry
-        if part == 'hm':
-            x, y = max(x, px), max(y, py)
-            if x + w > px + pw:
-                x = (px + pw) - w
-            if y + h > py + ph:
-                y = (py + ph) - h
-        else:
-            if x < px:
-                w = w - (px - x)
-                x = px
-            if y < py:
-                h = h - (py - y)
-                y = py
-            if x + w > px + pw:
-                w = (px + pw) - x
-            if y + h > py + ph:
-                h = (py + ph) - y
-
-        # apply new geometry
-        self.sel.move(x, y)
-        self.sel.resize(w, h)
-
-        # remember relative hints
+        # calc relative pos
         rel1x = float(x - px) / pw
         rel1y = float(y - py) / ph
         rel2x = float(x + w - px) / pw
         rel2y = float(y + h - py) / ph
+
+        # constrain inside photo geometry
+        rel1x = clamp(0.0, rel1x, 1.0)
+        rel1y = clamp(0.0, rel1y, 1.0)
+        rel2x = clamp(0.0, rel2x, 1.0)
+        rel2y = clamp(0.0, rel2y, 1.0)
+
+        # update
         self.sel.data['rel1'] = (rel1x, rel1y)
         self.sel.data['rel2'] = (rel2x, rel2y)
-
-        # update dark shader
-        self._update_shader()
+        self._update_selection()
 
         return ECORE_CALLBACK_RENEW
 
 class MainWin(StandardWindow):
     def __init__(self):
         StandardWindow.__init__(self, 'edje_cropper', 'Edje Cropper',
-                                autodel=True, size=(600,400))
+                                autodel=True, size=(800,600))
         self.callback_delete_request_add(lambda o: elementary.exit())
 
         img = ScrollablePhotocam(self, file='photo.jpg')
