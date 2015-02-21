@@ -14,12 +14,11 @@ from efl.evas import Rectangle, EXPAND_BOTH, EVAS_CALLBACK_MOUSE_WHEEL, \
     EVAS_EVENT_FLAG_ON_HOLD
 
 
-SHADER_COLOR = (0, 0, 0, 100)
-
 def clamp(low, val, high):
     if val < low: return low
     if val > high: return high
     return val
+
 
 class ScrollablePhotocam(Photocam, Scrollable):
     def __init__(self, *args, **kargs):
@@ -51,18 +50,7 @@ class ScrollablePhotocam(Photocam, Scrollable):
     # region selector stuff
     def region_selector_show(self):
         self.sel = Edje(self.evas, file='theme.edj', group='sel')
-        self.sel.data['rel1'] = (0.2, 0.2)
-        self.sel.data['rel2'] = (0.8, 0.8)
         self.sel.show()
-
-        self.sel_shader1 = Rectangle(self.evas, color=SHADER_COLOR, pass_events=True)
-        self.sel_shader1.show()
-        self.sel_shader2 = Rectangle(self.evas, color=SHADER_COLOR, pass_events=True)
-        self.sel_shader2.show()
-        self.sel_shader3 = Rectangle(self.evas, color=SHADER_COLOR, pass_events=True)
-        self.sel_shader3.show()
-        self.sel_shader4 = Rectangle(self.evas, color=SHADER_COLOR, pass_events=True)
-        self.sel_shader4.show()
 
         self.internal_image.on_move_add(self._internal_on_move_resize)
         self.internal_image.on_resize_add(self._internal_on_move_resize)
@@ -74,36 +62,11 @@ class ScrollablePhotocam(Photocam, Scrollable):
             h.on_mouse_up_add(self._on_handler_mouse_up, part)
 
     def _internal_on_move_resize(self, obj):
-        self._update_selection()
-
-    def _update_selection(self):
-        px, py, pw, ph = self.internal_image.geometry
-
-        rel1x, rel1y = self.sel.data['rel1']
-        rel2x, rel2y = self.sel.data['rel2']
-        x1 = int((pw * rel1x) + px)
-        y1 = int((ph * rel1y) + py)
-        x2 = int((pw * rel2x) + px)
-        y2 = int((ph * rel2y) + py)
-
-        # selection geometry
-        sx, sy, sw, sh = x1, y1, x2-x1, y2-y1
-        self.sel.move(sx, sy)
-        self.sel.resize(sw, sh)
-
-        # shaders geometry
-        self.sel_shader1.move(px, py)
-        self.sel_shader1.resize(pw, sy - py)
-        self.sel_shader2.move(px, sy + sh)
-        self.sel_shader2.resize(pw, (py + ph) - (sy + sh))
-        self.sel_shader3.move(px, sy)
-        self.sel_shader3.resize(sx - px, sh)
-        self.sel_shader4.move(sx + sw, sy)
-        self.sel_shader4.resize((px + pw) - (sx + sw), sh)
+        self.sel.geometry = obj.geometry
 
     def _on_handler_mouse_down(self, obj, event, part):
         self._drag_start_x, self._drag_start_y = event.position.canvas
-        self._drag_start_geom = self.sel.geometry
+        self._drag_start_geom = self.sel.part_object_get('selector').geometry
         self._drag_animator = Animator(self._drag_animator_cb, obj, part)
 
     def _on_handler_mouse_up(self, obj, event, part):
@@ -140,7 +103,7 @@ class ScrollablePhotocam(Photocam, Scrollable):
             x = x + dx
             w = w - dx
 
-        # calc relative pos
+        # calc new relative pos
         rel1x = float(x - px) / pw
         rel1y = float(y - py) / ph
         rel2x = float(x + w - px) / pw
@@ -152,11 +115,8 @@ class ScrollablePhotocam(Photocam, Scrollable):
         rel2x = clamp(0.0, rel2x, 1.0)
         rel2y = clamp(0.0, rel2y, 1.0)
 
-        # update
-        self.sel.data['rel1'] = (rel1x, rel1y)
-        self.sel.data['rel2'] = (rel2x, rel2y)
-        self._update_selection()
-
+        # send signal to edje with new rels
+        self.sel.message_send(1, (rel1x, rel1y, rel2x, rel2y))
         return ECORE_CALLBACK_RENEW
 
 class MainWin(StandardWindow):

@@ -14,16 +14,81 @@
 // }
 
 collections {
-
    group { name: "sel";
-      parts {
+      script {
+         public message(Msg_Type:type, id, ...) {
+            if ((type == MSG_FLOAT_SET) && (id == 1)) {
+               new Float:rel1x, Float:rel1y;
+               new Float:rel2x, Float:rel2y;
 
-         part { name: "bg"; type: RECT;
+               rel1x = getfarg(2);
+               rel1y = getfarg(3);
+               rel2x = getfarg(4);
+               rel2y = getfarg(5);
+
+               custom_state(PART:"selector", "default", 0.0);
+               set_state_val(PART:"selector", STATE_REL1, rel1x, rel1y);
+               set_state_val(PART:"selector", STATE_REL2, rel2x, rel2y);
+               set_state(PART:"selector", "custom", 0.0);
+            }
+         }
+      }
+      parts {
+         part { name: "shader_top"; type: RECT;
+            repeat_events: 1;
+            description { state: "default" 0.0;
+               color: 0 0 0 200;
+               rel2 {
+                  to_y: "selector";
+                  relative: 1.0 0.0;
+               }
+            }
+         }
+         part { name: "shader_bottom"; type: RECT;
+            repeat_events: 1;
+            description { state: "default" 0.0;
+               color: 0 0 0 200;
+               rel1 {
+                  to_y: "selector";
+                  relative: 0.0 1.0;
+               }
+            }
+         }
+         part { name: "shader_left"; type: RECT;
+            repeat_events: 1;
+            description { state: "default" 0.0;
+               color: 0 0 0 200;
+               rel1 {
+                  to_y: "selector";
+                  relative: 0.0 0.0;
+               }
+               rel2 {
+                  to: "selector";
+                  relative: 0.0 1.0;
+               }
+            }
+         }
+         part { name: "shader_right"; type: RECT;
+            repeat_events: 1;
+            description { state: "default" 0.0;
+               color: 0 0 0 200;
+               rel1 {
+                  to: "selector";
+                  relative: 1.0 0.0;
+               }
+               rel2 {
+                  to_y: "selector";
+                  relative: 1.0 1.0;
+               }
+            }
+         }
+         part { name: "selector"; type: RECT;
             repeat_events: 1;
             description { state: "default" 0.0;
                color: 255 255 255 0;
+               rel1.relative: 0.2 0.2;
+               rel2.relative: 0.8 0.8;
             }
-
             part { name: "h1"; type: RECT;
                description { state: "default" 0.0;
                   FIXED_SIZE(10, 10)
@@ -79,9 +144,7 @@ collections {
                }
             }
          }
-
       }
     }
-
 }
 
