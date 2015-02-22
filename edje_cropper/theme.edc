@@ -296,6 +296,8 @@ collections {
    IC("edit-cut", "icon_edit_cut.png")
    IC("go-next", "icon_go_next.png")
    IC("go-previous", "icon_go_previous.png")
+   IC("media-playback-start", "icon_media_playback_start.png")
+   IC("media-playback-pause", "icon_media_playback_pause.png")
    IC("zoom", "icon_zoom.png")
    IC("zoom-in", "icon_zoom_in.png")
    IC("zoom-out", "icon_zoom_out.png")

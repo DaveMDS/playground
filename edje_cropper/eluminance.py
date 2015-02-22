@@ -28,6 +28,11 @@ from efl.elementary.genlist import Genlist, GenlistItemClass, \
 from efl.elementary.gengrid import Gengrid, GengridItemClass, \
     ELM_OBJECT_SELECT_MODE_ALWAYS
 from efl.elementary.icon import Icon
+from efl.elementary.notify import Notify
+from efl.elementary.hoversel import Hoversel
+from efl.elementary.image import Image
+from efl.elementary.spinner import Spinner
+from efl.elementary.slideshow import Slideshow, SlideshowItemClass
 
 
 IMG_EXTS = ('.jpg', '.jpeg', '.png')
@@ -310,6 +315,14 @@ class StatusBar(Box):
         self.pack_end(bt)
         self.btn_zoom = bt
 
+        # slideshow button
+        bt = Button(self)
+        bt.content = Icon(bt, standard='media-playback-start',
+                          size_hint_min=(16,16))
+        bt.callback_clicked_add(lambda b: SlideShow(self.app))
+        self.pack_end(bt)
+        self.btn_slideshow = bt
+
         # edit button
         bt = Button(self)
         bt.content = Icon(bt, standard='edit', size_hint_min=(16,16))
@@ -337,10 +350,12 @@ class StatusBar(Box):
         if self.app.grid.items_count > 1:
             self.btn_next.show()
             self.btn_prev.show()
+            self.btn_slideshow.show()
             self.btn_edit.show()
         else:
             self.btn_next.hide()
             self.btn_prev.hide()
+            self.btn_slideshow.hide()
             self.btn_edit.hide()
     
     def _zoom_btn_cb(self, btn):
@@ -367,6 +382,94 @@ class StatusBar(Box):
     def _zoom_orig_set(self, menu, item):
         self.app.photo.zoom_mode = ELM_PHOTOCAM_ZOOM_MODE_MANUAL
         self.app.photo.zoom = 1.0
+
+
+class SlideShow(Slideshow):
+    NOTIFY_TIMEOUT = 3.0
+    def __init__(self, app):
+        Slideshow.__init__(self, app.main_win, timeout=5.0,
+                           size_hint_expand=EXPAND_BOTH)
+        app.main_win.resize_object_add(self)
+        self.show()
+
+        itc = SlideshowItemClass(self._item_get_func)
+        grid_item = app.grid.first_item
+        while grid_item:
+            self.item_add(itc, grid_item.data)
+            grid_item = grid_item.next
+
+        box = Box(self, horizontal=True)
+
+        notify = Notify(self, align=(0.5, 1.0), content=box,
+                        timeout=self.NOTIFY_TIMEOUT,
+                        size_hint_expand=EXPAND_BOTH)
+        notify.on_mouse_in_add(self._notify_mouse_in_cb)
+        notify.on_mouse_out_add(self._notify_mouse_out_cb)
+        self.on_mouse_move_add(self._sshow_mouse_move_cb, notify)
+
+        bt = Button(box)
+        bt.content = Icon(bt, standard='go-previous', resizable=(False, False))
+        bt.callback_clicked_add(lambda b: self.previous())
+        box.pack_end(bt)
+        bt.show()
+
+        bt = Button(box)
+        bt.content = Icon(bt, standard='go-next', resizable=(False, False))
+        bt.callback_clicked_add(lambda b: self.next())
+        box.pack_end(bt)
+        bt.show()
+
+        hv = Hoversel(box, hover_parent=app.main_win, text=self.transitions[0])
+        for t in list(self.transitions) + [None]:
+            hv.item_add(t or "None", None, 0, self._transition_cb, t)
+        box.pack_end(hv)
+        hv.show()
+
+        spinner = Spinner(box, label_format="%2.0f secs.", step=1,
+                          min_max=(3, 60), value=3)
+        spinner.callback_changed_add(lambda s: setattr(self, 'timeout', s.value))
+        box.pack_end(spinner)
+        spinner.show()
+
+        bt = Button(box, text='Pause')
+        bt.content = Icon(bt, standard='media-playback-pause', resizable=(False, False))
+        bt.callback_clicked_add(self._play_pause_cb)
+        box.pack_end(bt)
+        bt.show()
+
+        bt = Button(box, text='Close',)
+        bt.content = Icon(bt, standard='close', resizable=(False, False))
+        bt.callback_clicked_add(lambda b: self.delete())
+        box.pack_end(bt)
+        bt.show()
+
+    def _item_get_func(self, obj, file_path):
+        return Image(obj, file=file_path)
+
+    def _sshow_mouse_move_cb(self, obj, event, notify):
+        notify.timeout = self.NOTIFY_TIMEOUT
+        notify.show()
+
+    def _notify_mouse_in_cb(self, notify, event):
+        notify.timeout = 0.0
+        notify.show()
+
+    def _notify_mouse_out_cb(self, notify, event):
+        notify.timeout = self.NOTIFY_TIMEOUT
+
+    def _transition_cb(self, hoversel, item, transition):
+        self.transition = transition
+        hoversel.text = transition or "None"
+
+    def _play_pause_cb(self, btn):
+        if self.timeout == 0:
+            self.timeout = 3 # TODO FIXME
+            btn.text = 'Pause'
+            btn.content = Icon(btn, standard='media-playback-pause', resizable=(False, False))
+        else:
+            self.timeout = 0
+            btn.text = 'Play'
+            btn.content = Icon(btn, standard='media-playback-start', resizable=(False, False))
 
 
 class ImageEditor(object):
