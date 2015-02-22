@@ -83,6 +83,7 @@ class TreeView(Genlist):
 
     def _item_selected_cb(self, gl, item):
         self.app.grid.populate(item.data)
+        self.app.status.update()
 
     def _item_expand_request_cb(self, gl, item):
         item.expanded = True
@@ -122,13 +123,26 @@ class PhotoGrid(Gengrid):
 
     def _item_selected_cb(self, gg, item):
         self.app.photo.file_set(item.data)
-        self.app.status.file_set(item.data)
+        self.app.status.update()
 
     def populate(self, path):
         self.clear()
         for f in natural_sort(os.listdir(path)):
             if os.path.splitext(f)[-1].lower() in IMG_EXTS:
                 self.item_append(self.itc, os.path.join(path, f))
+        if self.first_item:
+            self.first_item.selected = True
+            self.first_item.show()
+
+    def next_select(self):
+        it = self.selected_item or self.first_item
+        if it: it = it.next
+        if it: it.selected = True
+
+    def prev_select(self):
+        it = self.selected_item or self.last_item
+        if it: it = it.prev
+        if it: it.selected = True
 
 
 class ScrollablePhotocam(Photocam, Scrollable):
@@ -255,15 +269,31 @@ class StatusBar(Box):
         self.pack_end(self.label)
         self.label.show()
 
+        # prev button
+        bt = Button(self)
+        bt.content = Icon(bt, standard='previous', size_hint_min=(16,16))
+        bt.callback_clicked_add(lambda b: self.app.grid.prev_select())
+        self.pack_end(bt)
+        self.btn_prev = bt
+        bt.show()
+
+        # next button
+        bt = Button(self)
+        bt.content = Icon(bt, standard='next', size_hint_min=(16,16))
+        bt.callback_clicked_add(lambda b: self.app.grid.next_select())
+        self.pack_end(bt)
+        self.btn_next = bt
+        bt.show()
+
+        # zoom button
         bt = Button(self)
         bt.content = Icon(bt, standard='home', size_hint_min=(16,16))
-        bt.callback_clicked_add(self._zoom_btn_clicked_cb)
+        bt.callback_clicked_add(self._zoom_btn_cb)
         self.pack_end(bt)
         self.btn_zoom = bt
 
-        self.file_set(None)
-
-    def file_set(self, image_path):
+    def update(self):
+        image_path = self.app.photo.file
         if image_path is None:
             self.btn_zoom.hide()
             self.label.text = 'No image selected'
@@ -277,8 +307,14 @@ class StatusBar(Box):
                     self.app.photo.image_size[0], self.app.photo.image_size[1],
                     'Size', file_hum_size(image_path)
                 )
-
-    def _zoom_btn_clicked_cb(self, btn):
+        if self.app.grid.items_count > 1:
+            self.btn_next.show()
+            self.btn_prev.show()
+        else:
+            self.btn_next.hide()
+            self.btn_prev.hide()
+    
+    def _zoom_btn_cb(self, btn):
         m = Menu(self.app.main_win)
         m.item_add(None, 'Zoom In', None, self._zoom_set, -0.3)
         m.item_add(None, 'Zoom Out', None, self._zoom_set, +0.3)
@@ -355,7 +391,9 @@ class EphotoApp(object):
         self.grid = self.main_win.grid
         self.photo = self.main_win.photo
         self.status = self.main_win.status
+
         self.tree.populate(os.path.expanduser("~"))
+        self.status.update()
 
 
 if __name__ == '__main__':
