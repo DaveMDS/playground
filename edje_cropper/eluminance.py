@@ -107,11 +107,11 @@ class TreeView(Genlist):
 
 
 class PhotoGrid(Gengrid):
-    def __init__(self, app, *args, **kargs):
+    def __init__(self, app, parent):
         self.app = app
 
-        Gengrid.__init__(self, select_mode=ELM_OBJECT_SELECT_MODE_ALWAYS,
-                         *args, **kargs)
+        Gengrid.__init__(self, parent, select_mode=ELM_OBJECT_SELECT_MODE_ALWAYS,
+                         item_size=(128, 128), align=(0.5, 0.0))
         self.callback_selected_add(self._item_selected_cb)
 
         self.itc = GengridItemClass('thumb',
@@ -119,7 +119,7 @@ class PhotoGrid(Gengrid):
 
     def _gg_content_get(self, gg, part, item_data):
         if part == 'elm.swallow.icon':
-            return Thumb(gg, file=item_data, size_hint_min=(128,128))
+            return Thumb(gg, file=item_data)
 
     def _item_selected_cb(self, gg, item):
         self.app.photo.file_set(item.data)
@@ -338,6 +338,7 @@ class StatusBar(Box):
     def _zoom_orig_set(self, menu, item):
         self.app.photo.zoom_mode = ELM_PHOTOCAM_ZOOM_MODE_MANUAL
         self.app.photo.zoom = 1.0
+
 
 class MainWin(StandardWindow):
     def __init__(self, app):
