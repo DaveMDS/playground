@@ -29,6 +29,7 @@ from efl.elementary.icon import Icon
 
 
 IMG_EXTS = ('.jpg', '.jpeg', '.png')
+THEME_FILE = 'theme.edj'
 
 def clamp(low, val, high):
     if val < low: return low
@@ -114,12 +115,16 @@ class PhotoGrid(Gengrid):
                          item_size=(128, 128), align=(0.5, 0.0))
         self.callback_selected_add(self._item_selected_cb)
 
-        self.itc = GengridItemClass('thumb',
+        self.itc = GengridItemClass('default',
+                                    text_get_func=self._gg_text_get,
                                     content_get_func=self._gg_content_get)
 
     def _gg_content_get(self, gg, part, item_data):
         if part == 'elm.swallow.icon':
             return Thumb(gg, file=item_data)
+
+    def _gg_text_get(self, gg, part, item_data):
+        return os.path.basename(item_data)
 
     def _item_selected_cb(self, gg, item):
         self.app.photo.file_set(item.data)
@@ -184,7 +189,7 @@ class ScrollablePhotocam(Photocam, Scrollable):
 
     # region selector stuff
     def region_selector_show(self):
-        self.sel = Edje(self.evas, file='theme.edj', group='sel')
+        self.sel = Edje(self.evas, file=THEME_FILE, group='sel')
         self.sel.show()
 
         internal = self.internal_image
