@@ -67,6 +67,23 @@ def natural_sort(l):
    return sorted(l, key=alphanum_key)
 
 
+class StdButton(Button):
+    """ A Button with a standard fdo icon """
+    def __init__(self, parent, icon, *args, **kargs):
+        Button.__init__(self, parent, *args, **kargs)
+        # self.content = Icon(self, standard=icon, resizable=(False, False))
+        self.icon = icon
+        self.show()
+
+    @property
+    def icon(self):
+        return self.content
+
+    @icon.setter
+    def icon(self, name):
+        self.content = Icon(self, standard=name, resizable=(False, False))
+
+
 class TreeView(Genlist):
     def __init__(self, app, *args, **kargs):
         self.app = app
@@ -293,39 +310,31 @@ class StatusBar(Box):
         self.lb_info.show()
 
         # prev button
-        bt = Button(self)
-        bt.content = Icon(bt, standard='go-previous', size_hint_min=(16,16))
+        bt = StdButton(self, icon='go-previous')
         bt.callback_clicked_add(lambda b: self.app.grid.prev_select())
         self.pack_end(bt)
         self.btn_prev = bt
-        bt.show()
 
         # next button
-        bt = Button(self)
-        bt.content = Icon(bt, standard='go-next', size_hint_min=(16,16))
+        bt = StdButton(self, icon='go-next')
         bt.callback_clicked_add(lambda b: self.app.grid.next_select())
         self.pack_end(bt)
         self.btn_next = bt
-        bt.show()
 
         # zoom button
-        bt = Button(self)
-        bt.content = Icon(bt, standard='zoom', size_hint_min=(16,16))
+        bt = StdButton(self, icon='zoom')
         bt.callback_clicked_add(self._zoom_btn_cb)
         self.pack_end(bt)
         self.btn_zoom = bt
 
         # slideshow button
-        bt = Button(self)
-        bt.content = Icon(bt, standard='media-playback-start',
-                          size_hint_min=(16,16))
+        bt = StdButton(self, icon='media-playback-start')
         bt.callback_clicked_add(lambda b: SlideShow(self.app))
         self.pack_end(bt)
         self.btn_slideshow = bt
 
         # edit button
-        bt = Button(self)
-        bt.content = Icon(bt, standard='edit', size_hint_min=(16,16))
+        bt = StdButton(self, icon='edit')
         bt.callback_clicked_add(lambda b: ImageEditor(self.app))
         self.pack_end(bt)
         self.btn_edit = bt
@@ -407,17 +416,13 @@ class SlideShow(Slideshow):
         notify.on_mouse_out_add(self._notify_mouse_out_cb)
         self.on_mouse_move_add(self._sshow_mouse_move_cb, notify)
 
-        bt = Button(box)
-        bt.content = Icon(bt, standard='go-previous', resizable=(False, False))
+        bt = StdButton(box, icon='go-previous')
         bt.callback_clicked_add(lambda b: self.previous())
         box.pack_end(bt)
-        bt.show()
 
-        bt = Button(box)
-        bt.content = Icon(bt, standard='go-next', resizable=(False, False))
+        bt = StdButton(box, icon='go-next')
         bt.callback_clicked_add(lambda b: self.next())
         box.pack_end(bt)
-        bt.show()
 
         hv = Hoversel(box, hover_parent=app.main_win, text=self.transitions[0])
         for t in list(self.transitions) + [None]:
@@ -431,17 +436,13 @@ class SlideShow(Slideshow):
         box.pack_end(spinner)
         spinner.show()
 
-        bt = Button(box, text='Pause')
-        bt.content = Icon(bt, standard='media-playback-pause', resizable=(False, False))
+        bt = StdButton(box, icon='media-playback-pause', text='Pause')
         bt.callback_clicked_add(self._play_pause_cb)
         box.pack_end(bt)
-        bt.show()
 
-        bt = Button(box, text='Close',)
-        bt.content = Icon(bt, standard='close', resizable=(False, False))
+        bt = StdButton(box, icon='close', text='Close')
         bt.callback_clicked_add(lambda b: self.delete())
         box.pack_end(bt)
-        bt.show()
 
     def _item_get_func(self, obj, file_path):
         return Image(obj, file=file_path)
@@ -465,11 +466,11 @@ class SlideShow(Slideshow):
         if self.timeout == 0:
             self.timeout = 3 # TODO FIXME
             btn.text = 'Pause'
-            btn.content = Icon(btn, standard='media-playback-pause', resizable=(False, False))
+            btn.icon = 'media-playback-pause'
         else:
             self.timeout = 0
             btn.text = 'Play'
-            btn.content = Icon(btn, standard='media-playback-start', resizable=(False, False))
+            btn.icon = 'media-playback-start'
 
 
 class ImageEditor(object):
