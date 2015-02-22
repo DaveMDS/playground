@@ -5,12 +5,15 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import re
 
-from efl.evas import EXPAND_BOTH, FILL_BOTH, EVAS_EVENT_FLAG_ON_HOLD
+from efl.evas import EXPAND_BOTH, EXPAND_HORIZ, FILL_BOTH, FILL_HORIZ, \
+    EVAS_EVENT_FLAG_ON_HOLD
 from efl.edje import Edje
 
 from efl import elementary
+from efl.elementary.button import Button
 from efl.elementary.box import Box
 from efl.elementary.label import Label
+from efl.elementary.menu import Menu
 from efl.elementary.thumb import Thumb
 from efl.elementary.photocam import Photocam, ELM_PHOTOCAM_ZOOM_MODE_AUTO_FIT, \
     ELM_PHOTOCAM_ZOOM_MODE_AUTO_FILL, ELM_PHOTOCAM_ZOOM_MODE_AUTO_FIT_IN, \
@@ -242,20 +245,30 @@ class ScrollablePhotocam(Photocam, Scrollable):
 
 
 class StatusBar(Box):
-    def __init__(self, app, *args, **kargs):
+    def __init__(self, app, parent):
         self.app = app
-        Box.__init__(self, *args, **kargs)
+        Box.__init__(self, parent, horizontal=True,
+                     size_hint_expand=EXPAND_HORIZ,
+                     size_hint_fill=FILL_HORIZ)
 
-        self.label = Label(self)
+        self.label = Label(self, size_hint_expand=EXPAND_HORIZ)
         self.pack_end(self.label)
         self.label.show()
+
+        bt = Button(self)
+        bt.content = Icon(bt, standard='home', size_hint_min=(16,16))
+        bt.callback_clicked_add(self._zoom_btn_clicked_cb)
+        self.pack_end(bt)
+        self.btn_zoom = bt
 
         self.file_set(None)
 
     def file_set(self, image_path):
         if image_path is None:
+            self.btn_zoom.hide()
             self.label.text = 'No image selected'
         else:
+            self.btn_zoom.show()
             self.label.text = \
                 '<b>{0}:</b> {1}    <b>{2}:</b> {3}x{4}    <b>{5}:</b> {6}' \
                 .format(
@@ -265,6 +278,30 @@ class StatusBar(Box):
                     'Size', file_hum_size(image_path)
                 )
 
+    def _zoom_btn_clicked_cb(self, btn):
+        m = Menu(self.app.main_win)
+        m.item_add(None, 'Zoom In', None, self._zoom_set, -0.3)
+        m.item_add(None, 'Zoom Out', None, self._zoom_set, +0.3)
+        m.item_separator_add()
+        m.item_add(None, 'Zoom Fit', None, self._zoom_fit_set)
+        m.item_add(None, 'Zoom Fill', None, self._zoom_fill_set)
+        m.item_add(None, 'Zoom 1:1', None, self._zoom_orig_set)
+        m.move(*btn.pos)
+        m.show()
+
+    def _zoom_set(self, menu, item, val):
+        self.app.photo.zoom_mode = ELM_PHOTOCAM_ZOOM_MODE_MANUAL
+        self.app.photo.zoom += val
+
+    def _zoom_fit_set(self, menu, item):
+        self.app.photo.zoom_mode = ELM_PHOTOCAM_ZOOM_MODE_AUTO_FIT
+
+    def _zoom_fill_set(self, menu, item):
+        self.app.photo.zoom_mode = ELM_PHOTOCAM_ZOOM_MODE_AUTO_FILL
+
+    def _zoom_orig_set(self, menu, item):
+        self.app.photo.zoom_mode = ELM_PHOTOCAM_ZOOM_MODE_MANUAL
+        self.app.photo.zoom = 1.0
 
 class MainWin(StandardWindow):
     def __init__(self, app):
