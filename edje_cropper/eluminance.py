@@ -11,10 +11,12 @@ from efl.edje import Edje
 
 from efl import elementary
 from efl.elementary.button import Button
+from efl.elementary.background import Background
 from efl.elementary.box import Box
 from efl.elementary.label import Label
 from efl.elementary.menu import Menu
 from efl.elementary.thumb import Thumb
+from efl.elementary.toolbar import Toolbar
 from efl.elementary.photocam import Photocam, ELM_PHOTOCAM_ZOOM_MODE_AUTO_FIT, \
     ELM_PHOTOCAM_ZOOM_MODE_AUTO_FILL, ELM_PHOTOCAM_ZOOM_MODE_AUTO_FIT_IN, \
     ELM_PHOTOCAM_ZOOM_MODE_MANUAL
@@ -29,7 +31,7 @@ from efl.elementary.icon import Icon
 
 
 IMG_EXTS = ('.jpg', '.jpeg', '.png')
-THEME_FILE = 'theme.edj'
+THEME_FILE = os.path.abspath('theme.edj')
 
 def clamp(low, val, high):
     if val < low: return low
@@ -159,12 +161,17 @@ class ScrollablePhotocam(Photocam, Scrollable):
         self.on_mouse_wheel_add(self._on_mouse_wheel)
         self.on_mouse_down_add(self._on_mouse_down)
         self.on_mouse_up_add(self._on_mouse_up)
+        self.on_del_add(self._on_del)
         self._drag_start_geom = None
+        self.sel = None
 
     def file_set(self, file):
         self.zoom_mode = ELM_PHOTOCAM_ZOOM_MODE_AUTO_FIT
         Photocam.file_set(self, file)
-        
+
+    def _on_del(self, obj):
+        if self.sel: self.sel.delete()
+
     # mouse wheel: zoom
     def _on_mouse_wheel(self, obj, event):
         event.event_flags |= EVAS_EVENT_FLAG_ON_HOLD
@@ -276,13 +283,13 @@ class StatusBar(Box):
         self.pack_end(self.lb_name)
         self.lb_name.show()
         
-        self.lb_info = Label(self)#, size_hint_expand=EXPAND_HORIZ)
+        self.lb_info = Label(self)
         self.pack_end(self.lb_info)
         self.lb_info.show()
 
         # prev button
         bt = Button(self)
-        bt.content = Icon(bt, standard='previous', size_hint_min=(16,16))
+        bt.content = Icon(bt, standard='go-previous', size_hint_min=(16,16))
         bt.callback_clicked_add(lambda b: self.app.grid.prev_select())
         self.pack_end(bt)
         self.btn_prev = bt
@@ -290,7 +297,7 @@ class StatusBar(Box):
 
         # next button
         bt = Button(self)
-        bt.content = Icon(bt, standard='next', size_hint_min=(16,16))
+        bt.content = Icon(bt, standard='go-next', size_hint_min=(16,16))
         bt.callback_clicked_add(lambda b: self.app.grid.next_select())
         self.pack_end(bt)
         self.btn_next = bt
@@ -298,15 +305,23 @@ class StatusBar(Box):
 
         # zoom button
         bt = Button(self)
-        bt.content = Icon(bt, standard='home', size_hint_min=(16,16))
+        bt.content = Icon(bt, standard='zoom', size_hint_min=(16,16))
         bt.callback_clicked_add(self._zoom_btn_cb)
         self.pack_end(bt)
         self.btn_zoom = bt
+
+        # edit button
+        bt = Button(self)
+        bt.content = Icon(bt, standard='edit', size_hint_min=(16,16))
+        bt.callback_clicked_add(lambda b: ImageEditor(self.app))
+        self.pack_end(bt)
+        self.btn_edit = bt
 
     def update(self):
         image_path = self.app.photo.file
         if image_path is None:
             self.btn_zoom.hide()
+            self.btn_edit.hide()
             self.lb_name.text = '<align=left>{}</>'.format('No image selected')
             self.lb_info.text = ''
         else:
@@ -322,18 +337,20 @@ class StatusBar(Box):
         if self.app.grid.items_count > 1:
             self.btn_next.show()
             self.btn_prev.show()
+            self.btn_edit.show()
         else:
             self.btn_next.hide()
             self.btn_prev.hide()
+            self.btn_edit.hide()
     
     def _zoom_btn_cb(self, btn):
         m = Menu(self.app.main_win)
-        m.item_add(None, 'Zoom In', None, self._zoom_set, -0.3)
-        m.item_add(None, 'Zoom Out', None, self._zoom_set, +0.3)
+        m.item_add(None, 'Zoom In', 'zoom-in', self._zoom_set, -0.3)
+        m.item_add(None, 'Zoom Out', 'zoom-out', self._zoom_set, +0.3)
         m.item_separator_add()
-        m.item_add(None, 'Zoom Fit', None, self._zoom_fit_set)
-        m.item_add(None, 'Zoom Fill', None, self._zoom_fill_set)
-        m.item_add(None, 'Zoom 1:1', None, self._zoom_orig_set)
+        m.item_add(None, 'Zoom Fit', 'zoom-fit-best', self._zoom_fit_set)
+        m.item_add(None, 'Zoom Fill', 'zoom-fit-best', self._zoom_fill_set)
+        m.item_add(None, 'Zoom 1:1', 'zoom-original', self._zoom_orig_set)
         m.move(*btn.pos)
         m.show()
 
@@ -352,11 +369,58 @@ class StatusBar(Box):
         self.app.photo.zoom = 1.0
 
 
+class ImageEditor(object):
+    def __init__(self, app):
+        self.bg = Background(app.main_win, size_hint_expand=EXPAND_BOTH)
+        app.main_win.resize_object_add(self.bg)
+        self.bg.show()
+
+        box = Box(self.bg, size_hint_expand=EXPAND_BOTH,
+                  size_hint_fill=FILL_BOTH)
+        app.main_win.resize_object_add(box)
+        box.show()
+
+        tb = Toolbar(app.main_win, homogeneous=True, menu_parent=app.main_win,
+                     size_hint_expand=EXPAND_HORIZ,
+                     size_hint_fill=FILL_HORIZ)
+
+        item = tb.item_append('rotate', 'Rotate')
+        item.menu = True
+        item.menu.item_add(None, 'Rotate Right', 'object-rotate-right')
+        item.menu.item_add(None, 'Rotate Left', 'object-rotate-left')
+        item.menu.item_add(None, 'Mirror', 'object-flip-horizontal')
+        item.menu.item_add(None, 'Flip', 'object-flip-vertical')
+
+        tb.item_append('edit-cut', 'Crop', self._crop_item_cb)
+        tb.item_append('resize', 'Resize')
+
+        sep = tb.item_append(None, None)
+        sep.separator = True
+
+        tb.item_append('document-save', 'Save')
+        tb.item_append('document-save-as', 'Save as')
+        tb.item_append('document-close', 'Close', self._close_item_cb)
+
+        box.pack_end(tb)
+        tb.show()
+
+        self.photo = ScrollablePhotocam(app, box, file=app.photo.file,
+                                        size_hint_expand=EXPAND_BOTH,
+                                        size_hint_fill=FILL_BOTH)
+        box.pack_end(self.photo)
+        self.photo.show()
+
+    def _crop_item_cb(self, tb, item):
+        self.photo.region_selector_show()
+
+    def _close_item_cb(self, tb, item):
+        self.bg.delete()
+
+
 class MainWin(StandardWindow):
     def __init__(self, app):
         self.app = app
-        h = "eluminance - wheel to zoom, drag to pan, doubleclick to crop"
-        StandardWindow.__init__(self, 'edje_cropper', h,
+        StandardWindow.__init__(self, 'edje_cropper', 'eluminance',
                                 autodel=True, size=(800,600))
         self.callback_delete_request_add(lambda o: elementary.exit())
 
@@ -387,14 +451,11 @@ class MainWin(StandardWindow):
         self.grid.show()
 
         self.photo = ScrollablePhotocam(app, self)
-        self.photo.callback_clicked_double_add(self._img_clicked_cb)
+        self.photo.callback_clicked_double_add(lambda b: ImageEditor(self.app))
         vpanes.part_content_set('right', self.photo)
         self.photo.show()
 
         self.show()
-
-    def _img_clicked_cb(self, img):
-        img.region_selector_show()
 
 
 class EphotoApp(object):
@@ -412,6 +473,7 @@ class EphotoApp(object):
 if __name__ == '__main__':
     elementary.init()
     elementary.need_ethumb()
+    elementary.theme.theme_extension_add(THEME_FILE)
     EphotoApp()
     elementary.run()
     elementary.shutdown()

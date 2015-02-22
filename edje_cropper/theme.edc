@@ -280,6 +280,33 @@ collections {
 #undef SHOW_HIDE_LATERALS
          }
       }
-    }
+   }
+
+   /// ICONS //////////////////////////////////////////////////////////////////
+#define IC(Name, File) \
+   group { name: "elm/icon/"##Name##"/default"; \
+      min: 16 16; max: 0 0; \
+      images.image: File COMP; \
+      parts { part { name: "base"; \
+         description { \
+            aspect: 1.0 1.0; aspect_preference: BOTH; \
+            image.normal: File; } } } }
+   IC("document-save", "icon_document_save.png")
+   IC("document-save-as", "icon_document_save_as.png")
+   IC("edit-cut", "icon_edit_cut.png")
+   IC("go-next", "icon_go_next.png")
+   IC("go-previous", "icon_go_previous.png")
+   IC("zoom", "icon_zoom.png")
+   IC("zoom-in", "icon_zoom_in.png")
+   IC("zoom-out", "icon_zoom_out.png")
+   IC("zoom-original", "icon_zoom_original.png")
+   IC("zoom-fit-best", "icon_zoom_fit_best.png")
+   IC("rotate", "icon_rotate.png")
+   IC("resize", "icon_resize.png")
+   IC("object-rotate-left", "icon_object_rotate_left.png")
+   IC("object-rotate-right", "icon_object_rotate_right.png")
+   IC("object-flip-vertical", "icon_object_flip_horizontal.png")
+   IC("object-flip-horizontal", "icon_object_flip_vertical.png")
+#undef IC
 }
 
