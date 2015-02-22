@@ -270,9 +270,15 @@ class StatusBar(Box):
                      size_hint_expand=EXPAND_HORIZ,
                      size_hint_fill=FILL_HORIZ)
 
-        self.label = Label(self, size_hint_expand=EXPAND_HORIZ)
-        self.pack_end(self.label)
-        self.label.show()
+        self.lb_name = Label(self, ellipsis=True,
+                            size_hint_expand=EXPAND_HORIZ,
+                            size_hint_fill=FILL_HORIZ)
+        self.pack_end(self.lb_name)
+        self.lb_name.show()
+        
+        self.lb_info = Label(self)#, size_hint_expand=EXPAND_HORIZ)
+        self.pack_end(self.lb_info)
+        self.lb_info.show()
 
         # prev button
         bt = Button(self)
@@ -301,13 +307,14 @@ class StatusBar(Box):
         image_path = self.app.photo.file
         if image_path is None:
             self.btn_zoom.hide()
-            self.label.text = 'No image selected'
+            self.lb_name.text = '<align=left>{}</>'.format('No image selected')
+            self.lb_info.text = ''
         else:
             self.btn_zoom.show()
-            self.label.text = \
-                '<b>{0}:</b> {1}    <b>{2}:</b> {3}x{4}    <b>{5}:</b> {6}' \
-                .format(
-                    'Name', os.path.basename(image_path),
+            self.lb_name.text = '<align=left><b>{0}:</b> {1}</align>'.format(
+                                'Name', os.path.basename(image_path))
+            self.lb_info.text = \
+                '    <b>{0}:</b> {1}x{2}    <b>{3}:</b> {4}    '.format(
                     'Resolution',
                     self.app.photo.image_size[0], self.app.photo.image_size[1],
                     'Size', file_hum_size(image_path)
