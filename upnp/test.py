@@ -4,6 +4,11 @@
 
 # https://en.wikipedia.org/wiki/Universal_Plug_and_Play
 # https://git.enlightenment.org/legacy/subversion-history.git/tree/trunk/PROTO/eupnp
+# http://www.upnp-hacks.org
+
+
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+# http://brisa.garage.maemo.org/doc/html/upnp/
 
 
 from efl.evas import EXPAND_BOTH, FILL_BOTH
