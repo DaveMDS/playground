@@ -8,21 +8,27 @@ import socket
 # import urllib2
 from xml.etree import ElementTree
 # import xml.dom.minidom
-
+from pprint import pprint
 
 from efl import ecore, ecore_con
 from efl.ecore import ECORE_CALLBACK_CANCEL, ECORE_CALLBACK_RENEW
 from efl import elementary as elm
 
 
+__all__ = ['UPnP_Network', 'UPnP_Device', 'UPnP_Service',
+           'UPNP_EVENT_DEVICE_FOUND', 'UPNP_EVENT_DEVICE_GONE',
+           'UPNP_EVENT_SERVICE_FOUND', 'UPNP_EVENT_SERVICE_GONE']
 
-#-------------
+
+#-----  Utils -----------------------------------------------------------------
 from collections import defaultdict
+
 
 def strip_ns(s):
     if s.startswith('{') and '}' in s:
         return s.split('}')[1]
     return s
+
 
 def etree_to_dict2(t):
 
@@ -46,7 +52,22 @@ def etree_to_dict2(t):
         else:
             d[tag] = text
     return d
-#-------------
+
+
+def split_usn(usn):
+    """ Utility function to split the USN into UUID and URN
+
+    USN:  "uuid:20102adc-7298-5948-1d49-51836164fec2::urn:schemas-upnp-org:service:ConnectionManager:1"
+    UUID: "20102adc-7298-5948-1d49-51836164fec2"
+    URN:  "schemas-upnp-org:service:ConnectionManager:1"
+    """
+    uuid, urn = usn.split('::', 1)
+    if uuid and uuid.startswith('uuid:'):
+        uuid = uuid[5:]
+    if urn and urn.startswith('urn:'):
+        urn = urn[4:]
+
+    return uuid, urn
 
 
 class UrlSimple(ecore_con.Url):
@@ -74,9 +95,10 @@ class UrlSimple(ecore_con.Url):
 #-------------
 
 class UPnP_Service(object):
-    def __init__(self, service_id, service_type, xml_url, control_url, event_url):
-        self.service_id = service_id
-        self.service_type = service_type
+    def __init__(self, parent_device, usn, xml_url, control_url, event_url):
+        self._device = parent_device
+        self._usn = usn
+        
         self._xml_url = xml_url
         self.control_url = control_url
         self.event_url = event_url
@@ -85,11 +107,36 @@ class UPnP_Service(object):
 
     def __str__(self):
         return "<UPnP_Service '{}' at '{}'>".format(
-                self.service_id, self.parent_host.friendly_name)
+                self.urn, self._device.name)
+
+    @property
+    def parent_device(self):
+        """ Parent UPnP_Device instance """
+        return self._device
+
+    @property
+    def usn(self):
+        """ uuid:20102adc-7298-5948-1d49-51836164fec2::urn:schemas-upnp-org:service:ContentDirectory:1 """
+        return self._usn
+
+    @property
+    def uuid(self):
+        """ 20102adc-7298-5948-1d49-51836164fec2 """
+        return split_usn(self._usn)[0]
+
+    @property
+    def urn(self):
+        """ schemas-upnp-org:service:ContentDirectory:1 """
+        return split_usn(self._usn)[1]
+
+    @property
+    def type(self):
+        """ ContentDirectory:1 """
+        return ':'.join(self._usn.split(':')[-2:])
 
     # XML stuff...
     def request_xml(self):
-        # if self.parent_host.net.verbose_xml:
+        # if self._device._net.verbose_xml:
             # print("XML request Service info from: '{}'".format(self._xml_url))
         u = UrlSimple(self._xml_url, self._xml_complete)
         u.additional_header_add('USER-AGENT', 'UPnP/2.0')
@@ -97,47 +144,81 @@ class UPnP_Service(object):
         u.get()
 
     def _xml_complete(self, url, status, data):
-        # if self.parent_host.net.verbose_xml:
-            # print("XML Service done {} {}".format(status, url if status != 200 else ''))
+        # if self._device._net.verbose_xml:
+            # print("XML Device done {} {}".format(status, url if status != 200 else ''))
+
         # print(data)
         # print("========================================")
         # pass
 
         # emit the event
-        self.parent_host.net.event_callbacks_call(UPNP_EVENT_SERVICE_ADD, self)
+        self._device._net.event_callbacks_call(UPNP_EVENT_SERVICE_FOUND, self)
 
+class UPnP_Icon(object):
+    def __init__(self, url, mimetype, width, height, depth):
+        self.url = url
+        self.mimetype = mimetype
+        self.width = int(width)
+        self.height = int(height)
+        self.depth = int(depth)
 
+    def __str__(self):
+        return "<UPnP_Icon at {} [{}x{}]>".format(self.url, self.width, self.height)
+
+        
 class UPnP_Device(object):
     def __init__(self, net, usn, xml_url):
-        self.net = net
-        self.usn = usn
+        self._net = net
+        self._usn = usn
         self._xml_url = xml_url
-        self._base_url = ''
         self._xml_received = False
+        self._base_url = ''
 
-        self.device_info = {} # raw info from xml
-        self.services = {}    # key:serviceId val:UPnP_Service() instance
+        self.device_info = {} # raw device info from xml
+        self.services = {}    # usn -> UPnP_Service
+        self.icons = []       # UPnP_Icon instances
 
         self.request_xml()
 
     def __str__(self):
         if self._xml_received:
             return "<UPnP_Device '{}' USN:'{}'>".format(
-                   self.friendly_name, self.usn)
+                   self.name, self.usn)
         else:
             return "<UPnP_Device !!NOT READY!! USN:'{}'>".format(self.usn)
 
     @property
-    def UDN(self):
-        return self.device_info.get('UDN')
+    def usn(self):
+        """ uuid:3553f223-fa6f-5e58-8b2f-bd5a9d5d2197::urn:schemas-upnp-org:device:MediaServer:1 """
+        return self._usn
 
     @property
-    def device_type(self):
-        return self.device_info.get('deviceType')
+    def uuid(self):
+        """ 3553f223-fa6f-5e58-8b2f-bd5a9d5d2197 """
+        return split_usn(self._usn)[0]
 
     @property
-    def friendly_name(self):
+    def urn(self):
+        """ schemas-upnp-org:device:MediaServer:1 """
+        return split_usn(self._usn)[1]
+
+    @property
+    def type(self):
+        """ MediaServer:1 """
+        return ':'.join(self._usn.split(':')[-2:])
+
+    @property
+    def name(self):
         return self.device_info.get('friendlyName')
+
+    ###
+    # @property
+    # def device_type(self):
+        # return self.device_info.get('deviceType')
+
+    # @property
+    # def friendly_name(self):
+        # return self.device_info.get('friendlyName')
 
     @property
     def manufacturer(self):
@@ -163,29 +244,27 @@ class UPnP_Device(object):
     def serial_number(self):
         return self.device_info.get('serialNumber')
 
+    @property
+    def bigger_icon_url(self):
+        if self.icons:
+            return self.icons[0].url
+
     # XML stuff...
     def request_xml(self):
-        if self.net.verbose_xml:
+        if self._net.verbose_xml:
             print("XML request Device info from: '{}'".format(self._xml_url))
+
         u = UrlSimple(self._xml_url, self._xml_complete)
         u.additional_header_add('USER-AGENT', 'UPnP/2.0')
         u.additional_header_add('CONTENT-TYPE','text/xml; charset="utf-8"')
         u.get()
 
     def _xml_complete(self, url, status, data):
-        if self.net.verbose_xml:
+        if self._net.verbose_xml:
             print("XML Device done {} {}".format(status, url if status != 200 else ''))
 
         if status != 200:
             return
-
-        # from pprint import pprint
-            
-        # print("@@@@@@@@@@@")
-        # print(url)
-        # print(status)
-        # print(data)
-        # print("---")
 
         ns = '{urn:schemas-upnp-org:device-1-0}'
         root = ElementTree.fromstring(data)
@@ -203,41 +282,41 @@ class UPnP_Device(object):
         device_info = etree_to_dict2(device)
         device_info = device_info['device'] # :/
 
+
         # handle services
-        # lis = device_info['serviceList']['service']
-        # if not isinstance(lis, list):
-            # lis = [lis]
-# 
-        # for service in lis:
-            # service_id = service['serviceId']
-            # if not service_id in self.services:
-                # s = UPnP_Service(self, service_id,
+        services = device_info['serviceList']['service']
+        if not isinstance(services, list):
+            services = [services]
+        for service in services:
+            usn = 'uuid:{}::{}'.format(self.uuid, service['serviceType'])
+            if not usn in self.services:
+                s = UPnP_Service(self, usn,
                                  # service['serviceType'],
-                                 # self._fix_base_url(service['SCPDURL']),
-                                 # self._fix_base_url(service['controlURL']),
-                                 # self._fix_base_url(service['eventSubURL']))
-                # self.services[service_id] = s
-        # del device_info['serviceList']
-
-        # TODO handle icons
-        
-
-        self.device_info = device_info
+                                 self._fix_base_url(service['SCPDURL']),
+                                 self._fix_base_url(service['controlURL']),
+                                 self._fix_base_url(service['eventSubURL']))
+                self.services[usn] = s
+        del device_info['serviceList']
 
 
-        # debug...
-        # print("--- COMPLETED HOST:")
-        # print(self)
-        # pprint(self.device_info)
-        # for service in self.services:
-            # print(self.services[service])
+        # handle icons
+        if 'iconList' in device_info:
+            icons = device_info['iconList']['icon']
+            if not isinstance(icons, list):
+                icons = [icons]
+            for ic in icons:
+                # only keep png icons (that are mandatory)
+                if ic['mimetype'] == 'image/png':
+                    ic['url'] = self._fix_base_url(ic['url'])
+                    self.icons.append(UPnP_Icon(**ic))
+            self.icons.sort(key=lambda i: i.width, reverse=True)
+            del device_info['iconList']
 
 
-        # print("---")
+        # finalize and emit the user event
         self._xml_received = True
-
-        # emit the event
-        self.net.event_callbacks_call(UPNP_EVENT_DEVICE_FOUND, self)
+        self.device_info = device_info
+        self._net.event_callbacks_call(UPNP_EVENT_DEVICE_FOUND, self)
 
     def _fix_base_url(self, url):
         if url.startswith(self._base_url):
@@ -279,7 +358,7 @@ class SSDP_Network(object):
 
     def ssdp_service_gone(self, usn):
         raise NotImplemented('ssdp_service_gone')
-        
+
     # msearch
     def perform_an_msearch_discover(self):
         request = 'M-SEARCH * HTTP/1.1\r\n' \
@@ -397,11 +476,9 @@ class SSDP_Network(object):
             print("ERROR")
             return ECORE_CALLBACK_RENEW
 
-        # if self.verbose:
-            # print("SSDP " + header + " -> " + str(data))
-            # print("SSDP " + header)
-            # import pprint
-            # pprint.pprint(ssdp)
+        if self.verbose:
+            print("SSDP packet received: \n{}".format(data))
+
 
         # an m-search request?
         if header.startswith('M-SEARCH'):
@@ -430,19 +507,15 @@ class SSDP_Network(object):
         else:
             max_age = None
 
-        # print(service_or_device, type, usn)
-
         if ssdp.get('NTS') == 'ssdp:byebye':
             # clear the expire timer (if exists) and notify the user
             self._usn_expired_cb(usn, service_or_device)
-
-
         else: # ssdp:alive or M-SEARCH response
-
             if usn in self._expire_timers:
                 # we know it, just renew the timer
                 t = self._expire_timers[usn]
                 t.interval = max_age
+                t.reset()
             else:
                 # a new service/device, send notification to the class user
                 if service_or_device == 'service':
@@ -523,13 +596,13 @@ UPNP_EVENT_SERVICE_FOUND = 3
 UPNP_EVENT_SERVICE_GONE = 4
 
 class UPnP_Network(SSDP_Network):
-    def __init__(self, verbose_ssdp=False, verbose_xml=False):
+    
+    def __init__(self, verbose_ssdp=False, verbose_xml=True):
 
         self.verbose_xml = verbose_xml
-        self.devices = {} # usn -> UPnP_Device
-        self.services = {} # usn -> UPnP_Service
+        self.devices = {}  # usn -> UPnP_Device
 
-        self._events_cbs = []
+        self._events_cbs = [] # [(func, args, kargs),...]
 
         #######
         SSDP_Network.__init__(self, verbose=verbose_ssdp)
@@ -538,6 +611,10 @@ class UPnP_Network(SSDP_Network):
         # TODO !!
         SSDP_Network.shutdown(self)
 
+    ###
+
+
+    ###
     def events_callback_add(self, func, *args, **kargs):
         self._events_cbs.append((func, args, kargs))
 
@@ -548,8 +625,10 @@ class UPnP_Network(SSDP_Network):
         for func, args, kargs in self._events_cbs:
             func(self, event, obj, *args, **kargs)
 
+    ###
     def ssdp_device_found(self, device_info):
         usn = device_info.get('USN')
+        uuid, urn = split_usn(usn)
         self.devices[usn] = UPnP_Device(self, usn, device_info['LOCATION'])
 
     def ssdp_device_gone(self, usn):
@@ -558,17 +637,14 @@ class UPnP_Network(SSDP_Network):
             self.event_callbacks_call(UPNP_EVENT_DEVICE_GONE, device)
 
     def ssdp_service_found(self, service_info):
-        usn = service_info.get('USN')
-        print("##### service found ##### {}".format(usn))
-        from pprint import pprint
-        pprint(service_info)
-        # self.services[usn] = UPnP_Service(self, usn, device_info['LOCATION'])
+        # services are populated from the device xml...
+        pass
 
     def ssdp_service_gone(self, usn):
-        print("##### service gone  ##### {}".format(usn))
-        service = self.services.pop(usn, None)
-        if service:
-            self.event_callbacks_call(UPNP_EVENT_SERVICE_GONE, service)
+        for _, device in self.devices.items():
+            service = device.services.pop(usn, None)
+            if service:
+                self.event_callbacks_call(UPNP_EVENT_SERVICE_GONE, service)
 
 
 # test
@@ -578,24 +654,23 @@ if __name__ == '__main__':
     def _on_events(net, event, obj):
 
         if event is UPNP_EVENT_DEVICE_FOUND:
-            print("--- UPNP_EVENT_DEVICE_FOUND:")
+            print("--- UPNP_DEVICE_FOUND:" + str(obj))
 
         elif event is UPNP_EVENT_DEVICE_GONE:
-            print("--- UPNP_EVENT_DEVICE_GONE:")
+            print("--- UPNP_DEVICE_GONE:" + str(obj))
 
         elif event is UPNP_EVENT_SERVICE_FOUND:
-            print("--- UPNP_EVENT_SERVICE_FOUND:")
+            print("--- UPNP_SERVICE_FOUND:" + str(obj))
         
         elif event is UPNP_EVENT_SERVICE_GONE:
-            print("--- UPNP_EVENT_SERVICE_GONE:")
+            print("--- UPNP_SERVICE_GONE:" + str(obj))
 
         else:
-            print("--- UNKNOWN EVENT: {}".format(event))
-            
-        print(obj)
+            print("--- UPNP UNKNOWN EVENT: {}".format(event))
+
 
     # main
-    n = UPnP_Network(verbose_ssdp=True, verbose_xml=False)
+    n = UPnP_Network(verbose_ssdp=False, verbose_xml=False)
     n.events_callback_add(_on_events)
 
     elm.run()
