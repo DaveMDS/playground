@@ -15,9 +15,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this Python-EFL.  If not, see <http://www.gnu.org/licenses/>.
 
-# semver examples:
-# development: "1.12.99" ( 1, 12, 99 )
-# pre-release: "1.13.0-beta1" ( 1, 13, 0 )
-# release:     "1.13.0" ( 1, 13, 0 )
-__version__ = "2.0.0-test1"
-__version_info__ = ( 2, 0, 0 )
+from ._eina import ffi, lib
+
+import atexit
+
+print("EINA INIT")
+lib.eina_init()
+atexit.register(lambda: lib.eina_shutdown())
+
+
+

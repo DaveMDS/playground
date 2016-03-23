@@ -1,2 +1,1 @@
-include README.rst
-include cffi_example/*.h
+include README.rst COPYING COPYING.LESSER AUTHORS ChangeLog

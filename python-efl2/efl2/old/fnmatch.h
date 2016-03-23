@@ -4,9 +4,9 @@
  */
 
 /* Bits set in the FLAGS argument to `fnmatch'.  */
-#define	FNM_PATHNAME	... /* No wildcard can ever match `/'.  */
-#define	FNM_NOESCAPE	... /* Backslashes don't quote special chars.  */
-#define	FNM_PERIOD	... /* Leading `.' is matched only explicitly.  */
+#define	FNM_PATHNAME	... 
+#define	FNM_NOESCAPE	... 
+#define	FNM_PERIOD	... 
 
 /* Value returned by `fnmatch' if STRING does not match PATTERN.  */
 #define	FNM_NOMATCH	1
