@@ -40,11 +40,6 @@ def main_loop_quit():
     lib.ecore_main_loop_quit()
 
 
-
-
-# TODO: atexit lib.ecore_shutdown()
-
-
 @ffi.def_extern()
 def _timer_cb(x):
 
@@ -70,9 +65,8 @@ class Timer(Eo):
         # self._add(lib.ecore_timer_class_get(), ffi.NULL)
 
         # TODO 0 should be the line number... it's expensive here !
-        timer_class = lib.ecore_timer_class_get()
         self._obj = eo_lib._eo_add_internal_start(__file__, 0,
-                                                  timer_class,
+                                                  lib.ecore_timer_class_get(),
                                                   ffi.NULL, # parent
                                                   False); # add ref ?
         if self._obj == ffi.NULL:
