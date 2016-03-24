@@ -45,6 +45,8 @@ setup(
     cffi_modules = [
         "./efl2/cffi/eina_build.py:ffi",
         "./efl2/cffi/eo_build.py:ffi",
+        "./efl2/cffi/efl_build.py:ffi",
+        "./efl2/cffi/evas_build.py:ffi",
         "./efl2/cffi/ecore_build.py:ffi",
         "./efl2/cffi/elementary_build.py:ffi",
     ],

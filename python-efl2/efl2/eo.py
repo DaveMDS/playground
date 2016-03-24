@@ -33,17 +33,21 @@ atexit.register(lambda: lib.eo_shutdown())
 
 
 class Eo(object):
-    def __init__(self):
-        print("Eo obstract")
-        self._obj = None
+    def __init__(self, klass, parent, finalize=True):
+        print("Eo obstract for klass:", klass)
+        # self._obj = None
         self._priv = dict()
 
-    def _add(self, klass, parent):
-        self._obj = lib.eo_add(klass, parent)
-        print("KLASS", klass)
-        print("PAREN", parent)
+        self._obj = lib._eo_add_internal_start(__file__, 0, klass, parent, False) # add ref ?
         if self._obj == ffi.NULL:
             raise MemoryError("Could not create the object")
+
+        if finalize:
+            lib._eo_add_end(self._obj)
+
+    def _finalize(self):
+        lib._eo_add_end(self._obj)
+
 
     """
     cdef int _set_properties_from_keyword_args(self, dict kwargs) except 0:
@@ -52,3 +56,7 @@ class Eo(object):
                 setattr(self, k, v)
         return 1
     """
+
+    # def event_callback_add(
+        # Eina_Bool eo_event_callback_add(Eo *obj, const Eo_Event_Description *desc, Eo_Event_Cb cb, const void *data);
+

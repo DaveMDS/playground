@@ -16,13 +16,14 @@
 # along with this Python-EFL.  If not, see <http://www.gnu.org/licenses/>.
 
 from ._elementary_ffi import ffi, lib
+from ._utils import _to_bytes, _to_unicode
+from . import eo
+from . import evas
 
-from ._eo_ffi import lib as eo_lib # TODO: can remove this ???
-from .eo import Eo
 
-import atexit
-
+###  module init/shutdown  ####################################################
 print("ELM INIT")
+import atexit
 lib.elm_init(0, ffi.NULL)
 atexit.register(lambda: lib.elm_shutdown())
 
@@ -40,27 +41,91 @@ def exit():
     lib.elm_exit()
 
 
-###  classes  #################################################################
+###  Elm.Widget  ##############################################################
+class Widget(evas.Object_Smart):
+    pass
 
-class Win(Eo):
+
+###  Elm.Container  ###########################################################
+class Container(Widget):
+    pass
+
+
+###  Elm.Box  ##############################################################
+class Box(Widget):
+    def __init__(self, parent, *args, **kargs):
+        eo.Eo.__init__(self, lib.elm_box_class_get(), parent._obj)
+
+    def pack_end(self, subobj):
+        lib.elm_obj_box_pack_end(self._obj, subobj._obj);
+
+    def pack_start(self, subobj):
+        lib.elm_obj_box_pack_start(self._obj, subobj._obj);
+
+###  Elm.Layout  ##############################################################
+class Layout(Container):
+    def __init__(self, parent, *args, **kargs):
+        eo.Eo.__init__(self, lib.elm_layout_class_get(), parent._obj)
+
+    @property
+    def text(self):
+        # TODO FIX part
+        return _to_unicode(ffi, lib.elm_obj_layout_text_get(self._obj, ffi.NULL))
+
+    @text.setter
+    def text(self, text):
+        # TODO FIX part
+        lib.elm_obj_layout_text_set(self._obj, ffi.NULL, _to_bytes(text))
+
+
+
+###  Elm.Win  #################################################################
+class Win(Widget):
     def __init__(self, name, type, *args, **kargs):
 
-        super(Win, self).__init__()
+        name = _to_bytes(name)
+
+        # custom constructor
+        eo.Eo.__init__(self, lib.elm_win_class_get(), ffi.NULL, False)
+        lib.elm_obj_win_type_set(self._obj, type)
+        lib.elm_obj_win_name_set(self._obj, name) # encode/decode ???
+        eo.Eo._finalize(self)
+
         print("Win INIT")
 
-        self._obj = eo_lib._eo_add_internal_start(__file__, 0,
-                                                  lib.elm_win_class_get(),
-                                                  ffi.NULL, # parent
-                                                  False); # add ref ?
-        if self._obj == ffi.NULL:
-            raise MemoryError("Could not create the object")
+    @property
+    def title(self):
+        return _to_unicode(ffi, lib.elm_obj_win_title_get(self._obj))
 
-        # lib.ecore_obj_timer_constructor(self._obj, in_, lib._timer_cb, userdata)
-        lib.elm_obj_win_type_set(self._obj, lib.ELM_WIN_BASIC) # FIXME type
+    @title.setter
+    def title(self, title):
+        lib.elm_obj_win_title_set(self._obj, _to_bytes(title))
+
+    def resize_object_add(self, subobj):
+        lib.elm_obj_win_resize_object_add(self._obj, subobj._obj)
+
+
+###  Elm.Win_Standard  ########################################################
+class Win_Standard(Win):
+    def __init__(self, name, *args, **kargs):
+
+        # custom constructor
+        # super(Eo, self).__init__(lib.elm_win_standard_class_get(), ffi.NULL, False)
+        eo.Eo.__init__(self, lib.elm_win_standard_class_get(), ffi.NULL, False)
         lib.elm_obj_win_name_set(self._obj, name) # encode/decode ???
-        eo_lib._eo_add_end(self._obj)
+        eo.Eo._finalize(self)
+        
+        print("Standard INIT")
 
-    # TODO REMOVE
-    def show(self):
-        lib.evas_object_show(self._obj)
-        lib.evas_object_resize(self._obj, 300, 300)
+
+###  Elm.Label  ###############################################################
+class Label(Layout):
+    def __init__(self, parent, *args, **kargs):
+        eo.Eo.__init__(self, lib.elm_label_class_get(), parent._obj)
+
+
+###  Elm.Button  ##############################################################
+class Button(Layout, evas.Clickable_Interface):
+    def __init__(self, parent, *args, **kargs):
+        eo.Eo.__init__(self, lib.elm_button_class_get(), parent._obj)
+

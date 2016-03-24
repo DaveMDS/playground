@@ -17,7 +17,6 @@
 
 from ._ecore_ffi import ffi, lib
 
-from ._eo_ffi import lib as eo_lib # TODO: can remove this ???
 from .eo import Eo
 
 import atexit
@@ -53,28 +52,16 @@ def _timer_cb(x):
 class Timer(Eo):
     def __init__(self, in_, callback, *args, **kargs):
 
-        super(Timer, self).__init__()
+        userdata = ffi.new_handle(self)
+
+        # custom constructor
+        super(Timer, self).__init__(lib.ecore_timer_class_get(), ffi.NULL, False)
+        lib.ecore_obj_timer_constructor(self._obj, in_, lib._timer_cb, userdata)
+        super(Timer, self)._finalize()
+
         print("Timer INIT", in_)
 
-        userdata = ffi.new_handle(self)
         self._priv['self_h'] = userdata   # must keep this alive!   :/
         self._priv['cb'] = callback
         self._priv['cb_args'] = args
         self._priv['cb_kargs'] = kargs
-
-        # self._add(lib.ecore_timer_class_get(), ffi.NULL)
-
-        # TODO 0 should be the line number... it's expensive here !
-        self._obj = eo_lib._eo_add_internal_start(__file__, 0,
-                                                  lib.ecore_timer_class_get(),
-                                                  ffi.NULL, # parent
-                                                  False); # add ref ?
-        if self._obj == ffi.NULL:
-            raise MemoryError("Could not create the object")
-
-        lib.ecore_obj_timer_constructor(self._obj, in_, lib._timer_cb, userdata)
-        eo_lib._eo_add_end(self._obj)
-        
-        print("KLASS", lib.ecore_timer_class_get())
-        print("PAREN", ffi.NULL)
-        print("_OBJ", self._obj)

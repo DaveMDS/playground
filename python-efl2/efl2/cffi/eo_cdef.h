@@ -18,6 +18,11 @@ Eo* _eo_add_end(Eo *obj);
 //Eo* eo_add_ref(Eo_Class *klass, Eo *parent);
 
 
+// Eina_Bool eo_event_callback_add(Eo *obj, const Eo_Event_Description *desc, Eo_Event_Cb cb, const void *data);
+// Eina_Bool eo_event_callback_priority_add(Eo *obj, const Eo_Event_Description *desc, Eo_Callback_Priority priority, Eo_Event_Cb cb, const void *data);
+
+
+
 #define EO_CALLBACK_STOP ...
 #define EO_CALLBACK_CONTINUE ...
 

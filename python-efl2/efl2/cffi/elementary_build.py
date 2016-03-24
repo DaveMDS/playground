@@ -41,11 +41,11 @@ ffi.set_source(
 )
 
 
-for header in "eina_cdef.h", "eo_cdef.h", "elementary_cdef.h":
+for header in 'eina_cdef.h', 'eo_cdef.h', 'evas_cdef.h', 'elementary_cdef.h':
     with open(os.path.join(os.path.dirname(__file__), header)) as f:
         ffi.cdef(f.read())
 
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     ffi.compile()

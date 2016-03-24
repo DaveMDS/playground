@@ -1,0 +1,126 @@
+
+Style
+=====
+
+* For indentation, use *four space characters* per level of indentation. Keep
+  lines under the 80 chars limit (only exception are the functions definition)
+
+* For long lines that do not fit in the 80 cols please use only the first
+  raccomandation from PEP-8 (Aligned with opening delimiter). Example:
+  Yes:
+    foo = long_function_name(var_one, var_two,
+                             var_three, var_four)
+  No:
+    foo = long_function_name(
+        var_one, var_two,
+        var_three, var_four)
+
+  This to keep new code consistent with the rest of the bindings and to
+  try to match the style of the C efl code style as much as possible.
+  ...also because I found it more readable and I like it more :P -davemds-
+
+
+Documentation cheatsheet
+========================
+
+* Links:
+
+  :class:`List`        (for classes)
+  :func:`elm_list_go`  (for functions)
+  :attr:`homogeneous`  (for properties)
+  :ref:`Elm_List_Mode` (for enums)
+  :data:`ELM_LIST_LIMIT` (for enum values)
+
+  :func:`efl.evas.Object.delete`  (for items not in current scope)
+  :func:`~efl.evas.Object.delete` (will show it short, just "delete")
+
+* Formatting:
+
+  ``ELM_LIST_SCROLL``  (for enum values, bools and None)
+
+
+* Versions:
+
+.. versionadded:: 1.15
+
+.. versionchanged:: 1.15
+    Description of the change.
+
+.. deprecated:: 1.15
+    Use the blah, blah way instead.
+
+* Notes:
+
+    .. seealso:: :py:attr:`mode`
+
+    .. note:: Some text to be noted, blah, blah, blah,
+        some more information for this note, etc.
+
+    .. warning:: Same as note, but the box will be red
+        some more information for this warning, etc.
+
+
+Design patterns
+===============
+
+ * From "The Zen of Python":
+
+    Beautiful is better than ugly.
+    Explicit is better than implicit.
+    Simple is better than complex.
+    Complex is better than complicated.
+    Flat is better than nested.
+    Sparse is better than dense.
+    Readability counts.
+    Special cases aren't special enough to break the rules.
+    Although practicality beats purity.
+    Errors should never pass silently.
+    Unless explicitly silenced.
+    In the face of ambiguity, refuse the temptation to guess.
+    There should be one-- and preferably only one --obvious way to do it.
+    Although that way may not be obvious at first unless you're Dutch.
+    Now is better than never.
+    Although never is often better than *right* now.
+    If the implementation is hard to explain, it's a bad idea.
+    If the implementation is easy to explain, it may be a good idea.
+    Namespaces are one honking great idea -- let's do more of those!
+
+
+
+Release process instructions
+============================
+
+* Announce at enlightenment-release@lists.sourceforge.net and
+  enlightenment-devel@lists.sourceforge.net that you are planning for the release
+* Change versions in efl/__init__.py (ex: 1.9.0)
+* Update the ChangeLog file:
+    setup.py build_doc -b changes ...and manually merge from the html file
+* Git push and wait jenkins to generate the 2 tarballs
+* Test the generated tarballs
+* scp tarballs & md5sums to:
+  download.enlightenment.org:/srv/web/download.enlightenment.org/public_html/pre-releases/
+* Announce at enlightenment-release@lists.sourceforge.net and
+  enlightenment-devel@lists.sourceforge.net that tarballs are ready for testing
+
+... wait 24 hours, fix any issues found. In the mean time you can prepare the
+    release announcement for phame/ml.
+
+* ssh to download.enlightenment.org and mv tarballs & md5sums to:
+    /srv/web/download.enlightenment.org/public_html/rel/bindings/python/
+* Upload the .tar.gz archive to pypi:
+   - first upload the PKG-INFO file from the "edit" section on pypi
+   - then upload the tarball from the "files" section
+* Create and push the tag for the release
+    git tag -a v1.9.0 && git push origin v1.9.0
+* Create and push the branch for stable backporting
+    git branch python-efl-1.9 && git push origin python-efl-1.9
+* scp the generated html documentation to:
+  download.enlightenment.org:/srv/web/docs.enlightenment.org/public_html/python-efl/1.XX.0/
+  and update the 'current' link on the server (ssh)
+* Update download link on the wiki (www.enlightenment.org/download)
+* Publish the blog post on phame (Official Announcements)
+* Announce the release to release@lists.enlightenment.org
+* Change versions again in efl/__init__.py (ex: 1.9.99)
+
+more info at:
+phab.enlightenment.org/w/release_procedure/
