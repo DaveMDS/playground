@@ -1,3 +1,4 @@
+
 from cffi import FFI
 import os
 
@@ -5,8 +6,8 @@ import os
 ffi = FFI()
 
 ffi.set_source(
-    'efl2._elementary_ffi',
-    libraries=['efl', 'eina', 'eo', 'elementary'],
+    'efl2._efl_ffi',
+    libraries=['efl', 'eina', 'eo', 'evas', 'ecore', 'elementary'],
     define_macros=[
         ('EFL_BETA_API_SUPPORT', 1),
         ('EFL_EO_API_SUPPORT', 1),
@@ -36,12 +37,17 @@ ffi.set_source(
     ], # TODO FIXME
 
     source="""
+    #include <Eina.h>
+    #include <Eo.h>
+    #include <Efl.h>
+    #include <Evas.h>
+    #include <Ecore.h>
     #include <Elementary.h>
     """
 )
 
 
-for header in 'eina_cdef.h', 'eo_cdef.h', 'evas_cdef.h', 'elementary_cdef.h':
+for header in 'eina.h', 'eo.h', 'efl.h', 'evas.h', 'ecore.h', 'elementary.h':
     with open(os.path.join(os.path.dirname(__file__), header)) as f:
         ffi.cdef(f.read())
 
