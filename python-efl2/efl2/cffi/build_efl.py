@@ -1,3 +1,6 @@
+###################################
+## THIS FILE IS MANUALLY WRITTEN ##
+###################################
 
 from cffi import FFI
 import os

@@ -47,9 +47,9 @@ def main_loop_quit():
 
 ###  Ecore.Timer  #############################################################
 @ffi.def_extern()
-def _timer_cb(x):
+def _timer_cb(userdata):
 
-    self = ffi.from_handle(x)
+    self = ffi.from_handle(userdata)
     if callable(self._priv['cb']):
         return self._priv['cb'](*self._priv['cb_args'], **self._priv['cb_kargs'])
 
@@ -62,7 +62,7 @@ class Timer(eo.Base):
         userdata = ffi.new_handle(self)
 
         # custom constructor
-        eo.Base.__init__(self, lib.ecore_timer_class_get(), ffi.NULL, False)
+        eo.Base.__init__(self, lib.ecore_timer_class_get(), None, False)
         lib.ecore_obj_timer_constructor(self._obj, in_, lib._timer_cb, userdata)
         eo.Base._finalize(self)
 

@@ -58,7 +58,7 @@ class Container(Widget):
 ###  Elm.Box  ##############################################################
 class Box(Widget):
     def __init__(self, parent, *args, **kargs):
-        eo.Base.__init__(self, lib.elm_box_class_get(), parent._obj)
+        eo.Base.__init__(self, lib.elm_box_class_get(), parent)
 
     def pack_end(self, subobj):
         lib.elm_obj_box_pack_end(self._obj, subobj._obj);
@@ -69,7 +69,7 @@ class Box(Widget):
 ###  Elm.Layout  ##############################################################
 class Layout(Container):
     def __init__(self, parent, *args, **kargs):
-        eo.Base.__init__(self, lib.elm_layout_class_get(), parent._obj)
+        eo.Base.__init__(self, lib.elm_layout_class_get(), parent)
 
     @property
     def text(self):
@@ -120,11 +120,11 @@ class Win_Standard(Win):
 ###  Elm.Label  ###############################################################
 class Label(Layout):
     def __init__(self, parent, *args, **kargs):
-        eo.Base.__init__(self, lib.elm_label_class_get(), parent._obj)
+        eo.Base.__init__(self, lib.elm_label_class_get(), parent)
 
 
 ###  Elm.Button  ##############################################################
 class Button(Layout, evas.Clickable_Interface):
     def __init__(self, parent, *args, **kargs):
-        eo.Base.__init__(self, lib.elm_button_class_get(), parent._obj)
+        eo.Base.__init__(self, lib.elm_button_class_get(), parent)
 

@@ -29,7 +29,7 @@ atexit.register(lambda: lib.eo_shutdown())
 
 ###  utils for internal usage utils  ##########################################
 _class_mapping = {} # { 'Eo.Base': <class 'efl2.eo.Base'>, ... }
-_event_mapping = {} # { 'del':, lib._EO_BASE_EVENT_DEL, ... }
+# _event_mapping = {} # { 'del':, lib._EO_BASE_EVENT_DEL, ... }
 
 def _class_register(class_name):
     """ This decorator must be used on each Eo derived class """
@@ -50,20 +50,26 @@ def _class_register(class_name):
 ###  Eo.Base  #################################################################
 # Eina_Bool (*Eo_Event_Cb)(void *data, const Eo_Event *event);
 @ffi.def_extern()
-def _eo_event_cb(data, event):
+def _eo_base_event_cb(data, event):
     print("@@@@@ "*40)
     # self = ffi.from_handle(x)
     # if callable(self._priv['cb']):
         # return self._priv['cb'](*self._priv['cb_args'], **self._priv['cb_kargs'])
 
-    return 0
+    return lib.EO_CALLBACK_CONTINUE
 
 @ffi.def_extern()
-def _eo_del_cb(data, event):
+def _eo_base_del_cb(data, event):
     print("DEL "*40)
 
-    return 0
+    return lib.EO_CALLBACK_CONTINUE
 
+# ufffaaaaa
+@ffi.callback("Eina_Bool (*Eo_Event_Cb)(void *data, const Eo_Event *event)")
+def my_global_callback(data, event):
+    # return ffi.from_handle(handle).some
+    print("DEL "*40)
+    return lib.EO_CALLBACK_CONTINUE
 
 EO_BASE_EVENT_DEL = lib._EO_BASE_EVENT_DEL
 EO_BASE_EVENT_CALLBACK_ADD = lib._EO_BASE_EVENT_CALLBACK_ADD
@@ -76,33 +82,40 @@ class Base(object):
     Base class used by all the object in the EFL.
 
     """
-    _events = {
-        'del': lib._EO_BASE_EVENT_DEL,
-        'callback,add': lib._EO_BASE_EVENT_CALLBACK_ADD,
-        'callback,del': lib._EO_BASE_EVENT_CALLBACK_DEL,
-    }
+    # _events = {
+        # 'del': ffi.addressof(lib._EO_BASE_EVENT_DEL),
+        # 'callback,add': ffi.addressof(lib._EO_BASE_EVENT_CALLBACK_ADD),
+        # 'callback,del': ffi.addressof(lib._EO_BASE_EVENT_CALLBACK_DEL),
+    # }
     def __init__(self, klass, parent, finalize=True):
-        print("Eo obstract for klass:", klass)
-        # self._obj = None
-        self._priv = dict()
+        print("Eo Base __init__ for klass:", klass)
+        self._priv = dict()  # for bindings internal usage
 
-        self._obj = lib._eo_add_internal_start(ffi.NULL, 0, klass, parent, False) # add ref ?
+        self._obj = lib._eo_add_internal_start(ffi.NULL, 0, klass,
+                                            parent._obj if parent else ffi.NULL,
+                                            False, # add ref ?
+                                            False  # is fallback ?
+                                            )
         if self._obj == ffi.NULL:
             raise MemoryError("Could not create the object")
 
-        if finalize:
+        if finalize is True:
             self._finalize()
 
     def _finalize(self):
         print("fin")
         
-        lib._eo_add_end(self._obj)
+        lib._eo_add_end(self._obj, False)  # is fallback ?
 
         # daiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii !!!!!!!!!!!!!!!111
-        print(ffi.string(lib._EO_BASE_EVENT_CALLBACK_ADD.name))
+        print("---" + ffi.string(ffi.addressof(lib._EO_BASE_EVENT_CALLBACK_ADD).name))
         lib.eo_event_callback_add(self._obj,
+
                                     ffi.addressof(lib._EO_BASE_EVENT_DEL),
-                                    lib._eo_del_cb, ffi.NULL)
+                                    # lib._EO_BASE_EVENT_DEL,
+
+                                    # lib._eo_base_del_cb, ffi.NULL)
+                                    my_global_callback, ffi.NULL)
 
     def _set_properties_from_keyword_args(self, **kwargs):
         if kwargs:
@@ -118,7 +131,14 @@ class Base(object):
         # lib.eo_unref(self._obj)
         self._obj = None
         # TODO disconnect on_del
-        
+
+    @property
+    def data(self):
+        """ For user convenience (dict lazy created only when used) """
+        if not hasattr(self, '_data'):
+            self._data = dict()
+        return self._data
+
     def event_callback_priority_add(self, priority, callback, *args, **kargs):
         userdata = ffi.new_handle(self)
         self._priv['self_h'] = userdata   # must keep this alive!   :/
@@ -127,17 +147,33 @@ class Base(object):
                 #const Eo_Event_Description *desc,
                 ffi.addressof(lib._EO_BASE_EVENT_DEL),
                 priority,
-                lib._eo_event_cb,
+                lib._eo_base_event_cb,
                 userdata))
+
+    def event_callback_add4(self, name, func, *args, **kargs):
+
+        print("Connecting4: " + name)
+
+        ret = lib.eo_event_callback_priority_byname_add(self._obj,
+                                  "SUKA!!!!", lib.EO_CALLBACK_PRIORITY_DEFAULT,
+                                  lib._eo_base_event_cb, ffi.NULL)
+        print("Connetcing3: " + str(ret))
 
     def event_callback_add3(self, ev, *args, **kargs):
         # ev = self.__events.get(ev_name)
 
         print("Connecting3: " + str(ev))
-        lib.eo_event_callback_add(self._obj,
-                                  ffi.addressof(ev),
-                                  # ev,
-                                  lib._eo_event_cb, ffi.NULL)
+        print("Connecting3: " + ffi.string(ev.name))
+        # ev_ptr = ffi.new("struct _Eo_Event_Description *")
+        # ev_ptr = ffi.addressof(ev)
+        # ev_ptr = 
+        # self._priv['daiiiiii'] = ev_ptr
+
+        ret = lib.eo_event_callback_add(self._obj,
+                                  # ev_ptr,
+                                  ev,
+                                  lib._eo_base_event_cb, ffi.NULL)
+        print("Connetcing3: " + str(ret))
 
     def event_callback_add2(self, ev_name, *args, **kargs):
         # ev = self.__events.get(ev_name)
@@ -148,8 +184,9 @@ class Base(object):
 
         print("Connecting2: " + ev_name)
         lib.eo_event_callback_add(self._obj,
-                                  ffi.addressof(ev),
-                                  lib._eo_event_cb, ffi.NULL)
+                                  # ffi.addressof(ev),
+                                  ev,
+                                  lib._eo_base_event_cb, ffi.NULL)
         
     def event_callback_add(self, *args, **kargs):
         self.event_callback_priority_add(0, *args, **kargs)

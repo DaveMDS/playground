@@ -1,3 +1,7 @@
+// ###################################
+// ## THIS FILE IS MANUALLY WRITTEN ##
+// ###################################
+
 
 typedef unsigned char Eina_Bool;
 

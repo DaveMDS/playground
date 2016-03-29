@@ -1,3 +1,6 @@
+// ###################################
+// ## THIS FILE IS MANUALLY WRITTEN ##
+// ###################################
 
 // enums
 #define EO_CALLBACK_PRIORITY_BEFORE -100
@@ -25,8 +28,7 @@ typedef enum _Eo_Op_Type Eo_Op_Type;
 
 
 // typedefs
-typedef void Eo;                 // TODO void* is correct?
-// typedef struct _Eo_Opaque Eo; // this should be better  :/
+typedef struct _Eo_Opaque Eo;
 typedef Eo Eo_Class;
 typedef Eo Eo_Base;
 typedef short Eo_Callback_Priority;
@@ -77,8 +79,12 @@ int eo_init(void);
 int eo_shutdown(void);
 
 // Eo* eo_add(Eo_Class *klass, Eo *parent, ...);
-Eo* _eo_add_internal_start(const char *file, int line, const Eo_Class *klass_id, Eo *parent, Eina_Bool ref);
-Eo* _eo_add_end(Eo *obj);
+// Eo* _eo_add_internal_start(const char *file, int line, const Eo_Class *klass_id, Eo *parent, Eina_Bool ref);
+Eo* _eo_add_internal_start(const char *file, int line, const Eo_Class *klass_id, Eo *parent, Eina_Bool ref, Eina_Bool is_fallback);
+Eo* _eo_add_end(Eo *obj, Eina_Bool is_fallback);
+
+
+
 
 //Eo* eo_add_ref(Eo_Class *klass, Eo *parent);
 void eo_parent_set(Eo *obj, Eo_Base *parent);
@@ -100,9 +106,14 @@ void eo_event_global_thaw(const Eo *obj);
 void eo_event_global_freeze(const Eo *obj);
 Eina_Bool eo_event_callback_priority_add(Eo *obj, const Eo_Event_Description *desc, Eo_Callback_Priority priority, Eo_Event_Cb cb, const void *data);
 
-Eina_Bool eo_event_callback_add(Eo *obj, const Eo_Event_Description *desc, Eo_Event_Cb cb, const void *data);
-
+// faked #define
+Eina_Bool eo_event_callback_add(Eo *obj, const Eo_Event_Description *desc, Eo_Event_Cb func, const void *user_data);
 Eina_Bool eo_event_callback_del(Eo *obj, const Eo_Event_Description *desc, Eo_Event_Cb func, const void *user_data);
+
+Eina_Bool eo_event_callback_priority_byname_add(Eo *obj, const char *name, Eo_Callback_Priority priority, Eo_Event_Cb cb, const void *data);
+
+
+
 // Eina_Bool eo_event_callback_array_priority_add(Eo *obj, const Eo_Callback_Array_Item *array, Eo_Callback_Priority priority, const void *data);
 // Eina_Bool eo_event_callback_array_del(Eo *obj, const Eo_Callback_Array_Item *array, const void *user_data);
 // Eina_Bool eo_event_callback_call(Eo *obj, const Eo_Event_Description *desc, void *event_info);
@@ -112,6 +123,7 @@ Eina_Bool eo_event_callback_del(Eo *obj, const Eo_Event_Description *desc, Eo_Ev
 // Eina_Iterator *eo_children_iterator_new(Eo *obj);
 
 
+// events
 extern const Eo_Event_Description _EO_BASE_EVENT_CALLBACK_ADD;
 extern const Eo_Event_Description _EO_BASE_EVENT_CALLBACK_DEL;
 extern const Eo_Event_Description _EO_BASE_EVENT_DEL;
@@ -128,7 +140,7 @@ void eo_del(const Eo *obj);
 
 
 // python callbacks
-extern "Python" Eina_Bool _eo_event_cb(void *data, const Eo_Event *event);
-extern "Python" Eina_Bool _eo_del_cb(void *data, const Eo_Event *event);
+extern "Python" Eina_Bool _eo_base_event_cb(void *data, const Eo_Event *event);
+extern "Python" Eina_Bool _eo_base_del_cb(void *data, const Eo_Event *event);
 
 
