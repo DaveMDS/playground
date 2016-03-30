@@ -110,8 +110,6 @@ Eina_Bool eo_event_callback_priority_add(Eo *obj, const Eo_Event_Description *de
 Eina_Bool eo_event_callback_add(Eo *obj, const Eo_Event_Description *desc, Eo_Event_Cb func, const void *user_data);
 Eina_Bool eo_event_callback_del(Eo *obj, const Eo_Event_Description *desc, Eo_Event_Cb func, const void *user_data);
 
-Eina_Bool eo_event_callback_priority_byname_add(Eo *obj, const char *name, Eo_Callback_Priority priority, Eo_Event_Cb cb, const void *data);
-
 
 
 // Eina_Bool eo_event_callback_array_priority_add(Eo *obj, const Eo_Callback_Array_Item *array, Eo_Callback_Priority priority, const void *data);
@@ -124,10 +122,9 @@ Eina_Bool eo_event_callback_priority_byname_add(Eo *obj, const char *name, Eo_Ca
 
 
 // events
-extern const Eo_Event_Description _EO_BASE_EVENT_CALLBACK_ADD;
-extern const Eo_Event_Description _EO_BASE_EVENT_CALLBACK_DEL;
-extern const Eo_Event_Description _EO_BASE_EVENT_DEL;
-
+extern static Eo_Event_Description *const EO_BASE_EVENT_DEL;
+extern static Eo_Event_Description *const EO_BASE_EVENT_CALLBACK_ADD;
+extern static Eo_Event_Description *const EO_BASE_EVENT_CALLBACK_DEL;
 
 // from Eo.h
 Eo *eo_ref(const Eo *obj);

@@ -43,9 +43,8 @@ atexit.register(lambda: lib.evas_shutdown())
 ###  Evas.Object  #############################################################
 class Object(eo.Base, efl.Gfx_Base):
     def __init__(self, parent):
-
         # standard constructor
-        eo.Base.__init__(self, lib.evas_object_class_get(), parent)
+        eo.Base.__init__(self, lib.EVAS_OBJECT_CLASS, parent, **kargs)
         print("Evas.Object INIT")
 
 
@@ -53,7 +52,7 @@ class Object(eo.Base, efl.Gfx_Base):
 class Object_Smart(Object):
     def __init__(self, *args, **kargs):
         # standard constructor
-        eo.Base.__init__(self, lib.evas_object_smart_class_get(), parent)
+        eo.Base.__init__(self, lib.EVAS_OBJECT_SMART_CLASS, parent, **kargs)
         print("Evas.Object_Smart INIT")
 
 
@@ -63,20 +62,20 @@ class Signal_Interface(object):
 
 ###  Evas.Clickable_Interface  ################################################
 
-EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED = ffi.addressof(lib._EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED)
-EVAS_CLICKABLE_INTERFACE_EVENT_PRESSED = ffi.addressof(lib._EVAS_CLICKABLE_INTERFACE_EVENT_PRESSED)
+EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED = lib.EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED
+EVAS_CLICKABLE_INTERFACE_EVENT_PRESSED = lib.EVAS_CLICKABLE_INTERFACE_EVENT_PRESSED
 
 @eo._class_register('Evas.Clickable_Interface')
 class Clickable_Interface(Signal_Interface):
     _events = {
-      'clicked': ffi.addressof(lib._EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED),
-      'clicked,double': ffi.addressof(lib._EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED_DOUBLE),
-      'clicked,triple': ffi.addressof(lib._EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED_TRIPLE),
-      'clicked,right': ffi.addressof(lib._EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED_RIGHT),
-      'pressed': ffi.addressof(lib._EVAS_CLICKABLE_INTERFACE_EVENT_PRESSED),
-      'unpressed': ffi.addressof(lib._EVAS_CLICKABLE_INTERFACE_EVENT_UNPRESSED),
-      'longpressed': ffi.addressof(lib._EVAS_CLICKABLE_INTERFACE_EVENT_LONGPRESSED),
-      'repeated': ffi.addressof(lib._EVAS_CLICKABLE_INTERFACE_EVENT_REPEATED),
+      'clicked':        lib.EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED,
+      'clicked,double': lib.EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED_DOUBLE,
+      'clicked,triple': lib.EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED_TRIPLE,
+      'clicked,right':  lib.EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED_RIGHT,
+      'pressed':        lib.EVAS_CLICKABLE_INTERFACE_EVENT_PRESSED,
+      'unpressed':      lib.EVAS_CLICKABLE_INTERFACE_EVENT_UNPRESSED,
+      'longpressed':    lib.EVAS_CLICKABLE_INTERFACE_EVENT_LONGPRESSED,
+      'repeated':       lib.EVAS_CLICKABLE_INTERFACE_EVENT_REPEATED,
     }
     """
     events {

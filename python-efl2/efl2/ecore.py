@@ -62,11 +62,11 @@ class Timer(eo.Base):
         userdata = ffi.new_handle(self)
 
         # custom constructor
-        eo.Base.__init__(self, lib.ecore_timer_class_get(), None, False)
+        eo.Base.__init__(self, lib.ECORE_TIMER_CLASS, None, False)
         lib.ecore_obj_timer_constructor(self._obj, in_, lib._timer_cb, userdata)
-        eo.Base._finalize(self)
+        eo.Base.__init__end__(self, **kargs)
 
-        print("Timer INIT", in_)
+        # print("Timer INIT", in_)
 
         self._priv['self_h'] = userdata   # must keep this alive!   :/
         self._priv['cb'] = callback

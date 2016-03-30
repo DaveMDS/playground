@@ -35,13 +35,11 @@ int evas_shutdown(void);
 // Evas.Clickable_Interface
 typedef Eo Evas_Clickable_Interface;
 const Eo_Class *evas_clickable_interface_interface_get(void);
-extern const Eo_Event_Description _EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED;
-extern const Eo_Event_Description _EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED_DOUBLE;
-extern const Eo_Event_Description _EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED_TRIPLE;
-extern const Eo_Event_Description _EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED_RIGHT;
-extern const Eo_Event_Description _EVAS_CLICKABLE_INTERFACE_EVENT_PRESSED;
-extern const Eo_Event_Description _EVAS_CLICKABLE_INTERFACE_EVENT_UNPRESSED;
-extern const Eo_Event_Description _EVAS_CLICKABLE_INTERFACE_EVENT_LONGPRESSED;
-extern const Eo_Event_Description _EVAS_CLICKABLE_INTERFACE_EVENT_REPEATED;
-
-
+extern static Eo_Event_Description *const EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED;
+extern static Eo_Event_Description *const EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED_DOUBLE;
+extern static Eo_Event_Description *const EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED_TRIPLE;
+extern static Eo_Event_Description *const EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED_RIGHT;
+extern static Eo_Event_Description *const EVAS_CLICKABLE_INTERFACE_EVENT_PRESSED;
+extern static Eo_Event_Description *const EVAS_CLICKABLE_INTERFACE_EVENT_UNPRESSED;
+extern static Eo_Event_Description *const EVAS_CLICKABLE_INTERFACE_EVENT_LONGPRESSED;
+extern static Eo_Event_Description *const EVAS_CLICKABLE_INTERFACE_EVENT_REPEATED;

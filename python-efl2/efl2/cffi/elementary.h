@@ -14,7 +14,7 @@ typedef enum {
     ELM_WIN_BASIC,
     ELM_WIN_DIALOG_BASIC,
     ...
-} Elm_Win_Type; // TODO COMPLETE
+} Elm_Win_Type; // etc...
 
 
 // typedefs
@@ -31,6 +31,7 @@ void elm_exit(void);
 
 // Elm.Box
 const Eo_Class *elm_box_class_get(void);
+static Eo_Class *const ELM_BOX_CLASS;
 // void elm_obj_box_homogeneous_set(Eo *obj, Eina_Bool homogeneous);
 // Eina_Bool elm_obj_box_homogeneous_get(const Eo *obj);
 // void elm_obj_box_align_set(Eo *obj, double horizontal, double vertical);
@@ -58,6 +59,7 @@ const char *elm_obj_layout_text_get(const Eo *obj, const char * part);
 
 // Elm.Win
 const Eo_Class *elm_win_class_get(void);
+static Eo_Class *const ELM_WIN_CLASS;
 void elm_obj_win_name_set(Eo *obj, const char *name);
 void elm_obj_win_type_set(Eo *obj, Elm_Win_Type type);
 
@@ -68,11 +70,15 @@ const char *elm_obj_win_title_get(const Eo *obj);
 
 // Elm.Win_Standard
 const Eo_Class *elm_win_standard_class_get(void);
+static Eo_Class *const ELM_WIN_STANDARD_CLASS;
 
 
 // Elm.Label
 const Eo_Class *elm_label_class_get(void);
+static Eo_Class *const ELM_LABEL_CLASS;
+
 
 // Elm.Button
 const Eo_Class *elm_button_class_get(void);
+static Eo_Class *const ELM_BUTTON_CLASS;
 

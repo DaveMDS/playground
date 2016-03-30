@@ -34,7 +34,7 @@ atexit.register(lambda: lib.elm_shutdown())
 
 ###  enums  ###################################################################
 ELM_WIN_BASIC = lib.ELM_WIN_BASIC
-# TODO COMPLETE...
+# etc...
 
 
 ###  module level functions  ##################################################
@@ -58,7 +58,7 @@ class Container(Widget):
 ###  Elm.Box  ##############################################################
 class Box(Widget):
     def __init__(self, parent, *args, **kargs):
-        eo.Base.__init__(self, lib.elm_box_class_get(), parent)
+        eo.Base.__init__(self, lib.ELM_BOX_CLASS, parent, **kargs)
 
     def pack_end(self, subobj):
         lib.elm_obj_box_pack_end(self._obj, subobj._obj);
@@ -69,7 +69,7 @@ class Box(Widget):
 ###  Elm.Layout  ##############################################################
 class Layout(Container):
     def __init__(self, parent, *args, **kargs):
-        eo.Base.__init__(self, lib.elm_layout_class_get(), parent)
+        eo.Base.__init__(self, lib.ELM_LAYOUT_CLASS, parent, **kargs)
 
     @property
     def text(self):
@@ -87,10 +87,10 @@ class Layout(Container):
 class Win(Widget):
     def __init__(self, name, type, *args, **kargs):
         # custom constructor
-        eo.Base.__init__(self, lib.elm_win_class_get(), ffi.NULL, False)
+        eo.Base.__init__(self, lib.ELM_WIN_CLASS, ffi.NULL, False)
         lib.elm_obj_win_type_set(self._obj, type)
         lib.elm_obj_win_name_set(self._obj, _to_bytes(name))
-        eo.Base._finalize(self)
+        eo.Base.__init__end__(self, **kargs)
 
         print("Win INIT")
 
@@ -110,21 +110,21 @@ class Win(Widget):
 class Win_Standard(Win):
     def __init__(self, name, *args, **kargs):
         # custom constructor
-        eo.Base.__init__(self, lib.elm_win_standard_class_get(), ffi.NULL, False)
+        eo.Base.__init__(self, lib.ELM_WIN_STANDARD_CLASS, ffi.NULL, False)
         lib.elm_obj_win_name_set(self._obj, _to_bytes(name))
-        eo.Base._finalize(self)
+        eo.Base.__init__end__(self, **kargs)
         
-        print("Standard INIT")
+        # print("Standard INIT")
 
 
 ###  Elm.Label  ###############################################################
 class Label(Layout):
     def __init__(self, parent, *args, **kargs):
-        eo.Base.__init__(self, lib.elm_label_class_get(), parent)
+        eo.Base.__init__(self, lib.ELM_LABEL_CLASS, parent, **kargs)
 
 
 ###  Elm.Button  ##############################################################
 class Button(Layout, evas.Clickable_Interface):
     def __init__(self, parent, *args, **kargs):
-        eo.Base.__init__(self, lib.elm_button_class_get(), parent)
+        eo.Base.__init__(self, lib.ELM_BUTTON_CLASS, parent, **kargs)
 

@@ -3,10 +3,32 @@
 import os
 import sys
 
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Command
+from setuptools.command.build_py import build_py
 from efl import __version__, __version_info__
 
 # os.chdir(os.path.dirname(sys.argv[0]) or ".")
+
+class Generate(Command):
+    """ run the eolian generator """
+    description = "generate the source code from eo descriptions"
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        print('!!!!!!!!!!!!!!!  PYOLIAN  !!!!!!!!!!!!!!!')
+
+
+class BuildPy(build_py):
+    def run(self):
+        # self.run_command("generate")
+        build_py.run(self)
+
 
 setup(
     name = 'python-efl2',
@@ -41,9 +63,15 @@ setup(
     setup_requires = ["cffi>=1.4.0"],
 
     zip_safe = False, # zipped the egg is slower to start?
-    packages = find_packages(),
+    packages = ['efl2'],
     cffi_modules = [
         "./efl2/cffi/build_efl.py:ffi",
     ],
+    cmdclass = {
+        'generate': Generate,
+        'build_py': BuildPy,
+    },
 )
 
+
+# --disable-cxx-bindings --disable-doc

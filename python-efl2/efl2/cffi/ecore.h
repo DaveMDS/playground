@@ -22,7 +22,8 @@ void ecore_main_loop_quit(void);
 
 // Timer
 const Eo_Class *ecore_timer_class_get(void);
-// #define	ECORE_TIMER_CLASS ...
+static Eo_Class *const ECORE_TIMER_CLASS;
+
 void ecore_obj_timer_constructor(Eo *obj, double in, Ecore_Task_Cb func, const void *data);
 void ecore_obj_timer_loop_constructor(Eo *obj, double in, Ecore_Task_Cb func, const void *data);
 void ecore_obj_timer_interval_set(Eo *obj, double in);

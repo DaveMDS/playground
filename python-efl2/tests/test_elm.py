@@ -5,7 +5,7 @@ import platform
 
 import efl2 as efl
 
-# from efl2 import eo
+from efl2 import eo
 # from efl2 import evas
 from efl2 import ecore
 # from efl2.ecore import Timer
@@ -20,8 +20,6 @@ from efl2 import elementary as elm, __version__
     # return ecore.ECORE_CALLBACK_CANCEL
 #
 
-
-lb = None
 
 def my_timer_cb():
     global lb
@@ -42,6 +40,11 @@ t2 = efl.ecore.Timer(3.0, my_timer_cb)
 
 def mycb3(*args):
     print("CB!!!!!!!!!!!!" + str(args))
+    return eo.EO_CALLBACK_STOP
+
+def mycb4(*args):
+    print("... and click !" + str(args))
+    return eo.EO_CALLBACK_CONTINUE
 
 if __name__ == '__main__':
     title = 'Python EFL version %s (on python: %s)' % (
@@ -50,8 +53,8 @@ if __name__ == '__main__':
     # win = elm.Win('pyefl-test', elm.ELM_WIN_BASIC)
     win = elm.Win_Standard('pyefl-test')
     win.title = "asdasd àèìòù ね の は " * 3
-    print("** " + win.title)
-    print("** " + str(type(win.title)))
+    # print("** " + win.title)
+    # print("** " + str(type(win.title)))
 
     # box
     box = elm.Box(win)
@@ -59,26 +62,20 @@ if __name__ == '__main__':
     box.visible = True
 
     # label
-    global lb
-    lb = elm.Label(win)
+    lb = elm.Label(win, visible=True)
     lb.text = win.title
     box.pack_end(lb)
-    lb.visible = True
-    # lb.event_callback_add(eo.EO_BASE_EVENT_DEL, mycb3)
-    # lb.event_callback_add2('del', mycb3)
+    # lb.visible = True
+    lb.event_callback_add(eo.EO_BASE_EVENT_DEL, mycb3)
 
     # button
     bt = elm.Button(win)
     bt.text = lb.text
     box.pack_end(bt)
     bt.visible = True
-    # bt.event_callback_priority_add(0, eo.EO_BASE_EVENT_DEL, mycb3)
-    bt.event_callback_add3(evas.EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED, mycb3)
-    bt.event_callback_add3(evas.EVAS_CLICKABLE_INTERFACE_EVENT_PRESSED, mycb3)
+    bt.event_callback_add(efl.evas.EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED, mycb4)
 
-    bt.event_callback_add4('clicked', mycb3)
-    # bt.delete()
-    
+
 
     #
     win.visible = True
