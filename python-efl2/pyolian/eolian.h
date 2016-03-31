@@ -1,8 +1,8 @@
-// ###################################
-// ## THIS FILE IS MANUALLY WRITTEN ##
-// ###################################
+///////////////////////////////////////////////////////////////////////////////
+////                   THIS FILE IS MANUALLY WRITTEN                       ////
+///////////////////////////////////////////////////////////////////////////////
 
-///  Eina  ////////////////////////////////////////////////////////////////////
+////  Eina  ///////////////////////////////////////////////////////////////////
 typedef unsigned char Eina_Bool;
 #define EINA_FALSE 0
 #define EINA_TRUE  1
@@ -17,7 +17,7 @@ Eina_Bool eina_iterator_unlock       (Eina_Iterator *iterator);
 void     *eina_iterator_container_get(Eina_Iterator *iterator);
 
 
-///  enums  ///////////////////////////////////////////////////////////////////
+////  enums  //////////////////////////////////////////////////////////////////
 typedef enum
 {
    EOLIAN_UNRESOLVED = 0,
@@ -92,18 +92,16 @@ typedef enum
 
 typedef enum
 {
-   EOLIAN_MASK_SINT, //   = 1 << 0,
-   EOLIAN_MASK_UINT, //   = 1 << 1,
-   EOLIAN_MASK_INT, //    = EOLIAN_MASK_SINT | EOLIAN_MASK_UINT,
-   EOLIAN_MASK_FLOAT, //  = 1 << 2,
-   EOLIAN_MASK_BOOL, //   = 1 << 3,
-   EOLIAN_MASK_STRING, // = 1 << 4,
-   EOLIAN_MASK_CHAR, //   = 1 << 5,
-   EOLIAN_MASK_NULL, //   = 1 << 6,
-   EOLIAN_MASK_NUMBER, // = EOLIAN_MASK_INT    | EOLIAN_MASK_FLOAT,
-   EOLIAN_MASK_ALL, //    = EOLIAN_MASK_NUMBER | EOLIAN_MASK_BOOL
-                    //  | EOLIAN_MASK_STRING | EOLIAN_MASK_CHAR
-                    //  | EOLIAN_MASK_NULL
+   EOLIAN_MASK_SINT,
+   EOLIAN_MASK_UINT,
+   EOLIAN_MASK_INT,
+   EOLIAN_MASK_FLOAT,
+   EOLIAN_MASK_BOOL,
+   EOLIAN_MASK_STRING,
+   EOLIAN_MASK_CHAR,
+   EOLIAN_MASK_NULL,
+   EOLIAN_MASK_NUMBER,
+   EOLIAN_MASK_ALL,
    ...
 } Eolian_Expression_Mask;
 
@@ -180,12 +178,10 @@ typedef enum
    EOLIAN_DECL_ALIAS,
    EOLIAN_DECL_STRUCT,
    EOLIAN_DECL_ENUM,
-   EOLIAN_DECL_VAR
+   EOLIAN_DECL_VAR,
 } Eolian_Declaration_Type;
 
-
-
-///  typedefs  ////////////////////////////////////////////////////////////////
+////  typedefs  ///////////////////////////////////////////////////////////////
 typedef struct _Eolian_Class Eolian_Class;
 typedef struct _Eolian_Function Eolian_Function;
 typedef struct _Eolian_Type Eolian_Type;
@@ -202,13 +198,11 @@ typedef struct _Eolian_Declaration Eolian_Declaration;
 typedef struct _Eolian_Documentation Eolian_Documentation;
 
 
-
-
-///  functions  ///////////////////////////////////////////////////////////////
+////  functions  //////////////////////////////////////////////////////////////
 int eolian_init(void);
 int eolian_shutdown(void);
 
-// parse
+// database population
 Eina_Bool      eolian_file_parse(const char *filepath);
 Eina_Iterator *eolian_all_eo_file_paths_get(void);
 Eina_Iterator *eolian_all_eot_file_paths_get(void);
@@ -218,11 +212,11 @@ Eina_Bool      eolian_directory_scan(const char *dir);
 Eina_Bool      eolian_system_directory_scan(void);
 Eina_Bool      eolian_all_eo_files_parse(void);
 Eina_Bool      eolian_all_eot_files_parse(void);
-
 Eina_Bool      eolian_database_validate(Eina_Bool silent_types);
 
 // class
 Eina_Iterator         *eolian_all_classes_get(void);
+Eina_Stringshare      *eolian_class_c_get_function_name_get(const Eolian_Class *klass);
 const Eolian_Class    *eolian_class_get_by_name(const char *class_name);
 const Eolian_Class    *eolian_class_get_by_file(const char *file_name);
 Eina_Stringshare      *eolian_class_file_get(const Eolian_Class *klass);
@@ -237,6 +231,30 @@ Eina_Stringshare      *eolian_class_data_type_get(const Eolian_Class *klass);
 Eina_Iterator         *eolian_class_inherits_get(const Eolian_Class *klass);
 Eina_Iterator         *eolian_class_functions_get(const Eolian_Class *klass, Eolian_Function_Type func_type);
 const Eolian_Function *eolian_class_function_get_by_name(const Eolian_Class *klass, const char *func_name, Eolian_Function_Type f_type);
+const Eolian_Event    *eolian_class_event_get_by_name(const Eolian_Class *klass, const char *event_name);
+Eina_Bool              eolian_class_ctor_enable_get(const Eolian_Class *klass);
+Eina_Bool              eolian_class_dtor_enable_get(const Eolian_Class *klass);
+Eina_Iterator         *eolian_class_constructors_get(const Eolian_Class *klass);
+Eina_Iterator         *eolian_class_events_get(const Eolian_Class *klass);
+
+// constructor
+Eina_Stringshare      *eolian_constructor_full_name_get(const Eolian_Constructor *ctor);
+const Eolian_Class    *eolian_constructor_class_get(const Eolian_Constructor *ctor);
+const Eolian_Function *eolian_constructor_function_get(const Eolian_Constructor *ctor);
+Eina_Bool              eolian_constructor_is_optional(const Eolian_Constructor *ctor);
+
+// event 
+Eina_Stringshare           *eolian_event_name_get(const Eolian_Event *event);
+const Eolian_Type          *eolian_event_type_get(const Eolian_Event *event);
+const Eolian_Documentation *eolian_event_documentation_get(const Eolian_Event *event);
+Eolian_Object_Scope         eolian_event_scope_get(const Eolian_Event *event);
+Eina_Bool                   eolian_event_is_beta(const Eolian_Event *event);
+Eina_Bool                   eolian_event_is_hot(const Eolian_Event *event);
+Eina_Stringshare           *eolian_event_c_name_get(const Eolian_Event *event);
+
+// property
+Eina_Iterator              *eolian_property_keys_get(const Eolian_Function *foo_id, Eolian_Function_Type ftype);
+Eina_Iterator              *eolian_property_values_get(const Eolian_Function *foo_id, Eolian_Function_Type ftype);
 
 // function
 Eolian_Function_Type        eolian_function_type_get(const Eolian_Function *function_id);
@@ -254,10 +272,9 @@ Eina_Bool                   eolian_function_is_c_only(const Eolian_Function *fun
 Eina_Bool                   eolian_function_is_beta(const Eolian_Function *function_id);
 Eina_Bool                   eolian_function_is_constructor(const Eolian_Function *function_id, const Eolian_Class *klass);
 Eina_Iterator              *eolian_function_parameters_get(const Eolian_Function *function_id);
-
-// property
-Eina_Iterator              *eolian_property_keys_get(const Eolian_Function *foo_id, Eolian_Function_Type ftype);
-Eina_Iterator              *eolian_property_values_get(const Eolian_Function *foo_id, Eolian_Function_Type ftype);
+Eina_Bool                   eolian_function_object_is_const(const Eolian_Function *function_id);
+const Eolian_Class         *eolian_function_class_get(const Eolian_Function *function_id);
+Eina_Bool                   eolian_function_is_implemented(const Eolian_Function *function_id, Eolian_Function_Type func_type, const Eolian_Class *klass);
 
 // parameter
 Eolian_Parameter_Dir        eolian_parameter_direction_get(const Eolian_Function_Parameter *param);
@@ -275,10 +292,6 @@ const Eolian_Expression    *eolian_function_return_default_value_get(const Eolia
 const Eolian_Documentation *eolian_function_return_documentation_get(const Eolian_Function *foo_id, Eolian_Function_Type ftype);
 Eina_Bool                   eolian_function_return_is_warn_unused(const Eolian_Function *foo_id, Eolian_Function_Type ftype);
 
-Eina_Bool                   eolian_function_object_is_const(const Eolian_Function *function_id);
-const Eolian_Class         *eolian_function_class_get(const Eolian_Function *function_id);
-Eina_Bool                   eolian_function_is_implemented(const Eolian_Function *function_id, Eolian_Function_Type func_type, const Eolian_Class *klass);
-
 // implement
 Eina_Stringshare      *eolian_implement_full_name_get(const Eolian_Implement *impl);
 const Eolian_Class    *eolian_implement_class_get(const Eolian_Implement *impl);
@@ -289,29 +302,6 @@ Eina_Bool              eolian_implement_is_virtual(const Eolian_Implement *impl)
 Eina_Bool              eolian_implement_is_prop_get(const Eolian_Implement *impl);
 Eina_Bool              eolian_implement_is_prop_set(const Eolian_Implement *impl);
 Eina_Iterator         *eolian_class_implements_get(const Eolian_Class *klass);
-
-// constructor
-Eina_Stringshare      *eolian_constructor_full_name_get(const Eolian_Constructor *ctor);
-const Eolian_Class    *eolian_constructor_class_get(const Eolian_Constructor *ctor);
-const Eolian_Function *eolian_constructor_function_get(const Eolian_Constructor *ctor);
-Eina_Bool              eolian_constructor_is_optional(const Eolian_Constructor *ctor);
-Eina_Iterator         *eolian_class_constructors_get(const Eolian_Class *klass);
-Eina_Iterator         *eolian_class_events_get(const Eolian_Class *klass);
-
-// event 
-Eina_Stringshare           *eolian_event_name_get(const Eolian_Event *event);
-const Eolian_Type          *eolian_event_type_get(const Eolian_Event *event);
-const Eolian_Documentation *eolian_event_documentation_get(const Eolian_Event *event);
-Eolian_Object_Scope         eolian_event_scope_get(const Eolian_Event *event);
-Eina_Bool                   eolian_event_is_beta(const Eolian_Event *event);
-Eina_Bool                   eolian_event_is_hot(const Eolian_Event *event);
-Eina_Stringshare           *eolian_event_c_name_get(const Eolian_Event *event);
-const Eolian_Event         *eolian_class_event_get_by_name(const Eolian_Class *klass, const char *event_name);
-
-Eina_Bool         eolian_class_ctor_enable_get(const Eolian_Class *klass);
-Eina_Bool         eolian_class_dtor_enable_get(const Eolian_Class *klass);
-
-Eina_Stringshare *eolian_class_c_get_function_name_get(const Eolian_Class *klass);
 
 // typedecl
 const Eolian_Typedecl          *eolian_typedecl_alias_get_by_name(const char *name);

@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import absolute_import, print_function, division
+
 import os
 import sys
 
@@ -8,6 +10,8 @@ from setuptools.command.build_py import build_py
 from efl import __version__, __version_info__
 
 # os.chdir(os.path.dirname(sys.argv[0]) or ".")
+
+PATH = os.path.dirname(os.path.realpath(__file__))
 
 class Generate(Command):
     """ run the eolian generator """
@@ -21,7 +25,23 @@ class Generate(Command):
         pass
 
     def run(self):
-        print('!!!!!!!!!!!!!!!  PYOLIAN  !!!!!!!!!!!!!!!')
+        print('-'*60)
+        print('generating bindings source code using pyolian')
+
+        from pyolian.pyolian import generate_all
+        ret = generate_all(
+                package_dir=os.path.join(PATH, 'efl2/'),
+                headers_dir=os.path.join(PATH, 'efl2/cffi/'),
+                )
+
+        if ret == 0:
+            ## info('Moving generated edje file to epymc/themes/ folder')
+            pass
+        else:
+            print('Error generating bindings')
+            # TODO abort setup !
+        
+        print('-'*60)
 
 
 class BuildPy(build_py):

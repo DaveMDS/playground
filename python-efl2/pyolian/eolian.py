@@ -111,10 +111,27 @@ def _c_eolian_declaration_to_py(f):
     return Declaration(f)
 
 ###  module init/shutdown  ####################################################
-print("EOLIAN INIT")
 import atexit
 lib.eolian_init()
 atexit.register(lambda: lib.eolian_shutdown())
+
+
+###  enums  ###################################################################
+
+# Eolian_Function_Type:
+EOLIAN_UNRESOLVED = lib.EOLIAN_UNRESOLVED
+EOLIAN_PROPERTY = lib.EOLIAN_PROPERTY
+EOLIAN_PROP_SET = lib.EOLIAN_PROP_SET
+EOLIAN_PROP_GET = lib.EOLIAN_PROP_GET
+EOLIAN_METHOD = lib.EOLIAN_METHOD
+
+# Eolian_Declaration_Type:
+EOLIAN_DECL_UNKNOWN = lib.EOLIAN_DECL_UNKNOWN
+EOLIAN_DECL_CLASS = lib.EOLIAN_DECL_CLASS
+EOLIAN_DECL_ALIAS = lib.EOLIAN_DECL_ALIAS
+EOLIAN_DECL_STRUCT = lib.EOLIAN_DECL_STRUCT
+EOLIAN_DECL_ENUM = lib.EOLIAN_DECL_ENUM
+EOLIAN_DECL_VAR = lib.EOLIAN_DECL_VAR
 
 
 ###  module level functions ###################################################
@@ -142,7 +159,7 @@ def declarations_get_by_file(fname):
 class Class(object):
     def __init__(self, eo_file):
         eo_file = _pystr_to_bytes(eo_file)
-        self._obj = lib.eolian_class_get_by_file(eo_file) # const Eolian_Class *klass
+        self._obj = lib.eolian_class_get_by_file(eo_file) # const Eolian_Class *
 
     def __repr__(self):
         return "<eolian.Class '{0.full_name}', prefix '{0.eo_prefix}'>".format(self)
@@ -172,6 +189,10 @@ class Class(object):
         return Iterator(_cstr_to_unicode2, lib.eolian_class_inherits_get(self._obj))
 
     @property
+    def c_get_function_name(self):
+        return _cstr_to_unicode(ffi, lib.eolian_class_c_get_function_name_get(self._obj))
+
+    @property
     def functions(self):
         return Iterator(_c_eolian_function_to_py, lib.eolian_class_functions_get(self._obj, lib.EOLIAN_METHOD))
 
@@ -179,14 +200,27 @@ class Class(object):
     def properties(self):
         return Iterator(_c_eolian_function_to_py, lib.eolian_class_functions_get(self._obj, lib.EOLIAN_PROPERTY))
 
+    @property
+    def getters(self):
+        return Iterator(_c_eolian_function_to_py, lib.eolian_class_functions_get(self._obj, lib.EOLIAN_PROP_GET))
+
+    @property
+    def setters(self):
+        return Iterator(_c_eolian_function_to_py, lib.eolian_class_functions_get(self._obj, lib.EOLIAN_PROP_SET))
+
 
 class Function(object):
     def __init__(self, c_func):
-        self._obj = c_func
+        self._obj = c_func # const Eolian_Function *
 
     def __repr__(self):
         return "<eolian.Function '{0.name}', api: '{0.full_c_name}'>".format(self)
-    
+
+    @property
+    def type(self):
+        return lib.eolian_function_type_get(self._obj)
+# Eolian_Function_Type        eolian_function_type_get(const Eolian_Function *function_id);
+        
     @property
     def name(self):
         return _cstr_to_unicode(ffi, lib.eolian_function_name_get(self._obj))
@@ -228,7 +262,7 @@ class Function(object):
 
 class Parameter(object):
     def __init__(self, c_param):
-        self._obj = c_param
+        self._obj = c_param # const Eolian_Parameter *
 
     def __repr__(self):
         return "<eolian.Parameter '{0.name}', type: {0.type}, optional: {0.is_optional}, nonull: {0.is_nonull}>".format(self)
@@ -256,7 +290,7 @@ class Parameter(object):
 
 class Type(object):
     def __init__(self, c_type):
-        self._obj = c_type
+        self._obj = c_type # const Eolian_Type *
 
     def __repr__(self):
         return "<eolian.Type '{0.name}', api: '{0.c_type}'>".format(self)
@@ -276,7 +310,7 @@ class Type(object):
 
 class Typedecl(object):
     def __init__(self, c_typedecl):
-        self._obj = c_typedecl
+        self._obj = c_typedecl # const Eolian_Typedecl *
 
     def __repr__(self):
         return "<eolian.Typedecl '{0.name}'>".format(self)
@@ -320,13 +354,36 @@ class Declaration(object):
         self._obj = c_decl # const Eolian_Declaration *
 
     def __repr__(self):
-        return "<eolian.Declaration '{0.name}'>".format(self)
+        return "<eolian.Declaration '{0.name}', type: {0.type}>".format(self)
 
     @property
     def name(self):
         return _cstr_to_unicode(ffi, lib.eolian_declaration_name_get(self._obj)) 
 
-
     @property
     def type(self):
-        return Type(lib.eolian_declaration_type_get(self._obj))
+        return lib.eolian_declaration_type_get(self._obj)
+
+    @property
+    def data_type(self):
+        return Typedecl(lib.eolian_declaration_data_type_get(self._obj))
+
+    @property
+    def variable(self):
+        return Variable(lib.eolian_declaration_variable_get(self._obj))
+
+
+class Variable(object):
+    def __init__(self, c_var):
+        self._obj = c_var # const Eolian_Variable *
+
+    def __repr__(self):
+        return "<eolian.Variable '{0.name}', type: {0.data_type}>".format(self)
+
+    @property
+    def name(self):
+        return _cstr_to_unicode(ffi, lib.eolian_variable_name_get(self._obj))
+
+    @property
+    def full_name(self):
+        return _cstr_to_unicode(ffi, lib.eolian_variable_full_name_get(self._obj)) 
