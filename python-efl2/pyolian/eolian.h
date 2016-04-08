@@ -236,6 +236,7 @@ Eina_Bool              eolian_class_ctor_enable_get(const Eolian_Class *klass);
 Eina_Bool              eolian_class_dtor_enable_get(const Eolian_Class *klass);
 Eina_Iterator         *eolian_class_constructors_get(const Eolian_Class *klass);
 Eina_Iterator         *eolian_class_events_get(const Eolian_Class *klass);
+Eina_Iterator         *eolian_class_implements_get(const Eolian_Class *klass);
 
 // constructor
 Eina_Stringshare      *eolian_constructor_full_name_get(const Eolian_Constructor *ctor);
@@ -301,7 +302,6 @@ Eina_Bool              eolian_implement_is_empty(const Eolian_Implement *impl);
 Eina_Bool              eolian_implement_is_virtual(const Eolian_Implement *impl);
 Eina_Bool              eolian_implement_is_prop_get(const Eolian_Implement *impl);
 Eina_Bool              eolian_implement_is_prop_set(const Eolian_Implement *impl);
-Eina_Iterator         *eolian_class_implements_get(const Eolian_Class *klass);
 
 // typedecl
 const Eolian_Typedecl          *eolian_typedecl_alias_get_by_name(const char *name);

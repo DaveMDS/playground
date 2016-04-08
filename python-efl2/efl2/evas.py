@@ -62,12 +62,12 @@ class Signal_Interface(object):
 
 ###  Evas.Clickable_Interface  ################################################
 
-EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED = lib.EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED
-EVAS_CLICKABLE_INTERFACE_EVENT_PRESSED = lib.EVAS_CLICKABLE_INTERFACE_EVENT_PRESSED
+# EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED = lib.EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED
+# EVAS_CLICKABLE_INTERFACE_EVENT_PRESSED = lib.EVAS_CLICKABLE_INTERFACE_EVENT_PRESSED
 
 @eo._class_register('Evas.Clickable_Interface')
 class Clickable_Interface(Signal_Interface):
-    _events = {
+    __events = {
       'clicked':        lib.EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED,
       'clicked,double': lib.EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED_DOUBLE,
       'clicked,triple': lib.EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED_TRIPLE,
@@ -77,16 +77,4 @@ class Clickable_Interface(Signal_Interface):
       'longpressed':    lib.EVAS_CLICKABLE_INTERFACE_EVENT_LONGPRESSED,
       'repeated':       lib.EVAS_CLICKABLE_INTERFACE_EVENT_REPEATED,
     }
-    """
-    events {
-      clicked
-      clicked,double
-      clicked,triple
-      clicked,right
-      pressed
-      unpressed
-      longpressed
-      repeated
-    }
-    """
     pass

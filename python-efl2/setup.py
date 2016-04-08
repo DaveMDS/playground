@@ -7,19 +7,19 @@ import sys
 
 from setuptools import setup, find_packages, Command
 from setuptools.command.build_py import build_py
-from efl import __version__, __version_info__
+from efl2 import __version__, __version_info__
 
-# os.chdir(os.path.dirname(sys.argv[0]) or ".")
 
 PATH = os.path.dirname(os.path.realpath(__file__))
+
 
 class Generate(Command):
     """ run the eolian generator """
     description = "generate the source code from eo descriptions"
-    user_options = []
+    user_options = [('svg', 'v', 'Super Verbose Generation')]
 
     def initialize_options(self):
-        pass
+        self.svg = False
 
     def finalize_options(self):
         pass
@@ -27,26 +27,20 @@ class Generate(Command):
     def run(self):
         print('-'*60)
         print('generating bindings source code using pyolian')
-
-        from pyolian.pyolian import generate_all
-        ret = generate_all(
-                package_dir=os.path.join(PATH, 'efl2/'),
-                headers_dir=os.path.join(PATH, 'efl2/cffi/'),
-                )
-
-        if ret == 0:
-            ## info('Moving generated edje file to epymc/themes/ folder')
-            pass
-        else:
-            print('Error generating bindings')
-            # TODO abort setup !
+        from pyolian.generator import Generator
         
+        if not Generator(main_py_path=os.path.join(PATH, 'efl2/'),
+                         headers_path=os.path.join(PATH, 'efl2/cffi/'),
+                         verbose=self.svg).generate_all():
+            print('\nSomething goes wrong, generation aborted.\n')
+            exit(1)
+
         print('-'*60)
 
 
 class BuildPy(build_py):
     def run(self):
-        # self.run_command("generate")
+        self.run_command("generate")
         build_py.run(self)
 
 
@@ -82,15 +76,16 @@ setup(
     install_requires = ["cffi>=1.4.0"],
     setup_requires = ["cffi>=1.4.0"],
 
-    zip_safe = False, # zipped the egg is slower to start?
     packages = ['efl2'],
-    cffi_modules = [
-        "./efl2/cffi/build_efl.py:ffi",
-    ],
+    zip_safe = False, # zipped the egg is slower to start?
     cmdclass = {
         'generate': Generate,
         'build_py': BuildPy,
     },
+    cffi_modules = [
+        "./efl2/cffi/build_efl.py:ffi",
+    ],
+
 )
 
 

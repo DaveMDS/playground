@@ -51,30 +51,24 @@ if __name__ == '__main__':
              __version__, platform.python_version())
 
     # win = elm.Win('pyefl-test', elm.ELM_WIN_BASIC)
-    win = elm.Win_Standard('pyefl-test')
+    win = elm.Win_Standard(None, title='pyefl-test')
     win.title = "asdasd àèìòù ね の は " * 3
     # print("** " + win.title)
     # print("** " + str(type(win.title)))
 
     # box
-    box = elm.Box(win)
+    box = elm.Box(win, visible=True)
     win.resize_object_add(box)
-    box.visible = True
 
     # label
-    lb = elm.Label(win, visible=True)
-    lb.text = win.title
+    lb = elm.Label(win, visible=True, text=win.title)
+    lb.on('del', mycb3)
     box.pack_end(lb)
-    # lb.visible = True
-    lb.event_callback_add(eo.EO_BASE_EVENT_DEL, mycb3)
 
     # button
-    bt = elm.Button(win)
-    bt.text = lb.text
+    bt = elm.Button(win, visible=True, text=lb.text)
+    bt.on('clicked', mycb4)
     box.pack_end(bt)
-    bt.visible = True
-    bt.event_callback_add(efl.evas.EVAS_CLICKABLE_INTERFACE_EVENT_CLICKED, mycb4)
-
 
 
     #

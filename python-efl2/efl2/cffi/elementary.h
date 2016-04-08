@@ -77,6 +77,14 @@ static Eo_Class *const ELM_WIN_STANDARD_CLASS;
 const Eo_Class *elm_label_class_get(void);
 static Eo_Class *const ELM_LABEL_CLASS;
 
+typedef enum {
+    ELM_LABEL_SLIDE_MODE_NONE,
+    ELM_LABEL_SLIDE_MODE_AUTO,
+    ELM_LABEL_SLIDE_MODE_ALWAYS,
+    ...
+} Elm_Label_Slide_Mode;
+
+extern static Eo_Event_Description *const ELM_LABEL_EVENT_SLIDE_END;
 
 // Elm.Button
 const Eo_Class *elm_button_class_get(void);

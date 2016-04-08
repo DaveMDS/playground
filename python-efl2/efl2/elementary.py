@@ -108,22 +108,28 @@ class Win(Widget):
 
 ###  Elm.Win_Standard  ########################################################
 class Win_Standard(Win):
-    def __init__(self, name, *args, **kargs):
-        # custom constructor
-        eo.Base.__init__(self, lib.ELM_WIN_STANDARD_CLASS, ffi.NULL, False)
-        lib.elm_obj_win_name_set(self._obj, _to_bytes(name))
-        eo.Base.__init__end__(self, **kargs)
-        
-        # print("Standard INIT")
+    def __init__(self, parent, *args, **kargs):
+        eo.Base.__init__(self, lib.ELM_WIN_STANDARD_CLASS, parent, **kargs)
 
 
 ###  Elm.Label  ###############################################################
+
+# enum: Elm.Label.Slide_Mode
+ELM_LABEL_SLIDE_MODE_NONE = lib.ELM_LABEL_SLIDE_MODE_NONE
+ELM_LABEL_SLIDE_MODE_AUTO = lib.ELM_LABEL_SLIDE_MODE_AUTO
+ELM_LABEL_SLIDE_MODE_ALWAYS = lib.ELM_LABEL_SLIDE_MODE_ALWAYS
+
+@eo._class_register('Elm.Label')
 class Label(Layout):
+    __events = {
+        'slide,end': lib.ELM_LABEL_EVENT_SLIDE_END,
+    }
     def __init__(self, parent, *args, **kargs):
         eo.Base.__init__(self, lib.ELM_LABEL_CLASS, parent, **kargs)
 
 
 ###  Elm.Button  ##############################################################
+@eo._class_register('Elm.Button')
 class Button(Layout, evas.Clickable_Interface):
     def __init__(self, parent, *args, **kargs):
         eo.Base.__init__(self, lib.ELM_BUTTON_CLASS, parent, **kargs)

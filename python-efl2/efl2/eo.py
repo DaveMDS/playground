@@ -15,7 +15,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this Python-EFL.  If not, see <http://www.gnu.org/licenses/>.
 
+import inspect
 from ._efl_ffi import ffi, lib
+
 
 ###  module init/shutdown  ####################################################
 print("EO INIT")
@@ -35,22 +37,23 @@ EO_CALLBACK_PRIORITY_AFTER = lib.EO_CALLBACK_PRIORITY_AFTER
 
 ###  utils for internal usage utils  ##########################################
 _class_mapping = {} # { 'Eo.Base': <class 'efl2.eo.Base'>, ... }
-# _event_mapping = {} # { 'del':, lib._EO_BASE_EVENT_DEL, ... }
+
 
 def _class_register(class_name):
     """ This decorator must be used on each Eo derived class """
     def decorator(pyclass):
         print('Registering eo class: "{}" as: {}'.format(class_name, pyclass))
         _class_mapping[class_name] = pyclass
-        
-        try:
-            print(pyclass._events)
-            print("------------------------------------------------------------")
-        except:
-            pass
-            
         return pyclass
     return decorator
+
+def _obj_event_search(obj, ev_name):
+    print('Searching event: "{}" for obj: {}'.format(ev_name, obj))
+
+    for klass in inspect.getmro(obj.__class__):
+        __events = getattr(klass, '_{}__events'.format(klass.__name__), None)
+        if __events and ev_name in __events:
+            return __events[ev_name]
 
 
 ###  Eo.Base  #################################################################
@@ -77,31 +80,26 @@ def _eo_base_del_cb(c_data, c_event):
     return lib.EO_CALLBACK_CONTINUE
 
 
-EO_BASE_EVENT_DEL = lib.EO_BASE_EVENT_DEL
-EO_BASE_EVENT_CALLBACK_ADD = lib.EO_BASE_EVENT_CALLBACK_ADD
-EO_BASE_EVENT_CALLBACK_DEL = lib.EO_BASE_EVENT_CALLBACK_DEL
+# EO_BASE_EVENT_DEL = lib.EO_BASE_EVENT_DEL
+# EO_BASE_EVENT_CALLBACK_ADD = lib.EO_BASE_EVENT_CALLBACK_ADD
+# EO_BASE_EVENT_CALLBACK_DEL = lib.EO_BASE_EVENT_CALLBACK_DEL
 
 @_class_register('Eo.Base')
 class Base(object):
-    """
-
-    Base class used by all the object in the EFL.
-
-    """
-    # _events = {
-        # 'del': lib.EO_BASE_EVENT_DEL),
-        # 'callback,add': lib.EO_BASE_EVENT_CALLBACK_ADD),
-        # 'callback,del': lib.EO_BASE_EVENT_CALLBACK_DEL),
-    # }
+    """ Base class used by all the object in the EFL. """
+    __events = {
+        'del': lib.EO_BASE_EVENT_DEL,
+        'callback,add': lib.EO_BASE_EVENT_CALLBACK_ADD,
+        'callback,del': lib.EO_BASE_EVENT_CALLBACK_DEL,
+    }
     def __init__(self, klass, parent, finalize=True, **kargs):
         # print("Eo Base __init__ for klass:", klass)
         self._priv = dict()  # for bindings internal usage
 
         self._obj = lib._eo_add_internal_start(ffi.NULL, 0, klass,
                                             parent._obj if parent else ffi.NULL,
-                                            False, # add ref ?
-                                            False  # is fallback ?
-                                            )
+                                            False, False) # add_ref, fallback
+                                            
         if self._obj == ffi.NULL:
             raise MemoryError("Could not create the object")
 
@@ -110,7 +108,7 @@ class Base(object):
 
     def __init__end__(self, **kargs):
         
-        lib._eo_add_end(self._obj, False)  # is fallback ?
+        lib._eo_add_end(self._obj, False)
 
         # set_properties_from_keyword_args
         if kargs:
@@ -137,12 +135,36 @@ class Base(object):
             self._data = dict()
         return self._data
 
+    def event_callback_priority_add(self, ev_name, priority, func, *args, **kargs):
+        ev = _obj_event_search(self, ev_name)
+        if ev is None:
+            raise RuntimeError('Unknown event "{}" for class "{}"' \
+                               .format(ev_name, self.__class__.__name__))
+            
+        c_data = ffi.new_handle((func, args, kargs))
+        self.TEST = c_data # TODO FIXME !!!!!!!!!!!!!!!!!!!!!!!
+
+        ret = lib.eo_event_callback_priority_add(self._obj, ev, priority,
+                                                 lib._eo_base_event_cb, c_data)
+        if ret == 0:
+            raise RuntimeError('Cannot add callback for event "{}" in class "{}"' \
+                               .format(ev_name, self.__class__.__name__))
+
+    def event_callback_add(self, ev_name, func, *args, **kargs):
+        self.event_callback_priority_add(ev_name, 0, func, *args, **kargs)
+
+    # just the really short alias "on" (do we like this?? remove the longer one?)
+    on = event_callback_add
+
+    
+    """
     def event_callback_add(self, ev, func, *args, **kargs):
         c_data = ffi.new_handle((func, args, kargs))
         self.TEST = c_data # TODO FIXME !!!!!!!!!!!!!!!!!!!!!!!
 
         return bool(lib.eo_event_callback_add(self._obj, ev,
                                               lib._eo_base_event_cb, c_data))
+    """
 
     """
     def event_callback_priority_add(self, priority, callback, *args, **kargs):
