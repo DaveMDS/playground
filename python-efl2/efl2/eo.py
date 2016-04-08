@@ -26,6 +26,11 @@ lib.eo_init()
 atexit.register(lambda: lib.eo_shutdown())
 
 
+####  MOMENTARY HACKS
+lib.ecore_init()
+####  MOMENTARY HACKS END
+
+
 ###  enums  ###################################################################
 EO_CALLBACK_CONTINUE = lib.EO_CALLBACK_CONTINUE
 EO_CALLBACK_STOP = lib.EO_CALLBACK_STOP
@@ -92,7 +97,7 @@ class Base(object):
         'callback,add': lib.EO_BASE_EVENT_CALLBACK_ADD,
         'callback,del': lib.EO_BASE_EVENT_CALLBACK_DEL,
     }
-    def __init__(self, klass, parent, finalize=True, **kargs):
+    def __init__(self, klass, parent=None, finalize=True, **kargs):
         # print("Eo Base __init__ for klass:", klass)
         self._priv = dict()  # for bindings internal usage
 

@@ -2,6 +2,10 @@
 // ## THIS FILE IS MANUALLY WRITTEN ##
 // ###################################
 
+// TEMPORARY HACKS
+int ecore_init(void);
+// TEMPORARY HACKS END
+
 // enums
 #define EO_CALLBACK_PRIORITY_BEFORE -100
 #define EO_CALLBACK_PRIORITY_DEFAULT 0

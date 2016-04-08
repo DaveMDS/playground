@@ -76,7 +76,7 @@ setup(
     install_requires = ["cffi>=1.4.0"],
     setup_requires = ["cffi>=1.4.0"],
 
-    packages = ['efl2'],
+    packages = find_packages(exclude=['pyolian']),
     zip_safe = False, # zipped the egg is slower to start?
     cmdclass = {
         'generate': Generate,

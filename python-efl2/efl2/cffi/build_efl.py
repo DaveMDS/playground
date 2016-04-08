@@ -50,7 +50,9 @@ ffi.set_source(
 )
 
 
-for header in 'eina.h', 'eo.h', 'efl.h', 'evas.h', 'ecore.h', 'elementary.h':
+# TODO: read all the *.h files instead !!!
+# for header in 'eina.h', 'eo.h', 'efl.h', 'evas.h', 'ecore.h', 'elementary.h':
+for header in 'eina.h', 'eo.h', 'ecore_mainloop.h':
     with open(os.path.join(os.path.dirname(__file__), header)) as f:
         ffi.cdef(f.read())
 

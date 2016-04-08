@@ -48,12 +48,12 @@ COPYRIGHT = """{0} Copyright (C) 2007-%d various contributors (see AUTHORS)
 """ % datetime.datetime.now().year
 
 PY_HEAD = """
-from ._efl_ffi import ffi, lib
-from . import eo
+from efl2._efl_ffi import ffi, lib
+from efl2 import eo
 """
 
 INIT_HEAD = """
-# asd asds ad asd   {0}
+
 """
 
 CLASS_TYPEDEF = """
@@ -68,7 +68,7 @@ class {1}({2}):
 """
 
 CLASS_CTOR_DEFAULT = """
-    def __init__(self, parent, *args, **kargs):
+    def __init__(self, parent=None, **kargs):
         eo.Base.__init__(self, lib.{}(), parent, **kargs)
 """
 
@@ -116,11 +116,12 @@ MANUAL_CONSTRUCTORS = {
 }
 
 MANUAL_EXCLUDES = [
-'elm_obj_widget_event_callback_del', # return void *
+'ecore_mainloop_select_func_get', # type @extern Ecore_Select_Function: __undefined_type;
+# 'elm_obj_widget_event_callback_del', # return void *
 # 'elm_obj_win_illume_command_send', # eolian.Type 'Elm.Illume_Command'
-'evas_obj_clipees_get', # return Eina_List *
-'evas_obj_smart_data_get', # return void *
-'evas_obj_map_get', # const Evas_Map *
+# 'evas_obj_clipees_get', # return Eina_List *
+# 'evas_obj_smart_data_get', # return void *
+# 'evas_obj_map_get', # const Evas_Map *
 ]
 
 class Generator(object):
@@ -149,12 +150,14 @@ class Generator(object):
             ERR('Failed to parse EOT files')
             return False
 
+        ret = self.generate_eo_file('ecore_mainloop.eo', 'ecore') # should be efl/gfx
         # ret = self.generate_eo_file('efl_gfx_base.eo', 'gfx') # should be efl/gfx
-        ret = self.generate_eo_file('evas_object.eo', 'evas')
+        # ret = self.generate_eo_file('evas_object.eo', 'evas')
         # ret = self.generate_eo_file('elm_widget.eo', 'elm')
         # ret = self.generate_eo_file('elm_win.eo', 'elm')
         # ret = self.generate_eo_file('elm_label.eo', 'elm')
 
+        INF('generation complete')
         return ret
 
     def generate_eo_file(self, eo_fname, py_pkg):
@@ -191,7 +194,7 @@ class Generator(object):
         with open(init_fname, mode) as initf:
             if mode == 'w':
                 initf.write(COPYRIGHT.format('#'))
-                initf.write(INIT_HEAD.format(py_pkg))
+                initf.write(INIT_HEAD)
 
             # open headerf
             mode = 'a' if header_fname in self.already_started_header_files else 'w'
