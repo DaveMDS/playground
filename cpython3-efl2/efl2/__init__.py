@@ -27,4 +27,8 @@ __version__ = "2.0.0-test1"
 __version_info__ = ( 2, 0, 0 )
 
 
-from ._object import system #, Object
+from ._object import _Object, system
+
+
+class Object(_Object):
+   pass
