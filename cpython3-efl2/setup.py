@@ -74,21 +74,29 @@ cflags, libs = pkg_config('Elementary', 'elementary', EFL_MIN_VER)
 
 
 ext_modules = []
-packages = ["efl2"]
+packages = ["efl2", "efl2.loop"]
+
+def efl_module(name, sources):
+    mod = Extension(name,
+            define_macros = [('EFL_BETA_API_SUPPORT', 1),
+                             ('EFL_EO_API_SUPPORT', 1),
+                             ('EFL_NOLEGACY_API_SUPPORT', 1)],
+            # include_dirs = ['/usr/local/include'],
+            # libraries = ['tcl83'],
+            # library_dirs = ['/usr/local/lib'],
+            # extra_compile_args = cflags + common_cflags,
+            # extra_link_args = libs + eina_libs
+            extra_compile_args = cflags,
+            extra_link_args = libs,
+            sources = sources)
+    ext_modules.append(mod)
 
 
-mod = Extension('efl2._object',
-                    define_macros = [('EFL_BETA_API_SUPPORT', 1),
-                                     ('EFL_EO_API_SUPPORT', 1)],
-                    # include_dirs = ['/usr/local/include'],
-                    # libraries = ['tcl83'],
-                    # library_dirs = ['/usr/local/lib'],
-                    # extra_compile_args = cflags + common_cflags,
-                    # extra_link_args = libs + eina_libs
-                    extra_compile_args = cflags,
-                    extra_link_args = libs,
-                    sources = ['efl2/efl.object.c'])
-ext_modules.append(mod)
+
+efl_module('efl2._object', ['efl2/efl.object.c'])
+efl_module('efl2._loop', ['efl2/efl.loop.c'])
+efl_module('efl2._loop_user', ['efl2/efl.loop_user.c'])
+efl_module('efl2.loop._timer', ['efl2/loop/efl.loop.timer.c'])
 
 
 setup(

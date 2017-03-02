@@ -1,84 +1,109 @@
 #include <Python.h>
 
+
 #include <Eo.h>
-#include "efl.object.h"
+#include <Efl.h>
+#include <Ecore.h> // EFL_LOOP_TIMER_CLASS is defined here
+
+#include "../efl.object.h"
+static EflObject_CAPIObject EflObjectCAPI;
 
 
-#define DBG(x) printf("Efl.Object: "x);printf("\n");
+#define DBG(x) printf("Efl.Loop.Timer: "x);printf("\n");
 
 ///////////////////////////////////////////////////////////////////////////////
-////  The Efl.Object OBJECT  //////////////////////////////////////////////////
+////  OBJECT  /////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-// Needed??
-static PyTypeObject Efl_ObjectType;
-// Needed??
-#define Efl_Object_Check(v) (Py_TYPE(v) == Efl_ObjectType)
+typedef struct {
+    Efl_ObjectObject base_class;
+    // PyObject            *x_attr;        /* Attributes dictionary */
+} Efl_Loop_TimerObject;
 
+// Needed??
+static PyTypeObject Efl_Loop_TimerType;
+// Needed??
+#define Efl_Loop_Timer_Check(v) (Py_TYPE(v) == Efl_Loop_TimerType)
+
+
+/* TODO move this to efl.object */
+static void
+__test_cb(void *data, const Efl_Event *event)
+{
+    DBG("tick \\o/")
+}
+
+
+static int
+Efl_Loop_Timer_init(Efl_Loop_TimerObject *self, PyObject *args, PyObject *kwds)
+{
+    DBG("init1() 1")
+    double interval;
+    Efl_ObjectObject *parent;
+
+    if (!PyArg_ParseTuple(args, "Od:Timer", &parent, &interval))
+        return -1;
+
+    // TODO check parent is a valid Eo object
+
+    /* Call the parent __init__ func, TODO: NOT SURE WE WANT THIS */
+    if (EflObjectCAPI.Efl_ObjectType->tp_init((PyObject *)self, args, kwds) < 0)
+        return -1;
+
+    Eo *o;
+    o  = efl_add(EFL_LOOP_TIMER_CLASS, parent->obj,
+            efl_loop_timer_interval_set(efl_added, interval));
+    ((Efl_ObjectObject*)self)->obj = o;
+    if (!o)
+        return -1;
+
+
+    /* TODO move this to efl.object */
+    efl_event_callback_add(((Efl_ObjectObject*)self)->obj,
+                            EFL_LOOP_TIMER_EVENT_TICK, __test_cb, NULL);
+
+    return 0;
+}
 
 static void
-Efl_Object_dealloc(Efl_ObjectObject *self)
+Efl_Loop_Timer_dealloc(Efl_Loop_TimerObject *self)
 {
     DBG("dealloc()")
-    Py_XDECREF(self->x_attr);
-    PyObject_Del(self);
+    // Py_XDECREF(self->x_attr);
+    PyObject_Del(self);  //TODO FIXME !!!!
 }
 
-static int
-Efl_Object_traverse(Efl_ObjectObject *self, visitproc visit, void *arg)
-{
-    DBG("traverse()")
-    Py_VISIT(self->x_attr);
-    return 0;
-}
-
-static int
-Efl_Object_init(Efl_ObjectObject *self, PyObject *args, PyObject *kwds)
-{
-    DBG("init()")
-    // if (PyList_Type.tp_init((PyObject *)self, args, kwds) < 0)
-        // return -1;
-    // self->state = 0;
-    return 0;
-}
-
-
-// static int
-// Efl_Object_finalize(Efl_ObjectObject *self)
-// {
-    // Py_CLEAR(self->x_attr);
-    // return 0;
-// }
-
-
+/*
 static PyObject *
-Efl_Object_parent_get(Efl_ObjectObject *self, PyObject *args)
+Efl_Loop_Timer_loop_get(Efl_Loop_UserObject *self, PyObject *args)
 {
-    DBG("PARENT 1")
-    if (!PyArg_ParseTuple(args, ":parent_get"))
+    DBG("loop_get()")
+    if (!PyArg_ParseTuple(args, ":loop_get"))
         return NULL;
 
-    DBG("PARENT 2")
+    Efl_Loop *loop = efl_loop_get(self->base_class.obj);
+
+    // TODO loop to python object and return it
+    
     Py_INCREF(Py_None);
     return Py_None;
-}
+}*/
 
 /* List of functions defined in the object */
-static PyMethodDef Efl_Object_methods[] = {
-    {"parent_get",    (PyCFunction)Efl_Object_parent_get,  METH_VARARGS,
-        PyDoc_STR("demo() -> None")},
+static PyMethodDef Efl_Loop_Timer_methods[] = {
+    // {"loop_get", (PyCFunction)Efl_Loop_User_loop_get,  METH_VARARGS, NULL},
     {NULL, NULL}           /* sentinel */
 };
 
-static PyTypeObject Efl_ObjectType = {
+static PyTypeObject Efl_Loop_TimerType = {
     /* The ob_type field must be initialized in the module init function
      * to be portable to Windows without using C++. */
     PyVarObject_HEAD_INIT(NULL, 0)
-    "_object._Object",          /*tp_name*/
-    sizeof(Efl_ObjectObject),  /*tp_basicsize*/
+    "_timer._Timer",    /*tp_name*/
+    sizeof(Efl_Loop_TimerObject),/*tp_basicsize*/
     0,                          /*tp_itemsize*/
     /* methods */
-    (destructor)Efl_Object_dealloc,    /*tp_dealloc*/
+    (destructor)Efl_Loop_Timer_dealloc,    /*tp_dealloc*/
     0,                          /*tp_print*/
     (getattrfunc)0,             /*tp_getattr*/
     // (setattrfunc)Xxo_setattr,   /*tp_setattr*/
@@ -98,48 +123,37 @@ static PyTypeObject Efl_ObjectType = {
     Py_TPFLAGS_DEFAULT |
         Py_TPFLAGS_BASETYPE,    /*tp_flags*/
     0,                          /*tp_doc*/
-    (traverseproc)Efl_Object_traverse,        /*tp_traverse*/
+    0,                          /*tp_traverse*/
     0,                          /*tp_clear*/
     0,                          /*tp_richcompare*/
     0,                          /*tp_weaklistoffset*/
     0,                          /*tp_iter*/
     0,                          /*tp_iternext*/
-    Efl_Object_methods,         /*tp_methods*/
+    Efl_Loop_Timer_methods,           /*tp_methods*/
     0,                          /*tp_members*/
     0,                          /*tp_getset*/
-    0,                          /*tp_base*/
+    0, /* setted in init */     /*tp_base*/
     0,                          /*tp_dict*/
     0,                          /*tp_descr_get*/
     0,                          /*tp_descr_set*/
     0,                          /*tp_dictoffset*/
-    (initproc)Efl_Object_init,  /* tp_init */
+    (initproc)Efl_Loop_Timer_init,    /* tp_init */
     0,                          /*tp_alloc*/
-    0,                          /*tp_new*/
+    0, /* setted in init */     /*tp_new*/
     0,                          /*tp_free*/
     0,                          /*tp_is_gc*/
 };
 
-///////////////////////////////////////////////////////////////////////////////
-////  The efl._object MODULE  /////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
 
-static PyObject *
-efl_object_system(PyObject *self, PyObject *args)
-{
-    const char *command;
-    int sts;
-
-    if (!PyArg_ParseTuple(args, "s", &command))
-        return NULL;
-    sts = system(command);
-    return PyLong_FromLong(sts);
-}
+///////////////////////////////////////////////////////////////////////////////
+////  MODULE  /////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 
 /* List of functions defined in the module */
 static PyMethodDef ThisModuleMethods[] = {
     
-    {"system",  efl_object_system, METH_VARARGS, "function doc"},
+    //TODO can we avoid this struct if no methods are present at module level?
     
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
@@ -148,48 +162,44 @@ static PyMethodDef ThisModuleMethods[] = {
 /* The module definition */
 static struct PyModuleDef ThisModule = {
    PyModuleDef_HEAD_INIT,
-   "_object",     /* name of module */
+   "_timer",      /* name of module */
    "module doc",  /* module documentation, may be NULL */
    -1,            /* size of per-interpreter state of the module,
                      or -1 if the module keeps state in global variables. */
    ThisModuleMethods
 };
 
-
-/* C API table - always add new things to the end for binary
-   compatibility. */
-static
-EflObject_CAPIObject EflObjectCAPI =
-{
-    &Efl_ObjectType//,
-    // NULL,
-    // NULL
-};
-
 /* Module init function, func name must match module name! (PyInit_XXX) */
 PyMODINIT_FUNC
-PyInit__object(void)
+PyInit__timer(void)
 {
     PyObject *m;
 
+    // TODO how can I autogenerate this init call ??
+    ecore_init(); // TODO check for errors
+
+    /* Import Efl.Object (the base class) CAPI */
+    EflObject_CAPIObject *capi;
+    capi = EflObject_ImportModuleAndAPI();
+    if (!capi)
+        return NULL;
+    EflObjectCAPI = *capi;
+        
+
     /* Finalize the type object including setting type of the new type
      * object; doing it here is required for portability, too. */
-    Efl_ObjectType.tp_new = PyType_GenericNew;
-    if (PyType_Ready(&Efl_ObjectType) < 0)
+    Efl_Loop_TimerType.tp_new = PyType_GenericNew;
+    Efl_Loop_TimerType.tp_base = EflObjectCAPI.Efl_ObjectType;
+    if (PyType_Ready(&Efl_Loop_TimerType) < 0)
         return NULL;
 
     m = PyModule_Create(&ThisModule);
     if (m == NULL)
         return NULL;
-    
-    Py_INCREF(&Efl_ObjectType);
-    PyModule_AddObject(m, "_Object", (PyObject *)&Efl_ObjectType);
 
-    /* Export C API */
-    if (PyModule_AddObject(m, EflObject_CAPI_NAME,
-           PyCapsule_New(&EflObjectCAPI, EflObject_CAPSULE_NAME, NULL)
-                             ) != 0)
-        return NULL;
+    Py_INCREF(&Efl_Loop_TimerType);
+    PyModule_AddObject(m, "_Timer", (PyObject *)&Efl_Loop_TimerType);
 
     return m;
 }
+

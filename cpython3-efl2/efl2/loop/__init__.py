@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # encoding: utf-8
 #
-# Copyright (C) 2007-2016 various contributors (see AUTHORS)
+# Copyright (C) 2007-2017 various contributors (see AUTHORS)
 #
 # This file is part of Python-EFL.
 #
@@ -18,25 +18,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this Python-EFL.  If not, see <http://www.gnu.org/licenses/>.
 
-# semver examples:
-# development: "1.12.99" ( 1, 12, 99 )
-# pre-release: "1.13.0-beta1" ( 1, 13, 0 )
-# release:     "1.13.0" ( 1, 13, 0 )
-
-__version__ = "2.0.0-test1"
-__version_info__ = ( 2, 0, 0 )
+from ._timer import _Timer
 
 
-from ._object import _Object, system
-from ._loop import _Loop
-from ._loop_user import _Loop_User
-
-
-class Object(_Object):  # Direct subclass of python object
-   pass
-
-class Loop(_Loop):  # Direct subclass of efl._Object
-   pass
-
-class Loop_User(_Loop_User):  # Direct subclass of efl._Object
+class Timer(_Timer):  # TODO Direct subclass of _Loop_User
    pass
