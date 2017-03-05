@@ -79,6 +79,7 @@ _eo_object_from_instance(Efl_Object *obj)
         ((Efl_ObjectObject*)ret)->obj = obj;
         // Call the __init_func in the base class (Efl.Object)
         Efl_ObjectType.tp_init(ret, NULL, NULL);
+        // TODO need to INCREF ret ??
         return ret;
     }
 

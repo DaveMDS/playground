@@ -47,7 +47,7 @@ t2 = None
 def timer_cb(obj, event, info, **kargs):
    print("tick1 \\o/", event, info, kargs)
 
-   # print("loop", obj.loop)  THIS NEED TO BE FIXED
+   print("loop", obj.loop)
    print("pending", obj.pending)
 
    itv = obj.interval

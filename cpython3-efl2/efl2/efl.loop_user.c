@@ -7,6 +7,11 @@
 
 #include "efl.object.h"
 
+#define INSIDE_EFL_LOOP_USER_MODULE
+#include "efl.loop_user.h"
+#undef INSIDE_EFL_LOOP_USER_MODULE
+
+
 
 // #define DBG(...) {}
 #define DBG(_fmt_, ...) printf("[%s:%d] "_fmt_"\n", __FILE__, __LINE__, ##__VA_ARGS__);
@@ -14,11 +19,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 ////  OBJECT  /////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-
-typedef struct {
-    Efl_ObjectObject base;
-    // PyObject            *x_attr;        /* Attributes dictionary */
-} Efl_Loop_UserObject;
 
 // Needed??
 static PyTypeObject Efl_Loop_UserType;
@@ -64,7 +64,7 @@ static PyMethodDef Efl_Loop_User_methods[] = {
 };
 
 /* Properties table for Efl.Loop_User class */
-static PyGetSetDef EFL_Loop_Timer_getsetters[] = {
+static PyGetSetDef EFL_Loop_User_getsetters[] = {
     {"loop",
         (getter)Efl_Loop_User_loop_get,
         NULL, /* readonly */
@@ -106,9 +106,9 @@ static PyTypeObject Efl_Loop_UserType = {
     0,                          /*tp_weaklistoffset*/
     0,                          /*tp_iter*/
     0,                          /*tp_iternext*/
-    Efl_Loop_User_methods,           /*tp_methods*/
+    Efl_Loop_User_methods,      /*tp_methods*/
     0,                          /*tp_members*/
-    0,                          /*tp_getset*/
+    EFL_Loop_User_getsetters,   /*tp_getset*/
     0, /* setted in init */     /*tp_base*/
     0,                          /*tp_dict*/
     0,                          /*tp_descr_get*/
@@ -157,6 +157,11 @@ static struct PyModuleDef ThisModule = {
    ThisModuleMethods
 };
 
+/* C API table - always add new things to the end for binary compatibility. */
+static EflLoop_User_CAPI_t EflLoop_UserCAPI = {
+    &Efl_Loop_UserType
+};
+
 /* Module init function, func name must match module name! (PyInit_XXX) */
 PyMODINIT_FUNC
 PyInit__loop_user(void)
@@ -184,6 +189,12 @@ PyInit__loop_user(void)
     Py_INCREF(&Efl_Loop_UserType);
     PyModule_AddObject(m, "_Loop_User", (PyObject *)&Efl_Loop_UserType);
     _eo_class_register(EFL_LOOP_USER_CLASS, &Efl_Loop_UserType);
+
+    /* Export C API */
+    if (PyModule_AddObject(m, EflLoop_User_CAPI_NAME,
+           PyCapsule_New(&EflLoop_UserCAPI, EflLoop_User_CAPSULE_NAME, NULL)
+                             ) != 0)
+        return NULL;
 
     return m;
 }

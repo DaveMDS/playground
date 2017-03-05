@@ -21,5 +21,5 @@
 from ._timer import _Timer
 
 
-class Timer(_Timer):  # TODO Direct subclass of _Loop_User
+class Timer(_Timer):  # Direct subclass of _Loop_User
    pass

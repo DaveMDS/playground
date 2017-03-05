@@ -6,6 +6,7 @@
 #include <Ecore.h> // EFL_LOOP_TIMER_CLASS is defined here
 
 #include "../efl.object.h"
+#include "../efl.loop_user.h"
 
 // #define DBG(...) {}
 #define DBG(_fmt_, ...) printf("[%s:%d] "_fmt_"\n", __FILE__, __LINE__, ##__VA_ARGS__);
@@ -15,7 +16,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 typedef struct {
-    Efl_ObjectObject base;
+    Efl_Loop_UserObject base;
 } Efl_Loop_TimerObject;
 
 
@@ -73,7 +74,7 @@ Efl_Loop_Timer_delay(Efl_Loop_TimerObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "d:delay", &arg1_add))
         return NULL;
 
-    efl_loop_timer_delay(self->base.obj, arg1_add);
+    efl_loop_timer_delay(((Efl_ObjectObject *)(self))->obj, arg1_add);
 
     Py_RETURN_NONE;
 }
@@ -82,7 +83,7 @@ static PyObject *  // Efl.Loop.Timer.loop_reset()
 Efl_Loop_Timer_loop_reset(Efl_Loop_TimerObject *self, PyObject *args)
 {
     DBG("loop_reset()")
-    efl_loop_timer_loop_reset(self->base.obj);
+    efl_loop_timer_loop_reset(((Efl_ObjectObject *)(self))->obj);
     Py_RETURN_NONE;
 }
 
@@ -90,7 +91,7 @@ static PyObject *  // Efl.Loop.Timer.reset()
 Efl_Loop_Timer_reset(Efl_Loop_TimerObject *self, PyObject *args)
 {
     DBG("reset()")
-    efl_loop_timer_reset(self->base.obj);
+    efl_loop_timer_reset(((Efl_ObjectObject *)(self))->obj);
     Py_RETURN_NONE;
 }
 
@@ -98,7 +99,7 @@ static PyObject *  // Efl.Loop.Timer.interval (getter)
 Efl_Loop_Timer_interval_get(Efl_Loop_TimerObject *self, void *closure)
 {
     double in;
-    in = efl_loop_timer_interval_get(self->base.obj);
+    in = efl_loop_timer_interval_get(((Efl_ObjectObject *)(self))->obj);
     return Py_BuildValue("d", in);
 }
 
@@ -107,7 +108,7 @@ Efl_Loop_Timer_interval_set(Efl_Loop_TimerObject *self, PyObject *value, void *c
 {
     DBG("interval_set()")
     double val = PyFloat_AsDouble(value);
-    efl_loop_timer_interval_set(self->base.obj, val);
+    efl_loop_timer_interval_set(((Efl_ObjectObject *)(self))->obj, val);
     return 0;
 }
 
@@ -115,7 +116,7 @@ static PyObject *  // Efl.Loop.Timer.pending (getter)
 Efl_Loop_Timer_pending_get(Efl_Loop_TimerObject *self, void *closure)
 {
     double val;
-    val = efl_loop_timer_pending_get(self->base.obj);
+    val = efl_loop_timer_pending_get(((Efl_ObjectObject *)(self))->obj);
     return Py_BuildValue("d", val);
 }
 
@@ -230,10 +231,14 @@ PyInit__timer(void)
     if (import_efl() < 0)
         return NULL;
 
+    /* Import the base class namespace C API */
+    if (import_efl_loop_user() < 0)
+        return NULL;
+
     /* Finalize the type object including setting type of the new type
      * object; doing it here is required for portability, too. */
     Efl_Loop_TimerType.tp_new = PyType_GenericNew;
-    Efl_Loop_TimerType.tp_base = Efl_ObjectType;
+    Efl_Loop_TimerType.tp_base = Efl_Loop_UserType;
     if (PyType_Ready(&Efl_Loop_TimerType) < 0)
         return NULL;
 
