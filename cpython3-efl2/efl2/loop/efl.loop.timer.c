@@ -15,13 +15,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 typedef struct {
-    Efl_ObjectObject base_class;
-    // PyObject            *x_attr;        /* Attributes dictionary */
+    Efl_ObjectObject base;
 } Efl_Loop_TimerObject;
 
-// Needed??
+
 static PyTypeObject Efl_Loop_TimerType;
-// Needed??
+
 #define Efl_Loop_Timer_Check(v) (Py_TYPE(v) == Efl_Loop_TimerType)
 
 
@@ -63,26 +62,85 @@ Efl_Loop_Timer_dealloc(Efl_Loop_TimerObject *self)
     PyObject_Del(self);  //TODO FIXME !!!!
 }
 
-/*
-static PyObject *
-Efl_Loop_Timer_loop_get(Efl_Loop_UserObject *self, PyObject *args)
+
+static PyObject *  // Efl.Loop.Timer.delay()
+Efl_Loop_Timer_delay(Efl_Loop_TimerObject *self, PyObject *args)
 {
-    DBG("loop_get()")
-    if (!PyArg_ParseTuple(args, ":loop_get"))
+    DBG("delay()")
+
+    // Fetch python args (double add)
+    double arg1_add;
+    if (!PyArg_ParseTuple(args, "d:delay", &arg1_add))
         return NULL;
 
-    Efl_Loop *loop = efl_loop_get(self->base_class.obj);
+    efl_loop_timer_delay(self->base.obj, arg1_add);
 
-    // TODO loop to python object and return it
-    
-    Py_INCREF(Py_None);
-    return Py_None;
-}*/
+    Py_RETURN_NONE;
+}
 
-/* List of functions defined in the object */
+static PyObject *  // Efl.Loop.Timer.loop_reset()
+Efl_Loop_Timer_loop_reset(Efl_Loop_TimerObject *self, PyObject *args)
+{
+    DBG("loop_reset()")
+    efl_loop_timer_loop_reset(self->base.obj);
+    Py_RETURN_NONE;
+}
+
+static PyObject *  // Efl.Loop.Timer.reset()
+Efl_Loop_Timer_reset(Efl_Loop_TimerObject *self, PyObject *args)
+{
+    DBG("reset()")
+    efl_loop_timer_reset(self->base.obj);
+    Py_RETURN_NONE;
+}
+
+static PyObject *  // Efl.Loop.Timer.interval (getter)
+Efl_Loop_Timer_interval_get(Efl_Loop_TimerObject *self, void *closure)
+{
+    double in;
+    in = efl_loop_timer_interval_get(self->base.obj);
+    return Py_BuildValue("d", in);
+}
+
+static int  // Efl.Loop.Timer.interval (setter)
+Efl_Loop_Timer_interval_set(Efl_Loop_TimerObject *self, PyObject *value, void *closure)
+{
+    DBG("interval_set()")
+    double val = PyFloat_AsDouble(value);
+    efl_loop_timer_interval_set(self->base.obj, val);
+    return 0;
+}
+
+static PyObject *  // Efl.Loop.Timer.pending (getter)
+Efl_Loop_Timer_pending_get(Efl_Loop_TimerObject *self, void *closure)
+{
+    double val;
+    val = efl_loop_timer_pending_get(self->base.obj);
+    return Py_BuildValue("d", val);
+}
+
+/* Functions table for Efl.Loop.Timer class */
 static PyMethodDef Efl_Loop_Timer_methods[] = {
-    // {"loop_get", (PyCFunction)Efl_Loop_User_loop_get,  METH_VARARGS, NULL},
-    {NULL, NULL}           /* sentinel */
+    {"delay", (PyCFunction)Efl_Loop_Timer_delay,
+        METH_VARARGS, NULL},
+    {"loop_reset", (PyCFunction)Efl_Loop_Timer_loop_reset,
+        METH_NOARGS, NULL},
+    {"reset", (PyCFunction)Efl_Loop_Timer_reset,
+        METH_NOARGS, NULL},
+    {NULL, NULL, 0, NULL}  /* sentinel */
+};
+
+/* Properties table for Efl.Loop.Timer class */
+static PyGetSetDef EFL_Loop_Timer_getsetters[] = {
+    {"interval",
+        (getter)Efl_Loop_Timer_interval_get,
+        (setter)Efl_Loop_Timer_interval_set,
+        NULL, NULL},
+    {"pending",
+        (getter)Efl_Loop_Timer_pending_get,
+        NULL, /* readonly */
+        NULL, NULL},
+    {NULL, 0, 0, NULL, NULL}  
 };
 
 static PyTypeObject Efl_Loop_TimerType = {
@@ -119,9 +177,9 @@ static PyTypeObject Efl_Loop_TimerType = {
     0,                          /*tp_weaklistoffset*/
     0,                          /*tp_iter*/
     0,                          /*tp_iternext*/
-    Efl_Loop_Timer_methods,           /*tp_methods*/
+    Efl_Loop_Timer_methods,     /*tp_methods*/
     0,                          /*tp_members*/
-    0,                          /*tp_getset*/
+    EFL_Loop_Timer_getsetters,  /*tp_getset*/
     0, /* setted in init */     /*tp_base*/
     0,                          /*tp_dict*/
     0,                          /*tp_descr_get*/

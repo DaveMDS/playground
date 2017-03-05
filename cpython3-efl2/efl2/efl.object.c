@@ -458,7 +458,8 @@ static struct PyModuleDef ThisModule = {
 static EflObject_CAPI_t EflObjectCAPI = {
     &Efl_ObjectType,
     &_eo_class_register,
-    &_eo_event_register
+    &_eo_event_register,
+    &_eo_object_from_instance
 };
 
 /* Module init function, func name must match module name! (PyInit_XXX) */

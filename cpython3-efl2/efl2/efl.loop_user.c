@@ -16,7 +16,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 typedef struct {
-    Efl_ObjectObject base_class;
+    Efl_ObjectObject base;
     // PyObject            *x_attr;        /* Attributes dictionary */
 } Efl_Loop_UserObject;
 
@@ -50,25 +50,26 @@ Efl_Loop_User_dealloc(Efl_Loop_UserObject *self)
     PyObject_Del(self);
 }
 
-static PyObject *
-Efl_Loop_User_loop_get(Efl_Loop_UserObject *self, PyObject *args)
+static PyObject *  // Efl.Loop_User.loop (getter)
+Efl_Loop_User_loop_get(Efl_Loop_UserObject *self, void *closure)
 {
-    DBG("loop_get()")
-    if (!PyArg_ParseTuple(args, ":loop_get"))
-        return NULL;
-
-    // Efl_Loop *loop = efl_loop_get(self->base_class.obj);
-
-    // TODO loop to python object and return it
-    
-    Py_INCREF(Py_None);
-    return Py_None;
+    Efl_Loop *loop;
+    loop = efl_loop_get(self->base.obj);
+    return _eo_object_from_instance(loop);
 }
 
-/* List of functions defined in the object */
+/* Functions table for Efl.Loop_User class */
 static PyMethodDef Efl_Loop_User_methods[] = {
-    {"loop_get", (PyCFunction)Efl_Loop_User_loop_get,  METH_VARARGS, NULL},
-    {NULL, NULL}           /* sentinel */
+    {NULL, NULL, 0, NULL}  /* sentinel */
+};
+
+/* Properties table for Efl.Loop_User class */
+static PyGetSetDef EFL_Loop_Timer_getsetters[] = {
+    {"loop",
+        (getter)Efl_Loop_User_loop_get,
+        NULL, /* readonly */
+        NULL, NULL},
+    {NULL, 0, 0, NULL, NULL}  /* sentinel */
 };
 
 static PyTypeObject Efl_Loop_UserType = {

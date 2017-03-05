@@ -47,10 +47,16 @@ t2 = None
 def timer_cb(obj, event, info, **kargs):
    print("tick1 \\o/", event, info, kargs)
 
-   print("QUIT!!")
+   # print("loop", obj.loop)  THIS NEED TO BE FIXED
+   print("pending", obj.pending)
+
+   itv = obj.interval
+   print("interval", itv)
+   obj.interval = itv + 0.2
+   
    # ml.quit(0)
    # t1.event_callback_del("tick", timer_cb, asd=4, pippo="pippo")
-   obj.delete()
+   # obj.delete()
 
 def timer_cb2(*args, **kargs):
    print("tick2 \\o/")

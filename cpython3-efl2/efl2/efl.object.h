@@ -32,6 +32,7 @@ typedef struct {
     // Exported functions
     void (*_eo_class_register)(const Efl_Class *, const PyTypeObject *type);
     void (*_eo_event_register)(Efl_ObjectObject *self, const Efl_Event_Description *desc);
+    PyObject* (*_eo_object_from_instance)(Efl_Object *obj);
 } EflObject_CAPI_t;
 
 
@@ -56,6 +57,7 @@ import_efl(void)
 #define Efl_ObjectType _EflObject_CAPI->Efl_ObjectType
 #define _eo_class_register _EflObject_CAPI->_eo_class_register
 #define _eo_event_register _EflObject_CAPI->_eo_event_register
+#define _eo_object_from_instance _EflObject_CAPI->_eo_object_from_instance
 
 
 #endif /* !EFL_OBJECT_MODULE */
