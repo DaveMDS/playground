@@ -166,6 +166,8 @@ PyInit__loop(void)
 {
     PyObject *m;
 
+    DBG("module import");
+
     // TODO how can I autogenerate this init call ??
     ecore_init(); // TODO check for errors
 
@@ -186,6 +188,7 @@ PyInit__loop(void)
 
     Py_INCREF(&Efl_LoopType);
     PyModule_AddObject(m, "_Loop", (PyObject *)&Efl_LoopType);
+    _eo_class_register(EFL_LOOP_CLASS, &Efl_LoopType);
 
     return m;
 }

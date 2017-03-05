@@ -44,14 +44,13 @@ obj = None
 t1 = None
 t2 = None
 
-def timer_cb(*args, **kargs):
-   global i
-   print("tick1 \\o/", args, kargs)
+def timer_cb(obj, event, info, **kargs):
+   print("tick1 \\o/", event, info, kargs)
 
    print("QUIT!!")
    # ml.quit(0)
    # t1.event_callback_del("tick", timer_cb, asd=4, pippo="pippo")
-   t1.delete()
+   obj.delete()
 
 def timer_cb2(*args, **kargs):
    print("tick2 \\o/")
@@ -64,7 +63,8 @@ def timer_cb2(*args, **kargs):
 print("\n---- Test: Efl.Loop.Timer")
 t1 = efl2.loop.Timer(ml, 1.0)
 t1.event_callback_add("tick", timer_cb, asd=4, pippo="pippo")
-t1.event_callback_add("tick", timer_cb, asd=4, pippo="pippo2")
+# t1.event_callback_add("tick", timer_cb, asd=4, pippo="pippo2")
+print("PARENT:", t1.parent_get())
 
 # t2 = efl2.loop.Timer(ml, 2.0)
 # t2.event_callback_add("tick", timer_cb2)

@@ -185,6 +185,7 @@ PyInit__timer(void)
 
     Py_INCREF(&Efl_Loop_TimerType);
     PyModule_AddObject(m, "_Timer", (PyObject *)&Efl_Loop_TimerType);
+    _eo_class_register(EFL_LOOP_TIMER_CLASS, &Efl_Loop_TimerType);
 
     return m;
 }

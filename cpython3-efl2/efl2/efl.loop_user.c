@@ -182,6 +182,7 @@ PyInit__loop_user(void)
 
     Py_INCREF(&Efl_Loop_UserType);
     PyModule_AddObject(m, "_Loop_User", (PyObject *)&Efl_Loop_UserType);
+    _eo_class_register(EFL_LOOP_USER_CLASS, &Efl_Loop_UserType);
 
     return m;
 }

@@ -13,6 +13,78 @@
 // #define DBG(...) {}
 #define DBG(_fmt_, ...) printf("[%s:%d] "_fmt_"\n", __FILE__, __LINE__, ##__VA_ARGS__);
 
+#define PY_EO_DATA_KEY "_py_eo_"
+
+// Needed??
+static PyTypeObject Efl_ObjectType;
+// Needed??
+#define Efl_Object_Check(v) (Py_TYPE(v) == Efl_ObjectType)
+
+static Eina_Hash *_eo_class_map = NULL;
+
+///////////////////////////////////////////////////////////////////////////////
+////  Conversion functions  ///////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+static void
+_eo_class_register(const Efl_Class *cls, const PyTypeObject *type)
+{
+    DBG("register class: '%s'%p with type: %s", efl_class_name_get(cls),cls, type->tp_name);
+    if (!eina_hash_direct_add(_eo_class_map, efl_class_name_get(cls), type))
+        DBG("ERROR: cannot register class");
+}
+
+
+static PyObject*
+_eo_object_from_instance(Efl_Object *obj)
+{
+    PyObject *ret;
+
+    DBG("_eo_object_from_instance %p", obj);
+    if (!obj)
+    {
+        Py_RETURN_NONE;
+    }
+
+    // Search in key data for an existing py instance
+    ret = efl_key_data_get(obj, PY_EO_DATA_KEY);
+    if (ret)
+    {
+        DBG("Found an existing Python object instance in key data");
+        return ret;
+    }
+
+    // Get the efl class
+    const Efl_Class *cls = efl_class_get(obj);
+    if (!cls)
+    {
+        DBG("ERROR: cannot get class from object")
+        Py_RETURN_NONE;  // or NULL ??
+    }
+    DBG("class: '%s'%p", efl_class_name_get(cls), cls);
+
+    // Find the registered python object type
+    PyTypeObject *type;
+    type = eina_hash_find(_eo_class_map, efl_class_name_get(cls));
+    if (!type)
+    {
+        DBG("ERROR: cannot find a matching python class")
+        Py_RETURN_NONE;  // or NULL ??
+    }
+
+    // Create a new object of the correct class
+    ret = type->tp_alloc(type, 0);
+    if (ret)
+    {
+        DBG("Created a new object of class: %s from obj: %p", type->tp_name, obj);
+        ((Efl_ObjectObject*)ret)->obj = obj;
+        // Call the __init_func in the base class (Efl.Object)
+        Efl_ObjectType.tp_init(ret, NULL, NULL);
+        return ret;
+    }
+
+    DBG("ERROR: cannot convert Efl_Object* object to python") 
+    Py_RETURN_NONE;  // or NULL ??
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 ////  Event callbacks and cbdata handling  ////////////////////////////////////
@@ -58,10 +130,13 @@ _eo_callback_dispatcher(void *data, const Efl_Event *event)
 
     DBG("_callback_dispatcher for event: '%s'", event->desc->name)
 
+    PyObject *obj;
+    obj = _eo_object_from_instance(event->object);
+    
     // Build python args for the callback
     // FIXME: callback signature: (obj, event_name, event_info, **kargs)
     PyObject *arglist;
-    arglist = Py_BuildValue("(OsO)", Py_None, event->desc->name, Py_None);
+    arglist = Py_BuildValue("(OsO)", obj, event->desc->name, Py_None);
 
     // Call the user python callback
     PyObject *result;
@@ -105,12 +180,6 @@ _eo_event_find_by_name(Efl_ObjectObject *self, const char *event_name)
 ////  The Efl.Object OBJECT  //////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-// Needed??
-static PyTypeObject Efl_ObjectType;
-// Needed??
-#define Efl_Object_Check(v) (Py_TYPE(v) == Efl_ObjectType)
-
-
 static void /* with GIL (NOT SURE) */
 _eo_del_callback(void *data, const Efl_Event *event)
 {
@@ -134,9 +203,8 @@ _eo_del_callback(void *data, const Efl_Event *event)
     self->events = NULL;
 
     // Invalidate the efl object reference
+    Py_DECREF(self);
     self->obj = NULL;
-
-    // TODO: also delete (unref?) the python object (self) here??
 
     /* Release the GIL */
     // PyGILState_Release(_gil_state);
@@ -146,6 +214,9 @@ static int
 Efl_Object_init(Efl_ObjectObject *self, PyObject *args, PyObject *kwds)
 {
     DBG("init()")
+
+    efl_key_data_set(self->obj, PY_EO_DATA_KEY, self);
+    Py_INCREF(self);
 
     // Keep track of the efl object lifetime (after user del cbs has been called)
     efl_event_callback_priority_add(self->obj, EFL_EVENT_DEL,
@@ -201,7 +272,7 @@ Efl_Object_event_callback_add(Efl_ObjectObject *self, PyObject *args, PyObject *
     event_desc = _eo_event_find_by_name(self, event_name);
     if (!event_desc) return NULL;
 
-    // Prepare cb data
+    // Prepare the data that will be attached with the cb
     struct cb_data_t *cbdata;
     cbdata = _eo_cbdata_new(cb, kargs);
 
@@ -274,8 +345,14 @@ static PyObject *  // Efl.Object.parent_get()
 Efl_Object_parent_get(Efl_ObjectObject *self, PyObject *args)
 {
     DBG("parent_get()")
-    // TODO implement
-    Py_RETURN_NONE;
+    Efl_Object *obj;
+    PyObject *ret;
+
+    obj = efl_parent_get(self->obj);
+    ret = _eo_object_from_instance(obj);
+
+    return ret;
+    
 }
 
 /* List of functions defined in the object */
@@ -378,9 +455,9 @@ static struct PyModuleDef ThisModule = {
 
 
 /* C API table - always add new things to the end for binary compatibility. */
-static EflObject_CAPI_t EflObjectCAPI =
-{
+static EflObject_CAPI_t EflObjectCAPI = {
     &Efl_ObjectType,
+    &_eo_class_register,
     &_eo_event_register
 };
 
@@ -390,9 +467,16 @@ PyInit__object(void)
 {
     PyObject *m;
 
+    DBG("module import");
+
     // TODO how can I autogenerate this init call ??
     eina_init(); // TODO check for errors
     ecore_init(); // TODO check for errors
+
+    // Init the "class name" => PyTypeObject* hash map
+    _eo_class_map = eina_hash_string_superfast_new(NULL);
+    if (!_eo_class_map)
+        return NULL;
 
     /* Finalize the type object including setting type of the new type
      * object; doing it here is required for portability, too. */
