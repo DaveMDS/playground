@@ -19,19 +19,45 @@ typedef struct {
     PyObject_HEAD
     PyObject            *x_attr;        /* just a demo dictionary */
     Eo *obj;
+    Eina_List *cbdatas;     /* content: cbdata_t pointers  */
+    Eina_List *events;      /* content: Efl_Event_Description pointers */
+    /* TODO FIX events should be at class level, not per instance! */
 } Efl_ObjectObject;
 
 
 /* C API for usage by other modules */
 typedef struct {
+    // Exported types
     PyTypeObject *Efl_ObjectType;
-    // PyObject *error;
-    // PyObject *timeout_error;
-} EflObject_CAPIObject;
+    // Exported functions
+    void (*_eo_event_register)(Efl_ObjectObject *self, const Efl_Event_Description *desc);
+} EflObject_CAPI_t;
 
 
-#define EflObject_ImportModuleAndAPI() PyCapsule_Import(EflObject_CAPSULE_NAME, 1)
+/******************************************************************************/
+/***** This section is used ONLY in modules that use efl.object.c API *********/
+/******************************************************************************/
+#ifndef INSIDE_EFL_OBJECT_MODULE
 
+static EflObject_CAPI_t *_EflObject_CAPI;
+
+/* Return -1 on error, 0 on success.
+ * PyCapsule_Import will set an exception if there's an error.
+ */
+static int
+import_efl(void)
+{
+    _EflObject_CAPI = PyCapsule_Import(EflObject_CAPSULE_NAME, 0); // TODO 0 or 1 ??
+    return (_EflObject_CAPI != NULL) ? 0 : -1;
+}
+
+// defines for faster access in modules
+#define Efl_ObjectType _EflObject_CAPI->Efl_ObjectType
+#define _eo_event_register _EflObject_CAPI->_eo_event_register
+
+
+#endif /* !EFL_OBJECT_MODULE */
+/******************************************************************************/
 
 #ifdef __cplusplus
 }

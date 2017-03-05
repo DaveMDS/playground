@@ -6,10 +6,10 @@
 #include <Ecore.h> // EFL_LOOP_USER_CLASS is defined here
 
 #include "efl.object.h"
-static EflObject_CAPIObject EflObjectCAPI;
 
 
-#define DBG(x) printf("Efl.Loop_User: "x);printf("\n");
+// #define DBG(...) {}
+#define DBG(_fmt_, ...) printf("[%s:%d] "_fmt_"\n", __FILE__, __LINE__, ##__VA_ARGS__);
 
 ///////////////////////////////////////////////////////////////////////////////
 ////  OBJECT  /////////////////////////////////////////////////////////////////
@@ -31,14 +31,13 @@ Efl_Loop_User_init(Efl_Loop_UserObject *self, PyObject *args, PyObject *kwds)
 {
     DBG("init()")
 
-    /* Call the parent __init__ func, TODO: NOT SURE WE WANT THIS */
-    if (EflObjectCAPI.Efl_ObjectType->tp_init((PyObject *)self, args, kwds) < 0)
-        return -1;
-    // self->state = 0;
-
     Eo *o;
     o  = efl_add(EFL_LOOP_USER_CLASS, NULL);
     ((Efl_ObjectObject*)self)->obj = o;
+
+    /* Call the base class __init__ func */
+    if (Efl_ObjectType->tp_init((PyObject *)self, args, kwds) < 0)
+        return -1;
 
     return 0;
 }
@@ -58,7 +57,7 @@ Efl_Loop_User_loop_get(Efl_Loop_UserObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, ":loop_get"))
         return NULL;
 
-    Efl_Loop *loop = efl_loop_get(self->base_class.obj);
+    // Efl_Loop *loop = efl_loop_get(self->base_class.obj);
 
     // TODO loop to python object and return it
     
@@ -166,18 +165,14 @@ PyInit__loop_user(void)
     // TODO how can I autogenerate this init call ??
     ecore_init(); // TODO check for errors
 
-    /* Import Efl.Object (the base class) CAPI */
-    EflObject_CAPIObject *capi;
-    capi = EflObject_ImportModuleAndAPI();
-    if (!capi)
+    /* Import the Efl namespace C API (_eo_* and others) */
+    if (import_efl() < 0)
         return NULL;
-    EflObjectCAPI = *capi;
-        
 
     /* Finalize the type object including setting type of the new type
      * object; doing it here is required for portability, too. */
     Efl_Loop_UserType.tp_new = PyType_GenericNew;
-    Efl_Loop_UserType.tp_base = EflObjectCAPI.Efl_ObjectType;
+    Efl_Loop_UserType.tp_base = Efl_ObjectType;
     if (PyType_Ready(&Efl_Loop_UserType) < 0)
         return NULL;
 

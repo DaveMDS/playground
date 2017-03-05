@@ -70,7 +70,7 @@ def pkg_config(name, require, min_vers=None):
 
 
 
-cflags, libs = pkg_config('Elementary', 'elementary', EFL_MIN_VER)
+cflags, libs = pkg_config('EFL', 'eina elementary', EFL_MIN_VER)
 
 
 ext_modules = []
@@ -92,10 +92,11 @@ def efl_module(name, sources):
     ext_modules.append(mod)
 
 
-
+# namespace: efl
 efl_module('efl2._object', ['efl2/efl.object.c'])
 efl_module('efl2._loop', ['efl2/efl.loop.c'])
 efl_module('efl2._loop_user', ['efl2/efl.loop_user.c'])
+# namespace: efl.loop
 efl_module('efl2.loop._timer', ['efl2/loop/efl.loop.timer.c'])
 
 

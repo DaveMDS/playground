@@ -6,10 +6,11 @@
 #include <Ecore.h> // EFL_LOOP_CLASS is defined here
 
 #include "efl.object.h"
-static EflObject_CAPIObject EflObjectCAPI;
 
 
-#define DBG(x) printf("Efl.Loop: "x);printf("\n");
+// #define DBG(...) {}
+#define DBG(_fmt_, ...) printf("[%s:%d] "_fmt_"\n", __FILE__, __LINE__, ##__VA_ARGS__);
+
 
 ///////////////////////////////////////////////////////////////////////////////
 ////  OBJECT  /////////////////////////////////////////////////////////////////
@@ -31,14 +32,20 @@ Efl_Loop_init(Efl_LoopObject *self, PyObject *args, PyObject *kwds)
 {
     DBG("init()")
 
-    /* Call the parent __init__ func, TODO: NOT SURE WE WANT THIS */
-    if (EflObjectCAPI.Efl_ObjectType->tp_init((PyObject *)self, args, kwds) < 0)
-        return -1;
+    // TODO FIX this should be at class level, not repeated for every instance */
+    _eo_event_register((Efl_ObjectObject*)self, EFL_LOOP_EVENT_ARGUMENTS);
+    _eo_event_register((Efl_ObjectObject*)self, EFL_LOOP_EVENT_IDLE_ENTER);
+    _eo_event_register((Efl_ObjectObject*)self, EFL_LOOP_EVENT_IDLE_EXIT);
+    _eo_event_register((Efl_ObjectObject*)self, EFL_LOOP_EVENT_IDLE);
 
     Eo *o;
     o  = efl_add(EFL_LOOP_CLASS, NULL);
     ((Efl_ObjectObject*)self)->obj = o;
-    
+
+    /* Call the base class __init__ func */
+    if (Efl_ObjectType->tp_init((PyObject *)self, args, kwds) < 0)
+        return -1;
+
     return 0;
 }
 
@@ -54,20 +61,30 @@ static PyObject *
 Efl_Loop_begin(Efl_LoopObject *self, PyObject *args)
 {
     DBG("begin()")
-    if (!PyArg_ParseTuple(args, ":begin"))
-        return NULL;
-    DBG("begin2()")
 
     efl_loop_begin(self->base_class.obj);
-    
-    Py_INCREF(Py_None);
-    return Py_None;
+
+    Py_RETURN_NONE;
+}
+
+static PyObject *
+Efl_Loop_quit(Efl_LoopObject *self, PyObject *args)
+{
+    unsigned char arg1_exit_code;
+
+    DBG("quit()")
+    if (!PyArg_ParseTuple(args, "i:quit", &arg1_exit_code))
+        return NULL;
+
+    efl_loop_quit(self->base_class.obj, arg1_exit_code);
+
+    Py_RETURN_NONE;
 }
 
 /* List of functions defined in the object */
 static PyMethodDef Efl_Loop_methods[] = {
-    {"begin",    (PyCFunction)Efl_Loop_begin,  METH_VARARGS,
-        PyDoc_STR("demo() -> None")},
+    {"begin",    (PyCFunction)Efl_Loop_begin,  METH_NOARGS, NULL},
+    {"quit",     (PyCFunction)Efl_Loop_quit,  METH_VARARGS, NULL},
     {NULL, NULL}           /* sentinel */
 };
 
@@ -152,18 +169,14 @@ PyInit__loop(void)
     // TODO how can I autogenerate this init call ??
     ecore_init(); // TODO check for errors
 
-    /* Import Efl.Object (the base class) CAPI */
-    EflObject_CAPIObject *capi;
-    capi = EflObject_ImportModuleAndAPI();
-    if (!capi)
+    /* Import the Efl namespace C API (_eo_* and others) */
+    if (import_efl() < 0)
         return NULL;
-    EflObjectCAPI = *capi;
-        
 
     /* Finalize the type object including setting type of the new type
      * object; doing it here is required for portability, too. */
     Efl_LoopType.tp_new = PyType_GenericNew;
-    Efl_LoopType.tp_base = EflObjectCAPI.Efl_ObjectType;
+    Efl_LoopType.tp_base = Efl_ObjectType;
     if (PyType_Ready(&Efl_LoopType) < 0)
         return NULL;
 

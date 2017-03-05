@@ -2,9 +2,9 @@
 # encoding: utf-8
 
 
-import efl2
-import efl2.loop
 import efl2 as efl
+import efl2.loop
+
 
 # from efl2 import system
 # from efl2 import Object
@@ -27,16 +27,52 @@ import efl2 as efl
 # print(o)
 
 
+def idle_cb(*args):
+   print("IDLE")
+
 print("\n---- Test: Efl.Loop")
 ml = efl.Loop()
+ml.event_callback_add("idle", idle_cb)
+# ml.event_callback_add("idle,enter", idle_cb)
+
+# ml.begin()
+
 
 #####
+# """
+obj = None
+t1 = None
+t2 = None
+
+def timer_cb(*args, **kargs):
+   global i
+   print("tick1 \\o/", args, kargs)
+
+   print("QUIT!!")
+   # ml.quit(0)
+   # t1.event_callback_del("tick", timer_cb, asd=4, pippo="pippo")
+   t1.delete()
+
+def timer_cb2(*args, **kargs):
+   print("tick2 \\o/")
+   # print(args, kargs)
+
+   print("QUIT 2")
+   t2.event_callback_del("tick", timer_cb2)
+
+
 print("\n---- Test: Efl.Loop.Timer")
-t = efl2.loop.Timer(ml, 1.0)
-print(t)
+t1 = efl2.loop.Timer(ml, 1.0)
+t1.event_callback_add("tick", timer_cb, asd=4, pippo="pippo")
+t1.event_callback_add("tick", timer_cb, asd=4, pippo="pippo2")
+
+# t2 = efl2.loop.Timer(ml, 2.0)
+# t2.event_callback_add("tick", timer_cb2)
+
+
 # ml.parent_get()
 ml.begin()
-
+# """
 
 
 # print("\n---- Test: Efl.Loop")

@@ -1,10 +1,105 @@
 #include <Python.h>
 
+#include <Eina.h>
 #include <Eo.h>
+#include <Efl.h>
+#include <Ecore.h>
+
+#define INSIDE_EFL_OBJECT_MODULE
 #include "efl.object.h"
+#undef INSIDE_EFL_OBJECT_MODULE
 
 
-#define DBG(x) printf("Efl.Object: "x);printf("\n");
+// #define DBG(...) {}
+#define DBG(_fmt_, ...) printf("[%s:%d] "_fmt_"\n", __FILE__, __LINE__, ##__VA_ARGS__);
+
+
+///////////////////////////////////////////////////////////////////////////////
+////  Event callbacks and cbdata handling  ////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+struct cb_data_t {
+    PyObject *cb;    // The user callback
+    PyObject *kargs; // User kargs to pass back in cb
+};
+
+static struct cb_data_t *
+_eo_cbdata_new(PyObject *cb, PyObject *kargs)
+{
+    struct cb_data_t *cbdata;
+
+    cbdata = malloc(sizeof(struct cb_data_t));
+    if (!cbdata || !cb) return NULL;
+
+    cbdata->cb = cb; 
+    cbdata->kargs = kargs; 
+
+    Py_INCREF(cb);
+    Py_XINCREF(kargs);
+
+    return cbdata;
+}
+
+static void
+_eo_cbdata_free(struct cb_data_t *cbdata)
+{
+    Py_DECREF(cbdata->cb);
+    Py_XDECREF(cbdata->kargs);
+    free(cbdata);
+}
+
+static void /* with GIL (NOT SURE) */
+_eo_callback_dispatcher(void *data, const Efl_Event *event)
+{
+    struct cb_data_t *cbdata = data;
+
+    /* Acquire the GIL */
+    PyGILState_STATE _gil_state = PyGILState_Ensure();
+
+    DBG("_callback_dispatcher for event: '%s'", event->desc->name)
+
+    // Build python args for the callback
+    // FIXME: callback signature: (obj, event_name, event_info, **kargs)
+    PyObject *arglist;
+    arglist = Py_BuildValue("(OsO)", Py_None, event->desc->name, Py_None);
+
+    // Call the user python callback
+    PyObject *result;
+    result = PyObject_Call(cbdata->cb, arglist, cbdata->kargs);
+    Py_DECREF(arglist);
+    Py_XDECREF(result);
+
+    /* Propagate exceptions raised inside the callback */
+    if (PyErr_Occurred()) {
+        PyErr_PrintEx(0);
+    }
+
+    /* Release the GIL */
+    PyGILState_Release(_gil_state);
+}
+
+static void
+_eo_event_register(Efl_ObjectObject *self, const Efl_Event_Description *desc)
+{
+    DBG("register event: %s", desc->name);
+    self->events = eina_list_append(self->events, desc);
+}
+
+static const Efl_Event_Description *
+_eo_event_find_by_name(Efl_ObjectObject *self, const char *event_name)
+{
+    const Efl_Event_Description *event_desc;
+    Eina_List *l;
+
+    EINA_LIST_FOREACH(self->events, l, event_desc)
+        if (strcmp(event_desc->name, event_name) == 0)
+            break;
+    if (l == NULL) {
+        PyErr_SetString(PyExc_TypeError, "event name cannot be found");
+        return NULL;
+    }
+    return event_desc;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 ////  The Efl.Object OBJECT  //////////////////////////////////////////////////
@@ -14,6 +109,51 @@
 static PyTypeObject Efl_ObjectType;
 // Needed??
 #define Efl_Object_Check(v) (Py_TYPE(v) == Efl_ObjectType)
+
+
+static void /* with GIL (NOT SURE) */
+_eo_del_callback(void *data, const Efl_Event *event)
+{
+    Efl_ObjectObject *self = data;
+
+    /* Acquire the GIL */
+    // PyGILState_STATE _gil_state = PyGILState_Ensure();
+
+    DBG("DEL EVENT")
+
+    // TODO need to call the del callbacks in python here ???
+
+    // Free all cb datas ad unref it's content
+    struct cb_data_t *d;
+    EINA_LIST_FREE(self->cbdatas,d)
+        _eo_cbdata_free(d);
+    self->cbdatas = NULL;
+
+    // Free the list of event descriptions
+    eina_list_free(self->events);
+    self->events = NULL;
+
+    // Invalidate the efl object reference
+    self->obj = NULL;
+
+    // TODO: also delete (unref?) the python object (self) here??
+
+    /* Release the GIL */
+    // PyGILState_Release(_gil_state);
+}
+
+static int
+Efl_Object_init(Efl_ObjectObject *self, PyObject *args, PyObject *kwds)
+{
+    DBG("init()")
+
+    // Keep track of the efl object lifetime (after user del cbs has been called)
+    efl_event_callback_priority_add(self->obj, EFL_EVENT_DEL,
+                                    EFL_CALLBACK_PRIORITY_AFTER + 9999,
+                                    _eo_del_callback, self);
+    
+    return 0;
+}
 
 
 static void
@@ -32,16 +172,6 @@ Efl_Object_traverse(Efl_ObjectObject *self, visitproc visit, void *arg)
     return 0;
 }
 
-static int
-Efl_Object_init(Efl_ObjectObject *self, PyObject *args, PyObject *kwds)
-{
-    DBG("init()")
-    // if (PyList_Type.tp_init((PyObject *)self, args, kwds) < 0)
-        // return -1;
-    // self->state = 0;
-    return 0;
-}
-
 
 // static int
 // Efl_Object_finalize(Efl_ObjectObject *self)
@@ -51,23 +181,114 @@ Efl_Object_init(Efl_ObjectObject *self, PyObject *args, PyObject *kwds)
 // }
 
 
-static PyObject *
+static PyObject *  // Efl.Object.event_callback_add()
+Efl_Object_event_callback_add(Efl_ObjectObject *self, PyObject *args, PyObject *kargs)
+{
+    DBG("event_callback_add()")
+
+    // Fetch python args (str event_name, callable cb, **kargs)
+    const char *event_name;
+    PyObject *cb;
+    if (!PyArg_ParseTuple(args, "sO:event_callback_add", &event_name, &cb))
+        return  NULL;
+    if (!PyCallable_Check(cb)) {
+        PyErr_SetString(PyExc_TypeError, "parameter must be callable");
+        return NULL;
+    }
+
+    // Event name -> event desc
+    const Efl_Event_Description *event_desc;
+    event_desc = _eo_event_find_by_name(self, event_name);
+    if (!event_desc) return NULL;
+
+    // Prepare cb data
+    struct cb_data_t *cbdata;
+    cbdata = _eo_cbdata_new(cb, kargs);
+
+    // Actually call the C EFL function
+    if (efl_event_callback_add(self->obj, event_desc,
+                              _eo_callback_dispatcher, cbdata) == EINA_FALSE) {
+        PyErr_SetString(PyExc_TypeError, "Unknown error while attaching callback");
+        _eo_cbdata_free(cbdata);
+        return NULL;
+    }
+
+    // Keep a list of reffed data, we will unref on del or callback_del
+    self->cbdatas = eina_list_append(self->cbdatas, cbdata);
+
+    Py_RETURN_NONE;
+}
+
+static PyObject *  // Efl.Object.event_callback_del()
+Efl_Object_event_callback_del(Efl_ObjectObject *self, PyObject *args, PyObject *kargs)
+{
+    DBG("event_callback_del()")
+
+    // Fetch python args (str event_name, callable cb, **kargs)
+    const char *event_name;
+    PyObject *cb;
+    if (!PyArg_ParseTuple(args, "sO:Efl_Object_event_callback_del", &event_name, &cb))
+        return  NULL;
+
+    // Search a matching cbdata in our list of connected cbs
+    struct cb_data_t *cbdata = NULL;
+    Eina_List *l;
+    EINA_LIST_FOREACH(self->cbdatas, l, cbdata)
+    {
+        if ((cbdata->cb == cb) &&
+            (PyObject_RichCompareBool(cbdata->kargs, kargs, Py_EQ)))
+        {
+            self->cbdatas = eina_list_remove_list(self->cbdatas, l);
+            break;
+        }
+    }
+    if (l == NULL)
+    {
+        PyErr_SetString(PyExc_TypeError, "cannot find a matching callback");
+        return NULL;
+    }
+
+    // Event name -> event desc
+    const Efl_Event_Description *event_desc;
+    event_desc = _eo_event_find_by_name(self, event_name);
+    if (!event_desc) return NULL;
+
+    efl_event_callback_del(self->obj, event_desc, _eo_callback_dispatcher, cbdata);
+
+    // Free data ad unref it's content
+    _eo_cbdata_free(cbdata);
+
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *  // Efl.Object.delete()
+Efl_Object_delete(Efl_ObjectObject *self, PyObject *args)
+{
+    DBG("delete()")
+    efl_del(self->obj);
+    Py_RETURN_NONE;
+}
+
+static PyObject *  // Efl.Object.parent_get()
 Efl_Object_parent_get(Efl_ObjectObject *self, PyObject *args)
 {
-    DBG("PARENT 1")
-    if (!PyArg_ParseTuple(args, ":parent_get"))
-        return NULL;
-
-    DBG("PARENT 2")
-    Py_INCREF(Py_None);
-    return Py_None;
+    DBG("parent_get()")
+    // TODO implement
+    Py_RETURN_NONE;
 }
 
 /* List of functions defined in the object */
 static PyMethodDef Efl_Object_methods[] = {
-    {"parent_get",    (PyCFunction)Efl_Object_parent_get,  METH_VARARGS,
-        PyDoc_STR("demo() -> None")},
-    {NULL, NULL}           /* sentinel */
+    {"delete", (PyCFunction)Efl_Object_delete,
+        METH_NOARGS, NULL},
+    {"event_callback_add", (PyCFunction)Efl_Object_event_callback_add,
+        METH_VARARGS | METH_KEYWORDS, NULL},
+    {"event_callback_del", (PyCFunction)Efl_Object_event_callback_del,
+        METH_VARARGS | METH_KEYWORDS, NULL},
+    {"parent_get", (PyCFunction)Efl_Object_parent_get,
+        METH_NOARGS, NULL},
+    {NULL, NULL, 0, NULL}  /* sentinel */
 };
 
 static PyTypeObject Efl_ObjectType = {
@@ -156,14 +377,11 @@ static struct PyModuleDef ThisModule = {
 };
 
 
-/* C API table - always add new things to the end for binary
-   compatibility. */
-static
-EflObject_CAPIObject EflObjectCAPI =
+/* C API table - always add new things to the end for binary compatibility. */
+static EflObject_CAPI_t EflObjectCAPI =
 {
-    &Efl_ObjectType//,
-    // NULL,
-    // NULL
+    &Efl_ObjectType,
+    &_eo_event_register
 };
 
 /* Module init function, func name must match module name! (PyInit_XXX) */
@@ -171,6 +389,10 @@ PyMODINIT_FUNC
 PyInit__object(void)
 {
     PyObject *m;
+
+    // TODO how can I autogenerate this init call ??
+    eina_init(); // TODO check for errors
+    ecore_init(); // TODO check for errors
 
     /* Finalize the type object including setting type of the new type
      * object; doing it here is required for portability, too. */

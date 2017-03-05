@@ -6,10 +6,9 @@
 #include <Ecore.h> // EFL_LOOP_TIMER_CLASS is defined here
 
 #include "../efl.object.h"
-static EflObject_CAPIObject EflObjectCAPI;
 
-
-#define DBG(x) printf("Efl.Loop.Timer: "x);printf("\n");
+// #define DBG(...) {}
+#define DBG(_fmt_, ...) printf("[%s:%d] "_fmt_"\n", __FILE__, __LINE__, ##__VA_ARGS__);
 
 ///////////////////////////////////////////////////////////////////////////////
 ////  OBJECT  /////////////////////////////////////////////////////////////////
@@ -26,29 +25,21 @@ static PyTypeObject Efl_Loop_TimerType;
 #define Efl_Loop_Timer_Check(v) (Py_TYPE(v) == Efl_Loop_TimerType)
 
 
-/* TODO move this to efl.object */
-static void
-__test_cb(void *data, const Efl_Event *event)
-{
-    DBG("tick \\o/")
-}
-
-
 static int
 Efl_Loop_Timer_init(Efl_Loop_TimerObject *self, PyObject *args, PyObject *kwds)
 {
-    DBG("init1() 1")
+    DBG("init()")
     double interval;
     Efl_ObjectObject *parent;
+
+    // TODO FIX this should be at class level, not repeated for every instance */
+    _eo_event_register((Efl_ObjectObject*)self, EFL_LOOP_TIMER_EVENT_TICK);
+
 
     if (!PyArg_ParseTuple(args, "Od:Timer", &parent, &interval))
         return -1;
 
     // TODO check parent is a valid Eo object
-
-    /* Call the parent __init__ func, TODO: NOT SURE WE WANT THIS */
-    if (EflObjectCAPI.Efl_ObjectType->tp_init((PyObject *)self, args, kwds) < 0)
-        return -1;
 
     Eo *o;
     o  = efl_add(EFL_LOOP_TIMER_CLASS, parent->obj,
@@ -57,10 +48,9 @@ Efl_Loop_Timer_init(Efl_Loop_TimerObject *self, PyObject *args, PyObject *kwds)
     if (!o)
         return -1;
 
-
-    /* TODO move this to efl.object */
-    efl_event_callback_add(((Efl_ObjectObject*)self)->obj,
-                            EFL_LOOP_TIMER_EVENT_TICK, __test_cb, NULL);
+    /* Call the base class __init__ func */
+    if (Efl_ObjectType->tp_init((PyObject *)self, args, kwds) < 0)
+        return -1;
 
     return 0;
 }
@@ -178,18 +168,14 @@ PyInit__timer(void)
     // TODO how can I autogenerate this init call ??
     ecore_init(); // TODO check for errors
 
-    /* Import Efl.Object (the base class) CAPI */
-    EflObject_CAPIObject *capi;
-    capi = EflObject_ImportModuleAndAPI();
-    if (!capi)
+    /* Import the Efl namespace C API (_eo_* and others) */
+    if (import_efl() < 0)
         return NULL;
-    EflObjectCAPI = *capi;
-        
 
     /* Finalize the type object including setting type of the new type
      * object; doing it here is required for portability, too. */
     Efl_Loop_TimerType.tp_new = PyType_GenericNew;
-    Efl_Loop_TimerType.tp_base = EflObjectCAPI.Efl_ObjectType;
+    Efl_Loop_TimerType.tp_base = Efl_ObjectType;
     if (PyType_Ready(&Efl_Loop_TimerType) < 0)
         return NULL;
 
