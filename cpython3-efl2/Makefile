@@ -34,8 +34,14 @@ install:
 # 	$(PY) setup.py build build_doc
 
 
-# .PHONY: test
-# test:
+.PHONY: test
+test:
+	$(PY) ./tests/test.py
+# 	$(PY) setup.py test
+
+.PHONY: debug
+debug:
+	gdb -ex r --args $(PY) ./tests/test.py
 # 	$(PY) setup.py test
 
 

@@ -92,12 +92,26 @@ def efl_module(name, sources):
     ext_modules.append(mod)
 
 
+
+efl_module('efl2._efl', [
+    'efl2/eo_utils.c',
+    'efl2/_efl.module.c',
+    'efl2/efl.object.c',
+    'efl2/efl.loop.c',
+    'efl2/efl.loop_user.c',
+])
+
+efl_module('efl2.loop._loop', [
+    'efl2/loop/_loop.module.c',
+    'efl2/loop/efl.loop.timer.c',
+])
+
 # namespace: efl
-efl_module('efl2._object', ['efl2/efl.object.c'])
-efl_module('efl2._loop', ['efl2/efl.loop.c'])
-efl_module('efl2._loop_user', ['efl2/efl.loop_user.c'])
+# efl_module('efl2._object', ['efl2/efl.object.c'])
+# efl_module('efl2._loop', ['efl2/efl.loop.c'])
+# efl_module('efl2._loop_user', ['efl2/efl.loop_user.c'])
 # namespace: efl.loop
-efl_module('efl2.loop._timer', ['efl2/loop/efl.loop.timer.c'])
+# efl_module('efl2.loop._timer', ['efl2/loop/efl.loop.timer.c'])
 
 
 setup(

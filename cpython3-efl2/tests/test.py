@@ -32,10 +32,9 @@ def idle_cb(*args):
 
 print("\n---- Test: Efl.Loop")
 ml = efl.Loop()
-ml.event_callback_add("idle", idle_cb)
+# ml.event_callback_add("idle", idle_cb)
 # ml.event_callback_add("idle,enter", idle_cb)
 
-# ml.begin()
 
 
 #####
@@ -67,7 +66,7 @@ def timer_cb2(*args, **kargs):
 
 
 print("\n---- Test: Efl.Loop.Timer")
-t1 = efl2.loop.Timer(ml, 1.0)
+t1 = efl.loop.Timer(ml, 1.0)
 t1.event_callback_add("tick", timer_cb, asd=4, pippo="pippo")
 # t1.event_callback_add("tick", timer_cb, asd=4, pippo="pippo2")
 print("PARENT:", t1.parent_get())

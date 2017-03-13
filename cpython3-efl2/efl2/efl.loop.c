@@ -5,7 +5,9 @@
 #include <Efl.h>
 #include <Ecore.h> // EFL_LOOP_CLASS is defined here
 
+#include "eo_utils.h"
 #include "efl.object.h"
+#include "efl.loop.h"
 
 
 // #define DBG(...) {}
@@ -16,41 +18,30 @@
 ////  OBJECT  /////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-typedef struct {
-    Efl_ObjectObject base_class;
-    // PyObject            *x_attr;        /* Attributes dictionary */
-} Efl_LoopObject;
-
-// Needed??
-static PyTypeObject Efl_LoopType;
-// Needed??
-#define Efl_Loop_Check(v) (Py_TYPE(v) == Efl_LoopType)
-
-
 static int
-Efl_Loop_init(Efl_LoopObject *self, PyObject *args, PyObject *kwds)
+Efl_Loop_init(PyEfl_Loop *self, PyObject *args, PyObject *kwds)
 {
     DBG("init()")
 
     // TODO FIX this should be at class level, not repeated for every instance */
-    _eo_event_register((Efl_ObjectObject*)self, EFL_LOOP_EVENT_ARGUMENTS);
-    _eo_event_register((Efl_ObjectObject*)self, EFL_LOOP_EVENT_IDLE_ENTER);
-    _eo_event_register((Efl_ObjectObject*)self, EFL_LOOP_EVENT_IDLE_EXIT);
-    _eo_event_register((Efl_ObjectObject*)self, EFL_LOOP_EVENT_IDLE);
+    pyefl_event_register((PyEfl_Object*)self, EFL_LOOP_EVENT_ARGUMENTS);
+    pyefl_event_register((PyEfl_Object*)self, EFL_LOOP_EVENT_IDLE_ENTER);
+    pyefl_event_register((PyEfl_Object*)self, EFL_LOOP_EVENT_IDLE_EXIT);
+    pyefl_event_register((PyEfl_Object*)self, EFL_LOOP_EVENT_IDLE);
 
     Eo *o;
     o  = efl_add(EFL_LOOP_CLASS, NULL);
-    ((Efl_ObjectObject*)self)->obj = o;
+    ((PyEfl_Object*)self)->obj = o;
 
     /* Call the base class __init__ func */
-    if (Efl_ObjectType->tp_init((PyObject *)self, args, kwds) < 0)
+    if (PyEfl_ObjectType.tp_init((PyObject *)self, args, kwds) < 0)
         return -1;
 
     return 0;
 }
 
 static void
-Efl_Loop_dealloc(Efl_LoopObject *self)
+Efl_Loop_dealloc(PyEfl_Loop *self)
 {
     DBG("dealloc()")
     // Py_XDECREF(self->x_attr);
@@ -58,7 +49,7 @@ Efl_Loop_dealloc(Efl_LoopObject *self)
 }
 
 static PyObject *
-Efl_Loop_begin(Efl_LoopObject *self, PyObject *args)
+Efl_Loop_begin(PyEfl_Loop *self, PyObject *args)
 {
     DBG("begin()")
 
@@ -68,7 +59,7 @@ Efl_Loop_begin(Efl_LoopObject *self, PyObject *args)
 }
 
 static PyObject *
-Efl_Loop_quit(Efl_LoopObject *self, PyObject *args)
+Efl_Loop_quit(PyEfl_Loop *self, PyObject *args)
 {
     unsigned char arg1_exit_code;
 
@@ -88,12 +79,12 @@ static PyMethodDef Efl_Loop_methods[] = {
     {NULL, NULL}           /* sentinel */
 };
 
-static PyTypeObject Efl_LoopType = {
+PyTypeObject PyEfl_LoopType = {
     /* The ob_type field must be initialized in the module init function
      * to be portable to Windows without using C++. */
     PyVarObject_HEAD_INIT(NULL, 0)
     "_loop._Loop",              /*tp_name*/
-    sizeof(Efl_LoopObject),     /*tp_basicsize*/
+    sizeof(PyEfl_Loop),         /*tp_basicsize*/
     0,                          /*tp_itemsize*/
     /* methods */
     (destructor)Efl_Loop_dealloc,    /*tp_dealloc*/
@@ -137,59 +128,21 @@ static PyTypeObject Efl_LoopType = {
     0,                          /*tp_is_gc*/
 };
 
-///////////////////////////////////////////////////////////////////////////////
-////  MODULE  /////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
 
-/* List of functions defined in the module */
-static PyMethodDef ThisModuleMethods[] = {
-
-    //TODO can we avoid this struct if no methods are present at module level?
-
-    {NULL, NULL, 0, NULL}        /* Sentinel */
-};
-
-
-/* The module definition */
-static struct PyModuleDef ThisModule = {
-   PyModuleDef_HEAD_INIT,
-   "_loop",     /* name of module */
-   "module doc",  /* module documentation, may be NULL */
-   -1,            /* size of per-interpreter state of the module,
-                     or -1 if the module keeps state in global variables. */
-   ThisModuleMethods
-};
-
-/* Module init function, func name must match module name! (PyInit_XXX) */
-PyMODINIT_FUNC
-PyInit__loop(void)
+Eina_Bool
+pyefl_loop_object_finalize(PyObject *module)
 {
-    PyObject *m;
+    DBG("pyefl_init");
 
-    DBG("module import");
+    PyEfl_LoopType.tp_new = PyType_GenericNew;
+    PyEfl_LoopType.tp_base = &PyEfl_ObjectType;
+    if (PyType_Ready(&PyEfl_LoopType) < 0)
+        return EINA_FALSE;
+        
+    PyModule_AddObject(module, "_Loop", (PyObject *)&PyEfl_LoopType);
+    Py_INCREF(&PyEfl_LoopType);
 
-    // TODO how can I autogenerate this init call ??
-    ecore_init(); // TODO check for errors
+    pyefl_class_register(EFL_LOOP_CLASS, &PyEfl_LoopType);
 
-    /* Import the Efl namespace C API (_eo_* and others) */
-    if (import_efl() < 0)
-        return NULL;
-
-    /* Finalize the type object including setting type of the new type
-     * object; doing it here is required for portability, too. */
-    Efl_LoopType.tp_new = PyType_GenericNew;
-    Efl_LoopType.tp_base = Efl_ObjectType;
-    if (PyType_Ready(&Efl_LoopType) < 0)
-        return NULL;
-
-    m = PyModule_Create(&ThisModule);
-    if (m == NULL)
-        return NULL;
-
-    Py_INCREF(&Efl_LoopType);
-    PyModule_AddObject(m, "_Loop", (PyObject *)&Efl_LoopType);
-    _eo_class_register(EFL_LOOP_CLASS, &Efl_LoopType);
-
-    return m;
+    return EINA_TRUE;
 }
-

@@ -18,8 +18,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this Python-EFL.  If not, see <http://www.gnu.org/licenses/>.
 
-from ._timer import _Timer
+from ._loop import _Timer
 
 
-class Timer(_Timer):  # Direct subclass of _Loop_User
+class Timer(_Timer):  # Direct subclass of efl._Loop_User
    pass
