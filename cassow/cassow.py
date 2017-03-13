@@ -66,6 +66,7 @@ class Point(object):
 
         win.update_all_points()
 
+
 class Icon(object):
     def __init__(self, parent, identifier, standard):
         self.x = Variable('x' + identifier)
@@ -80,6 +81,7 @@ class Icon(object):
         # self.icon.pos = self.x.value, self.y.value
         # self.icon.size = w2, w2
         self.icon.size = self.w.value, self.w.value
+
 
 class CassoWin(elm.StandardWindow):
     def __init__(self, app):
