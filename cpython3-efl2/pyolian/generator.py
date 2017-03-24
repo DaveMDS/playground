@@ -40,6 +40,7 @@ class Template(pyratemp.Template):
                        renderer_class=pyratemp.Renderer,
                        eval_class=pyratemp.EvalPseudoSandbox):
 
+        self.template_filename = filename
         data = {}  # TODO fill with fixed infos (versions, date, time, etc...)
 
         pyratemp.Template.__init__(self, filename=filename, encoding=encoding,
@@ -55,16 +56,12 @@ class Template(pyratemp.Template):
         if cls is not None:
             ctx['cls'] = eolian.Class(class_name=cls)
 
-        c = ctx['cls']
-        
-        for b in c.inherits:
-            print(repr(b))
-        print(list(c.inherits)[0])
-
         # render with the augmented context
         output = self(**ctx)
 
         if filename is not None:
+            INF('generating "%s" from template "%s"' % (
+                filename, self.template_filename))
             # write to file
             # TODO check dest dir exists, and create if necessary
             with open(filename, "w") as f:

@@ -60,7 +60,7 @@ debug:
 
 .PHONY: clean
 clean:
-	$(PY) setup.py clean --all
+	$(PY) setup.py clean
 
 
 # .PHONY: maintaner-clean

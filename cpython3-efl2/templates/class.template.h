@@ -1,7 +1,4 @@
-<!--(include)-->
-template.macros
-<!--(end)-->
-
+<!--(include)-->template.macros<!--(end)-->${COPYRIGHT}$
 <!--(macro HEADER_GUARD)-->
 Py_${cls.full_name.upper().replace('.','_',)}$_H
 <!--(end)-->
