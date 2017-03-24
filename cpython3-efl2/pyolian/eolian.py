@@ -136,3 +136,8 @@ class Class(object):
     def ctor_enable(self):
         return bool(lib.eolian_class_ctor_enable_get(self._obj))
 
+    @property
+    def base_class(self):
+        inherits = list(self.inherits)
+        if len(inherits) > 0:
+            return Class(class_name=inherits[0])

@@ -1,0 +1,22 @@
+#!
+#! CLS_OBJECT ex: "PyEfl_Loop_Timer"
+<!--(macro CLS_OBJECT)-->
+Py${cls.full_name.replace('.', '_')}$
+<!--(end)-->
+#!
+#! CLS_OBJECT_TYPE ex: "PyEfl_Loop_TimerType"
+<!--(macro CLS_OBJECT_TYPE)-->
+${CLS_OBJECT}$Type
+<!--(end)-->
+#!
+#! CLS_BASE_OBJECT ex: "PyEfl_Loop_User"
+<!--(macro CLS_BASE_OBJECT)-->
+Py${cls.base_class.full_name.replace('.', '_')}$
+<!--(end)-->
+#!
+#! OBJECT_FINALIZE_FUNC ex: "pyefl_loop_timer_object_finalize"
+<!--(macro OBJECT_FINALIZE_FUNC)-->
+py${cls.full_name.replace('.', '_').lower()}$_object_finalize
+<!--(end)-->
+#!
+#!
