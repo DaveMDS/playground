@@ -9,6 +9,19 @@ Py${cls.full_name.replace('.', '_')}$
 ${CLS_OBJECT}$Type
 <!--(end)-->
 #!
+#! CLS_EO_NAME ex: "EFL_LOOP_TIMER_CLASS"
+<!--(macro CLS_EO_NAME)-->
+${cls.full_name.replace('.', '_').upper()}$_CLASS
+<!--(end)-->
+#!
+#! CLS_TP_NAME ex: "efl2.loop._Timer"
+<!--(macro CLS_TP_NAME)-->
+    <!--(for ns in cls.namespaces)-->
+${ns.lower()}$.#!
+    <!--(end)-->
+_${cls.name}$
+<!--(end)-->
+#!
 #! CLS_BASE_OBJECT ex: "PyEfl_Loop_User"
 <!--(macro CLS_BASE_OBJECT)-->
 Py${cls.base_class.full_name.replace('.', '_')}$
@@ -41,7 +54,7 @@ py${cls.full_name.replace('.', '_').lower()}$_object_finalize
  * along with this Python-EFL.  If not, see <http://www.gnu.org/licenses/>.
  *
  *
- *      File automatically generated           
- *          !!! DO NOT EDIT !!!                
+ *      File automatically generated
+ *          !!! DO NOT EDIT !!!
  */
 <!--(end)-->

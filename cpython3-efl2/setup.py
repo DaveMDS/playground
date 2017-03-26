@@ -166,7 +166,10 @@ class Generate(Command):
         from pyolian.generator import Template
 
         cls_h_tmpl = Template('templates/class.template.h')
+        cls_c_tmpl = Template('templates/class.template.c')
+        
         cls_h_tmpl.render('efl2/loop/efl.loop.timer.h', cls='Efl.Loop.Timer')
+        cls_c_tmpl.render('efl2/loop/efl.loop.timer.c', cls='Efl.Loop.Timer')
 
 
 # === augmented build command ===
