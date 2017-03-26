@@ -19,18 +19,19 @@
 PY = python3
 
 
+.PHONY: build
+build:
+	$(PY) setup.py build
+
+
 .PHONY: generate
 generate:
 	$(PY) setup.py generate
 
+
 .PHONY: gen
 gen:
 	$(PY) setup.py generate
-
-
-.PHONY: build
-build:
-	$(PY) setup.py build
 
 
 .PHONY: install
