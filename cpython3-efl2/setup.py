@@ -165,11 +165,14 @@ class Generate(Command):
         print('generating bindings source code using pyolian')
         from pyolian.generator import Template
 
-        cls_h_tmpl = Template('templates/class.template.h')
         cls_c_tmpl = Template('templates/class.template.c')
+        cls_h_tmpl = Template('templates/class.template.h')
         
-        cls_h_tmpl.render('efl2/loop/efl.loop.timer.h', cls='Efl.Loop.Timer')
         cls_c_tmpl.render('efl2/loop/efl.loop.timer.c', cls='Efl.Loop.Timer')
+        cls_h_tmpl.render('efl2/loop/efl.loop.timer.h', cls='Efl.Loop.Timer')
+
+        cls_c_tmpl.render('efl2/loop/efl.loop.fd.c', cls='Efl.Loop.Fd')
+        cls_h_tmpl.render('efl2/loop/efl.loop.fd.h', cls='Efl.Loop.Fd')
 
 
 # === augmented build command ===
@@ -213,6 +216,7 @@ efl_module('efl2._efl', [
 efl_module('efl2.loop._loop', [
     'efl2/loop/_loop.module.c',
     'efl2/loop/efl.loop.timer.c',
+    'efl2/loop/efl.loop.fd.c',
 ])
 
 

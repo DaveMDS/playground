@@ -7,6 +7,7 @@
 
 #include "../_efl.module.h"
 #include "efl.loop.timer.h"
+#include "efl.loop.fd.h"
 
 // #define DBG(...) {}
 #define DBG(_fmt_, ...) printf("[%s:%d] "_fmt_"\n", __FILE__, __LINE__, ##__VA_ARGS__);
@@ -28,7 +29,7 @@ static PyMethodDef ThisModuleMethods[] = {
 /* The module definition */
 static struct PyModuleDef ThisModule = {
    PyModuleDef_HEAD_INIT,
-   "_loop",      /* name of module */
+   "efl._loop",      /* name of module */
    "module doc",  /* module documentation, may be NULL */
    -1,            /* size of per-interpreter state of the module,
                      or -1 if the module keeps state in global variables. */
@@ -55,7 +56,7 @@ PyInit__loop(void)
     /* Finalize all the type objects including setting type of the new type
      * object; doing it here is required for portability, too. */
     if (!pyefl_loop_timer_object_finalize(m)) return NULL;
-
+    if (!pyefl_loop_fd_object_finalize(m)) return NULL;
 
     return m;
 }

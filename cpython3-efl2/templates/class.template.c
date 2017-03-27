@@ -4,11 +4,11 @@
 
 #include <Eo.h>
 #include <Efl.h>
-#include <Ecore.h> // EFL_LOOP_TIMER_CLASS is defined here
+#include <Ecore.h> // EFL_LOOP_TIMER_CLASS is defined here  TODO FIXME
 
 
 #include "../_efl.module.h"  // TODO FIXME
-#include "efl.loop.timer.h"  // TODO FIXME
+#include "${cls.full_name.lower()}$.h"
 
 // #define DBG(...) {}
 #define DBG(_fmt_, ...) printf("[%s:%d] "_fmt_"\n", __FILE__, __LINE__, ##__VA_ARGS__);
@@ -18,21 +18,29 @@ static int
 ${CLS_OBJECT}$_init(${CLS_OBJECT}$ *self, PyObject *args, PyObject *kwds)
 {
     DBG("init()")
-    double interval;
     PyEfl_Object *parent;
 
-    // TODO FIX this should be at class level, not repeated for every instance */
-    pyefl_event_register((PyEfl_Object*)self, EFL_LOOP_TIMER_EVENT_TICK);
-
-
+<!--(if cls.full_name == 'Efl.Loop.Timer')-->
+    /* Timer custom constructor */
+    double interval;
     if (!PyArg_ParseTuple(args, "Od:Timer", &parent, &interval))
         return -1;
 
-    // TODO check parent is a valid Eo object
+    Eo *o  = efl_add(EFL_LOOP_TIMER_CLASS, parent->obj,
+                     efl_loop_timer_interval_set(efl_added, interval));
 
-    Eo *o;
-    o  = efl_add(EFL_LOOP_TIMER_CLASS, parent->obj,
-            efl_loop_timer_interval_set(efl_added, interval));
+<!--(elif cls.full_name ==  'Efl.Ui.Win')-->
+    // TODO Win cunstom constuctor
+<!--(else)-->
+    /* Standard Eo constructor */
+    if (!PyArg_ParseTuple(args, "O:${cls.name}$", &parent))
+        return -1;
+
+    // TODO check parent is a valid Eo object
+    Eo *o = efl_add(${cls.c_name}$, parent->obj, NULL);
+<!--(end)-->
+
+    /* Store the Eo object in self._obj */
     ((PyEfl_Object*)self)->obj = o;
     if (!o)
         return -1;
@@ -40,6 +48,11 @@ ${CLS_OBJECT}$_init(${CLS_OBJECT}$ *self, PyObject *args, PyObject *kwds)
     /* Call the base class __init__ func */
     if (PyEfl_ObjectType->tp_init((PyObject *)self, args, kwds) < 0)
         return -1;
+
+    // TODO FIX this should be at class level, not repeated for every instance */
+<!--(for event in cls.events)-->
+    pyefl_event_register((PyEfl_Object*)self, ${event.c_name}$);
+<!--(end)-->
 
     return 0;
 }
@@ -52,24 +65,25 @@ ${CLS_OBJECT}$_dealloc(${CLS_OBJECT}$ *self)
     PyObject_Del(self);  //TODO FIXME !!!!
 }
 
-
-<!--(macro PARAM_IN)-->#! macro params: (param, obj)
+#! // PARAM_IN(param, obj)
+<!--(macro PARAM_IN)-->
     <!--(if param.type.name == 'double')-->
 double ${param.name}$ = PyFloat_AsDouble(${obj}$);
-    <!--(elif param.type.name == 'another type...')-->
-
+    <!--(elif param.type.name == 'int')-->
+int ${param.name}$ = (int)PyLong_AsLong(${obj}$);
     <!--(else)-->
 // ERROR: UNSUPPORTED IN PARAM TYPE: ${param.type}$
     <!--(end)-->
 <!--(end)-->
 
-<!--(macro TYPE_OUT)-->#! macro params: (type, obj)
+#! // TYPE_OUT(type, obj)
+<!--(macro TYPE_OUT)-->
     <!--(if type.name == 'double')-->
 PyFloat_FromDouble(${obj}$);
-    <!--(elif param.type.name == 'another type...')-->
-
+    <!--(elif type.name == 'int')-->
+PyLong_FromLong(${obj}$);
     <!--(else)-->
-// ERROR: UNSUPPORTED IN PARAM TYPE: ${param.type}$
+// ERROR: UNSUPPORTED OUT TYPE: ${type}$
     <!--(end)-->
 <!--(end)-->
 
@@ -155,7 +169,7 @@ ${CLS_OBJECT}$_${func.name}$_get(${CLS_OBJECT}$ *self, void *closure)
 /* Class Setters */
 <!--(for func in cls.properties)-->
     <!--(if func.prop_writable)-->
-static PyObject *  // ${cls.full_name}$.${func.name}$  (getter)
+static PyObject *  // ${cls.full_name}$.${func.name}$  (setter)
 ${CLS_OBJECT}$_${func.name}$_set(${CLS_OBJECT}$ *self, PyObject *value, void *closure)
 {
     // TODO FIX for multiple vals !
@@ -169,7 +183,7 @@ ${CLS_OBJECT}$_${func.name}$_set(${CLS_OBJECT}$ *self, PyObject *value, void *cl
     <!--(end)-->
 <!--(end)-->
 
-/* Class getter/setter table */
+/* Class getsetter table */
 static PyGetSetDef ${CLS_OBJECT}$_getsetters[] = {
     <!--(for func in cls.properties)-->
     {"${func.name}$",
