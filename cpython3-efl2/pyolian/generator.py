@@ -1,6 +1,8 @@
 #! /usr/bin/env python3
 # encoding: utf-8
 
+import datetime
+
 from . import eolian
 from . import pyratemp
 
@@ -40,11 +42,20 @@ class Template(pyratemp.Template):
                        renderer_class=pyratemp.Renderer,
                        eval_class=pyratemp.EvalPseudoSandbox):
 
-        self.template_filename = filename
-        data = {}  # TODO fill with fixed infos (versions, date, time, etc...)
+        # Build the global context for the template
+        global_context = {
+            'date': datetime.datetime.now(),
+            'eolian_version': eolian.__version__,
+            'eolian_version_info': eolian.__version_info__,
+        }
+        # Augment context with user provided data
+        if data is not None:
+            global_context.update(data)
 
+        # Call the parent __init__ func
+        self.template_filename = filename
         pyratemp.Template.__init__(self, filename=filename, encoding=encoding,
-                                   data=data, escape=escape,
+                                   data=global_context, escape=escape,
                                    loader_class=loader_class,
                                    parser_class=parser_class,
                                    renderer_class=renderer_class,
@@ -52,6 +63,7 @@ class Template(pyratemp.Template):
 
     def render(self, filename=None, cls=None, **kargs):
 
+        # Build the context for the template
         ctx = {}
         if cls is not None:
             ctx['cls'] = eolian.Class(class_name=cls)

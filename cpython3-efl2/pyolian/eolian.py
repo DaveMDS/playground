@@ -6,6 +6,10 @@ from ctypes import CDLL, cast, byref, c_uint, c_char_p, c_void_p
 
 from .eolian_lib import lib
 
+### pyolian version ###########################################################
+__version__ = "0.99.0"
+__version_info__ = ( 0, 99, 0 )
+
 
 ###  enums  ###################################################################
 
