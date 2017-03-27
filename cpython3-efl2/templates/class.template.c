@@ -31,7 +31,7 @@ ${CLS_OBJECT}$_init(${CLS_OBJECT}$ *self, PyObject *args, PyObject *kwds)
                      efl_loop_timer_interval_set(efl_added, interval));
 
 <!--(elif cls.full_name ==  'Efl.Ui.Win')-->
-    // TODO Win cunstom constuctor
+    // TODO Win custom constuctor
 <!--(else)-->
     /* Standard Eo constructor */
     if (!PyArg_ParseTuple(args, "O:${cls.name}$", &parent))
@@ -66,23 +66,33 @@ ${CLS_OBJECT}$_dealloc(${CLS_OBJECT}$ *self)
     PyObject_Del(self);  //TODO FIXME !!!!
 }
 
-#! // PARAM_IN(param, obj)
-<!--(macro PARAM_IN)-->
-    <!--(if param.type.name == 'double')-->
-double ${param.name}$ = PyFloat_AsDouble(${obj}$);
-    <!--(elif param.type.name == 'int')-->
-int ${param.name}$ = (int)PyLong_AsLong(${obj}$);
+#! // TYPE_IN_FUNC(type)
+<!--(macro TYPE_IN_FUNC)-->
+    <!--(if type.full_name == 'void_ptr')-->
+void_func#!
+    <!--(elif type.full_name == 'Efl.Object')-->
+pyefl_object_to_pointer#!
+    <!--(elif type.full_name == 'double')-->
+PyFloat_AsDouble#!
+    <!--(elif type.full_name == 'int')-->
+(int)PyLong_AsLong#!
+    <!--(elif type.full_name == 'ubyte')-->
+(${type.c_type}$)PyLong_AsLong#!
     <!--(else)-->
-// ERROR: UNSUPPORTED IN PARAM TYPE: ${param.type}$
+// ERROR: UNSUPPORTED IN PARAM TYPE: ${type}$ //
     <!--(end)-->
 <!--(end)-->
 
-#! // TYPE_OUT(type, obj)
-<!--(macro TYPE_OUT)-->
-    <!--(if type.name == 'double')-->
-PyFloat_FromDouble(${obj}$);
-    <!--(elif type.name == 'int')-->
-PyLong_FromLong(${obj}$);
+#! // TYPE_OUT_FUNC(type)
+<!--(macro TYPE_OUT_FUNC)-->
+    <!--(if type.full_name == 'double')-->
+PyFloat_FromDouble#!
+    <!--(elif type.full_name == 'int')-->
+PyLong_FromLong#!
+    <!--(elif type.full_name == 'ubyte')-->
+PyLong_FromLong#!
+    <!--(elif type.full_name == 'bool')-->
+PyBool_FromLong#!
     <!--(else)-->
 // ERROR: UNSUPPORTED OUT TYPE: ${type}$
     <!--(end)-->
@@ -95,16 +105,22 @@ ${CLS_OBJECT}$_${func.name}$(${CLS_OBJECT}$ *self, PyObject *args)
 {
     DBG("${func.name}$()")
 
-    // input params
     <!--(if len(list(func.parameters)) == 1)-->
+    // single param
         <!--(for param in func.parameters)-->
-    ${PARAM_IN(param=param, obj='args')}$
+    ${param.type.c_type}$ ${param.name}$ = ${TYPE_IN_FUNC(type=param.type)}$(args);
         <!--(end)-->
     <!--(elif len(list(func.parameters)) > 1)-->
-
+    // multiple params
+        <!--(for i, param in enumerate(func.parameters))-->
+    ${param.type.c_type}$ ${param.name}$ = ${TYPE_IN_FUNC(type=param.type)}$(PyTuple_GetItem(args, ${i}$));
+        <!--(end)-->
     <!--(end)-->
 
     // c function call
+    <!--(if func.method_return_type)-->
+    ${func.method_return_type.c_type}$ ret =
+    <!--(end)-->
     <!--(if len(list(func.parameters)) == 0)-->
     ${func.full_c_method_name}$(((PyEfl_Object *)(self))->obj);
     <!--(else)-->
@@ -115,11 +131,12 @@ ${CLS_OBJECT}$_${func.name}$(${CLS_OBJECT}$ *self, PyObject *args)
 
     // return
     <!--(if func.method_return_type)-->
-
+    return ${TYPE_OUT_FUNC(type=func.method_return_type)}$(ret);
     <!--(else)-->
     Py_RETURN_NONE;
     <!--(end)-->
 }
+
 <!--(end)-->
 
 /* Class methods table */
@@ -156,11 +173,11 @@ ${CLS_OBJECT}$_${func.name}$_get(${CLS_OBJECT}$ *self, void *closure)
     val = ${func.full_c_getter_name}$(((PyEfl_Object *)(self))->obj);
 
         <!--(if func.getter_return_type)-->
-    return ${TYPE_OUT(type=func.getter_return_type, obj='val')}$
+    return ${TYPE_OUT_FUNC(type=func.getter_return_type)}$(val);
         <!--(else)-->
     // TODO FIX for multiple vals !
             <!--(for val in func.getter_values)-->
-    return ${TYPE_OUT(type=val.type, obj='val')}$
+    return ${TYPE_OUT_FUNC(type=val.type)}$(val);
             <!--(end)-->
         <!--(end)-->
 }
@@ -175,7 +192,7 @@ ${CLS_OBJECT}$_${func.name}$_set(${CLS_OBJECT}$ *self, PyObject *value, void *cl
 {
     // TODO FIX for multiple vals !
         <!--(for param in func.setter_values)-->
-    ${PARAM_IN(param=param, obj='value')}$
+    ${param.type.c_type}$ ${param.name}$ = ${TYPE_IN_FUNC(type=param.type)}$(value);
         <!--(end)-->
 
     ${func.full_c_setter_name}$(((PyEfl_Object *)(self))->obj, ${val.name}$);

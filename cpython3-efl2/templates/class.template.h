@@ -1,7 +1,7 @@
-<!--(include)-->copyright_c.include<!--(end)-->
-<!--(include)-->macros.include<!--(end)-->
+<!--(include)-->copyright_c.include<!--(end)-->#!
+<!--(include)-->macros.include<!--(end)-->#!
 <!--(macro HEADER_GUARD)-->
-Py_${cls.full_name.upper().replace('.','_',)}$_H
+Py_${cls.full_name.upper().replace('.','_',)}$__H
 <!--(end)-->
 
 #ifndef ${HEADER_GUARD}$
@@ -16,6 +16,7 @@ extern "C" {
 /* The ${cls.full_name}$ Type */
 extern PyTypeObject ${CLS_OBJECT_TYPE}$;
 #define ${CLS_OBJECT}$_Check(v) (Py_TYPE(v) == ${CLS_OBJECT_TYPE}$)
+
 
 /* The ${cls.full_name}$ object */
 typedef struct {
