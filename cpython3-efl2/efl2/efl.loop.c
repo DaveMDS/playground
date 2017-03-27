@@ -53,7 +53,7 @@ Efl_Loop_begin(PyEfl_Loop *self, PyObject *args)
 {
     DBG("begin()")
 
-    efl_loop_begin(self->base_class.obj);
+    efl_loop_begin(self->base.obj);
 
     Py_RETURN_NONE;
 }
@@ -67,7 +67,7 @@ Efl_Loop_quit(PyEfl_Loop *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "i:quit", &arg1_exit_code))
         return NULL;
 
-    efl_loop_quit(self->base_class.obj, arg1_exit_code);
+    efl_loop_quit(self->base.obj, arg1_exit_code);
 
     Py_RETURN_NONE;
 }

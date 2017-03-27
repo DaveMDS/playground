@@ -168,6 +168,9 @@ class Generate(Command):
         cls_c_tmpl = Template('templates/class.template.c')
         cls_h_tmpl = Template('templates/class.template.h')
         
+        # cls_c_tmpl.render('efl2/efl.loop.c.GEN', cls='Efl.Loop')
+        cls_h_tmpl.render('efl2/efl.loop.h', cls='Efl.Loop')
+        
         cls_c_tmpl.render('efl2/loop/efl.loop.timer.c', cls='Efl.Loop.Timer')
         cls_h_tmpl.render('efl2/loop/efl.loop.timer.h', cls='Efl.Loop.Timer')
 
