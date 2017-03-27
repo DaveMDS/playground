@@ -167,6 +167,12 @@ def _c_eolian_function_to_py(func):
 def _c_eolian_parameter_to_py(param):
     return Parameter(c_param=param)
 
+def _c_eolian_event_to_py(event):
+    return Event(c_event=event)
+
+def _c_eolian_constructor_to_py(ctor):
+    return Constructor(c_ctor=ctor)
+
 
 ###  module init/shutdown  ####################################################
 
@@ -245,6 +251,27 @@ class Class(object):
         return _c_str_to_py(lib.eolian_class_full_name_get(self._obj))
 
     @property
+    def c_name(self):
+        s = lib.eolian_class_c_name_get(self._obj)
+        ret = _c_str_to_py(s)
+        lib.eina_stringshare_del(s)
+        return ret
+
+    @property
+    def c_get_function_name(self):
+        s = lib.eolian_class_c_get_function_name_get(self._obj)
+        ret = _c_str_to_py(s)
+        lib.eina_stringshare_del(s)
+        return ret
+
+    @property
+    def c_data_type(self):
+        s = lib.eolian_class_c_data_type_get(self._obj)
+        ret = _c_str_to_py(s)
+        lib.eina_stringshare_del(s)
+        return ret
+
+    @property
     def legacy_prefix(self):
         return _c_str_to_py(lib.eolian_class_legacy_prefix_get(self._obj))
 
@@ -257,9 +284,24 @@ class Class(object):
         return _c_str_to_py(lib.eolian_class_data_type_get(self._obj))
 
     @property
+    def constructors(self):
+        return Iterator(_c_eolian_constructor_to_py,
+                        lib.eolian_class_constructors_get(self._obj))
+
+    @property
+    def events(self):
+        return Iterator(_c_eolian_event_to_py,
+                        lib.eolian_class_events_get(self._obj))
+
+    def event_get_by_name(self, event_name):
+        c_event = lib.eolian_class_event_get_by_name(self._obj, event_name)
+        return Event(c_event) if c_event else None
+
+    @property
     def inherits(self):
         # TODO: return class instances instead ?
-        return Iterator(_c_str_to_py, lib.eolian_class_inherits_get(self._obj))
+        return Iterator(_c_str_to_py,
+                        lib.eolian_class_inherits_get(self._obj))
 
     @property
     def base_class(self):
@@ -269,11 +311,8 @@ class Class(object):
 
     @property
     def namespaces(self):
-        return Iterator(_c_str_to_py, lib.eolian_class_namespaces_get(self._obj))
-
-    @property
-    def c_get_function_name(self):
-        return lib.eolian_class_c_get_function_name_get(self._obj)
+        return Iterator(_c_str_to_py,
+                        lib.eolian_class_namespaces_get(self._obj))
 
     @property
     def file(self):
@@ -282,6 +321,10 @@ class Class(object):
     @property
     def ctor_enable(self):
         return bool(lib.eolian_class_ctor_enable_get(self._obj))
+
+    @property
+    def dtor_enable(self):
+        return bool(lib.eolian_class_dtor_enable_get(self._obj))
 
     def function_get_by_name(self, func_name, ftype):
         f = lib.eolian_class_function_get_by_name(self._obj, func_name, ftype)
@@ -306,6 +349,76 @@ class Class(object):
     @property
     def setters(self):
         return self.functions_get(Eolian_Function_Type.PROP_SET)
+
+
+class Constructor(object):
+    def __init__(self, c_ctor):
+        self._obj = c_ctor # const Eolian_Constructor *
+
+    def __repr__(self):
+        return "<eolian.Constructor '{0.full_name}', optional: {0.is_optional}>".format(self)
+
+    @property
+    def full_name(self):
+        return _c_str_to_py(lib.eolian_constructor_full_name_get(self._obj))
+
+    @property
+    def function(self):
+        return Function(lib.eolian_constructor_function_get(self._obj))
+
+    @property
+    def is_optional(self):
+        return bool(lib.eolian_constructor_is_optional(self._obj))
+
+    @property
+    def class_(self):
+        return Class(lib.eolian_constructor_class_get(self._obj))
+
+
+class Event(object):
+    def __init__(self, c_event):
+        self._obj = c_event # const Eolian_Event *
+
+    def __repr__(self):
+        return "<eolian.Event '{0.name}', c_name: '{0.c_name}'>".format(self)
+
+    @property
+    def name(self):
+        return _c_str_to_py(lib.eolian_event_name_get(self._obj))
+
+    @property
+    def c_name(self):
+        s = lib.eolian_event_c_name_get(self._obj)
+        ret = _c_str_to_py(s)
+        lib.eina_stringshare_del(s)
+        return ret
+
+    @property
+    def type(self):
+        c_type = lib.eolian_event_type_get(self._obj)
+        return Type(c_type) if c_type else None
+
+    @property
+    def documentation(self):
+        c_doc = lib.eolian_event_documentation_get(self._obj)
+        return Documentation(c_doc) if c_doc else None
+
+    @property
+    def scope(self):
+        return Eolian_Object_Scope(lib.eolian_event_scope_get(self._obj))
+
+    @property
+    def is_beta(self):
+        return bool(lib.eolian_event_is_beta(self._obj))
+
+    @property
+    def is_hot(self):
+        return bool(lib.eolian_event_is_hot(self._obj))
+
+    @property
+    def is_restart(self):
+        return bool(lib.eolian_event_is_restart(self._obj))
+
 
 
 class Function(object):
@@ -483,7 +596,8 @@ class Type(object):
 
     @property
     def namespaces(self):
-        return Iterator(_c_str_to_py, lib.eolian_type_namespaces_get(self._obj))
+        return Iterator(_c_str_to_py,
+                        lib.eolian_type_namespaces_get(self._obj))
 
     @property
     def free_func(self):
@@ -567,7 +681,8 @@ class Typedecl(object):
 
     @property
     def namespaces(self):
-        return Iterator(_c_str_to_py, lib.eolian_typedecl_namespaces_get(self._obj))
+        return Iterator(_c_str_to_py,
+                        lib.eolian_typedecl_namespaces_get(self._obj))
 
     @property
     def free_func(self):
@@ -579,7 +694,8 @@ class Typedecl(object):
 
     # @property
     # def enum_fields(self):
-        # return Iterator(_c_eolian_enum_field_to_py, lib.eolian_typedecl_enum_fields_get(self._obj))
+        # return Iterator(_c_eolian_enum_field_to_py,
+                        # lib.eolian_typedecl_enum_fields_get(self._obj))
 
     @property
     def base_type(self):

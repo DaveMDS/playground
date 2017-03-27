@@ -30,3 +30,5 @@ lib.eolian_class_c_get_function_name_get.restype = c_char_p
 # EAPI Eina_Iterator *eolian_class_functions_get(const Eolian_Class *klass, Eolian_Function_Type func_type)
 lib.eolian_class_functions_get.argtypes = [c_void_p, c_uint]
 
+# EAPI const Eolian_Event *eolian_class_event_get_by_name(const Eolian_Class *klass, const char *event_name)
+lib.eolian_class_event_get_by_name.argtypes = [c_void_p, c_char_p]
