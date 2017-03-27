@@ -1,4 +1,5 @@
-<!--(include)-->template.macros<!--(end)-->${COPYRIGHT}$
+<!--(include)-->copyright_c.include<!--(end)-->
+<!--(include)-->macros.include<!--(end)-->
 #include <Python.h>
 
 
