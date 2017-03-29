@@ -8,8 +8,14 @@
 #include <Ecore.h> // EFL_LOOP_TIMER_CLASS is defined here  TODO FIXME
 
 
-#include "../_efl.module.h"  // TODO FIXME
+<!--(if len(list(cls.namespaces)) == 1)-->
+#include "eo_utils.h"
+#include "efl.object.h"
+#include "efl.loop.h"
+<!--(elif len(list(cls.namespaces)) > 1)-->
+#include "../_efl.module.h"
 #include "${cls.full_name.lower()}$.h"
+<!--(end)-->
 
 // #define DBG(...) {}
 #define DBG(_fmt_, ...) printf("[%s:%d] "_fmt_"\n", __FILE__, __LINE__, ##__VA_ARGS__);
@@ -19,7 +25,7 @@ static int
 ${CLS_OBJECT}$_init(${CLS_OBJECT}$ *self, PyObject *args, PyObject *kwds)
 {
     DBG("init()")
-    PyEfl_Object *parent;
+    PyEfl_Object *parent = NULL;
 
 <!--(if cls.full_name == 'Efl.Loop.Timer')-->
     /* Timer custom constructor */
@@ -34,11 +40,11 @@ ${CLS_OBJECT}$_init(${CLS_OBJECT}$ *self, PyObject *args, PyObject *kwds)
     // TODO Win custom constuctor
 <!--(else)-->
     /* Standard Eo constructor */
-    if (!PyArg_ParseTuple(args, "O:${cls.name}$", &parent))
+    if (!PyArg_ParseTuple(args, "|O:${cls.name}$", &parent))
         return -1;
 
     // TODO check parent is a valid Eo object
-    Eo *o = efl_add(${cls.c_name}$, parent->obj, NULL);
+    Eo *o = efl_add(${cls.c_name}$, parent ? parent->obj : NULL, NULL);
 <!--(end)-->
 
     /* Store the Eo object in self._obj */
@@ -93,6 +99,8 @@ PyLong_FromLong#!
 PyLong_FromLong#!
     <!--(elif type.full_name == 'bool')-->
 PyBool_FromLong#!
+    <!--(elif type.full_name == 'Efl.Loop')-->
+pyefl_object_from_instance#!
     <!--(else)-->
 // ERROR: UNSUPPORTED OUT TYPE: ${type}$
     <!--(end)-->
@@ -100,7 +108,8 @@ PyBool_FromLong#!
 
 /* Class methods */
 <!--(for func in cls.methods)-->
-static PyObject *  // ${cls.full_name}$.${func.name}$()
+  <!--(if not func.full_c_method_name in excludes)-->
+static PyObject *  // ${cls.full_name}$ ${func.name}$()
 ${CLS_OBJECT}$_${func.name}$(${CLS_OBJECT}$ *self, PyObject *args)
 {
     DBG("${func.name}$()")
@@ -136,12 +145,13 @@ ${CLS_OBJECT}$_${func.name}$(${CLS_OBJECT}$ *self, PyObject *args)
     Py_RETURN_NONE;
     <!--(end)-->
 }
-
+  <!--(end)-->
 <!--(end)-->
 
 /* Class methods table */
 static PyMethodDef ${CLS_OBJECT}$_methods[] = {
     <!--(for func in cls.methods)-->
+      <!--(if not func.full_c_method_name in excludes)-->
     {"${func.name}$", (PyCFunction)${CLS_OBJECT}$_${func.name}$,
         <!--(if len(list(func.parameters)) == 0)-->
         METH_NOARGS, NULL},
@@ -150,6 +160,7 @@ static PyMethodDef ${CLS_OBJECT}$_methods[] = {
         <!--(else)-->
         METH_VARARGS, NULL},
         <!--(end)-->
+      <!--(end)-->
     <!--(end)-->
     {NULL, NULL, 0, NULL}  /* sentinel */
 };
@@ -158,7 +169,8 @@ static PyMethodDef ${CLS_OBJECT}$_methods[] = {
 /* Class Getters */
 <!--(for func in cls.properties)-->
     <!--(if func.prop_readable)-->
-static PyObject *  // ${cls.full_name}$.${func.name}$  (getter)
+      <!--(if not func.full_c_getter_name in excludes)-->
+static PyObject *  // ${cls.full_name}$ ${func.name}$  (getter)
 ${CLS_OBJECT}$_${func.name}$_get(${CLS_OBJECT}$ *self, void *closure)
 {
         <!--(if func.getter_return_type)-->
@@ -181,13 +193,15 @@ ${CLS_OBJECT}$_${func.name}$_get(${CLS_OBJECT}$ *self, void *closure)
             <!--(end)-->
         <!--(end)-->
 }
+      <!--(end)-->
     <!--(end)-->
 <!--(end)-->
 
 /* Class Setters */
 <!--(for func in cls.properties)-->
     <!--(if func.prop_writable)-->
-static PyObject *  // ${cls.full_name}$.${func.name}$  (setter)
+      <!--(if not func.full_c_setter_name in excludes)-->
+static PyObject *  // ${cls.full_name}$ ${func.name}$  (setter)
 ${CLS_OBJECT}$_${func.name}$_set(${CLS_OBJECT}$ *self, PyObject *value, void *closure)
 {
     // TODO FIX for multiple vals !
@@ -198,6 +212,7 @@ ${CLS_OBJECT}$_${func.name}$_set(${CLS_OBJECT}$ *self, PyObject *value, void *cl
     ${func.full_c_setter_name}$(((PyEfl_Object *)(self))->obj, ${val.name}$);
     return 0; // TODO is 0 correct ??
 }
+      <!--(end)-->
     <!--(end)-->
 <!--(end)-->
 
@@ -205,12 +220,12 @@ ${CLS_OBJECT}$_${func.name}$_set(${CLS_OBJECT}$ *self, PyObject *value, void *cl
 static PyGetSetDef ${CLS_OBJECT}$_getsetters[] = {
     <!--(for func in cls.properties)-->
     {"${func.name}$",
-        <!--(if func.prop_readable)-->
+        <!--(if func.prop_readable and not func.full_c_getter_name in excludes)-->
         (getter)${CLS_OBJECT}$_${func.name}$_get,
         <!--(else)-->
         NULL, /* writeonly */
         <!--(end)-->
-        <!--(if func.prop_writable)-->
+        <!--(if func.prop_writable and not func.full_c_setter_name in excludes)-->
         (setter)${CLS_OBJECT}$_${func.name}$_set,
         <!--(else)-->
         NULL, /* readonly */
@@ -275,9 +290,12 @@ ${OBJECT_FINALIZE_FUNC}$(PyObject *module)
 {
     DBG("finalize");
 
+<!--(if len(list(cls.namespaces)) != 1)-->
     /* Import the Efl namespace C API (pyefl_* and types in the efl namespace) */
     if (import_efl() < 0)
         return EINA_FALSE;
+    /* TODO: import the namespace of the parent class */
+<!--(end)-->
 
     /* Finalize the object type */
     ${CLS_OBJECT_TYPE}$->tp_new = PyType_GenericNew;

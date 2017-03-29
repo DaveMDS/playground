@@ -165,10 +165,22 @@ class Generate(Command):
         print('generating bindings source code using pyolian')
         from pyolian.generator import Template
 
-        cls_c_tmpl = Template('templates/class.template.c')
-        cls_h_tmpl = Template('templates/class.template.h')
+        extra_context = {
+            'excludes': [
+                # Efl.Loop
+                'efl_loop_job',                   #  futures
+                'efl_loop_timeout',               #  futures
+                'efl_loop_register',              #  Efl.Class 
+                'efl_loop_unregister',            #  Efl.Class 
+                'efl_loop_app_efl_version_get',   #  Efl.Version (struct)
+                'efl_loop_efl_version_get',       #  Efl.Version (struct)
+            ]
+        }
+
+        cls_c_tmpl = Template('templates/class.template.c', data=extra_context)
+        cls_h_tmpl = Template('templates/class.template.h', data=extra_context)
         
-        # cls_c_tmpl.render('efl2/efl.loop.c.GEN', cls='Efl.Loop')
+        cls_c_tmpl.render('efl2/efl.loop.c', cls='Efl.Loop')
         cls_h_tmpl.render('efl2/efl.loop.h', cls='Efl.Loop')
         
         cls_c_tmpl.render('efl2/loop/efl.loop.timer.c', cls='Efl.Loop.Timer')

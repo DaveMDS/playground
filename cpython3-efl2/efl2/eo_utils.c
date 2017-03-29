@@ -18,8 +18,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 static Eina_Hash *_pyefl_class_map = NULL;
 
-// #define PY_EO_DATA_KEY "_py_eo_"
-
 void
 pyefl_class_register(const Efl_Class *cls, const PyTypeObject *type)
 {
