@@ -220,7 +220,7 @@ static PyGetSetDef ${CLS_OBJECT}$_getsetters[] = {
     {NULL, 0, 0, NULL, NULL}  /* sentinel */
 };
 
-PyTypeObject ${CLS_OBJECT_TYPE}$ = {
+PyTypeObject ${CLS_OBJECT_TYPE}$Internal = {
     /* The ob_type field must be initialized in the module init function
      * to be portable to Windows without using C++. */
     PyVarObject_HEAD_INIT(NULL, 0)
@@ -267,6 +267,7 @@ PyTypeObject ${CLS_OBJECT_TYPE}$ = {
     0,                          /*tp_free*/
     0,                          /*tp_is_gc*/
 };
+PyTypeObject *${CLS_OBJECT_TYPE}$ = &${CLS_OBJECT_TYPE}$Internal;
 
 
 Eina_Bool
@@ -279,17 +280,17 @@ ${OBJECT_FINALIZE_FUNC}$(PyObject *module)
         return EINA_FALSE;
 
     /* Finalize the object type */
-    ${CLS_OBJECT_TYPE}$.tp_new = PyType_GenericNew;
-    ${CLS_OBJECT_TYPE}$.tp_base = ${CLS_BASE_OBJECT}$Type;
-    if (PyType_Ready(&${CLS_OBJECT_TYPE}$) < 0)
+    ${CLS_OBJECT_TYPE}$->tp_new = PyType_GenericNew;
+    ${CLS_OBJECT_TYPE}$->tp_base = ${CLS_BASE_OBJECT}$Type;
+    if (PyType_Ready(${CLS_OBJECT_TYPE}$) < 0)
         return EINA_FALSE;
 
     /* Put the object in the calling module namespace */
-    PyModule_AddObject(module, "_${cls.name}$", (PyObject *)&${CLS_OBJECT_TYPE}$);
-    Py_INCREF(&${CLS_OBJECT_TYPE}$);
+    PyModule_AddObject(module, "_${cls.name}$", (PyObject *)${CLS_OBJECT_TYPE}$);
+    Py_INCREF(${CLS_OBJECT_TYPE}$);
 
     /* Link the EO class with the python type object */
-    pyefl_class_register(${CLS_EO_NAME}$, &${CLS_OBJECT_TYPE}$);
+    pyefl_class_register(${CLS_EO_NAME}$, ${CLS_OBJECT_TYPE}$);
 
     return EINA_TRUE;
 }

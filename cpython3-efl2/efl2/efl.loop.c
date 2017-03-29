@@ -34,7 +34,7 @@ Efl_Loop_init(PyEfl_Loop *self, PyObject *args, PyObject *kwds)
     ((PyEfl_Object*)self)->obj = o;
 
     /* Call the base class __init__ func */
-    if (PyEfl_ObjectType.tp_init((PyObject *)self, args, kwds) < 0)
+    if (PyEfl_ObjectType->tp_init((PyObject *)self, args, kwds) < 0)
         return -1;
 
     return 0;
@@ -79,7 +79,7 @@ static PyMethodDef Efl_Loop_methods[] = {
     {NULL, NULL}           /* sentinel */
 };
 
-PyTypeObject PyEfl_LoopType = {
+PyTypeObject PyEfl_LoopTypeInternal = {
     /* The ob_type field must be initialized in the module init function
      * to be portable to Windows without using C++. */
     PyVarObject_HEAD_INIT(NULL, 0)
@@ -127,22 +127,22 @@ PyTypeObject PyEfl_LoopType = {
     0,                          /*tp_free*/
     0,                          /*tp_is_gc*/
 };
-
+PyTypeObject *PyEfl_LoopType = &PyEfl_LoopTypeInternal;
 
 Eina_Bool
 pyefl_loop_object_finalize(PyObject *module)
 {
-    DBG("pyefl_init");
+    DBG("finalize");
 
-    PyEfl_LoopType.tp_new = PyType_GenericNew;
-    PyEfl_LoopType.tp_base = &PyEfl_ObjectType;
-    if (PyType_Ready(&PyEfl_LoopType) < 0)
+    PyEfl_LoopType->tp_new = PyType_GenericNew;
+    PyEfl_LoopType->tp_base = PyEfl_ObjectType;
+    if (PyType_Ready(PyEfl_LoopType) < 0)
         return EINA_FALSE;
-        
-    PyModule_AddObject(module, "_Loop", (PyObject *)&PyEfl_LoopType);
-    Py_INCREF(&PyEfl_LoopType);
 
-    pyefl_class_register(EFL_LOOP_CLASS, &PyEfl_LoopType);
+    PyModule_AddObject(module, "_Loop", (PyObject *)PyEfl_LoopType);
+    Py_INCREF(PyEfl_LoopType);
+
+    pyefl_class_register(EFL_LOOP_CLASS, PyEfl_LoopType);
 
     return EINA_TRUE;
 }

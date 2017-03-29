@@ -86,7 +86,7 @@ pyefl_object_from_instance(Efl_Object *obj)
         DBG("Created a new object of class: %s from obj: %p", type->tp_name, obj);
         ((PyEfl_Object*)ret)->obj = obj;
         // Call the __init_func in the base class (Efl.Object)
-        PyEfl_ObjectType.tp_init(ret, NULL, NULL);
+        PyEfl_ObjectType->tp_init(ret, NULL, NULL);
         // TODO need to INCREF ret ??
         return ret;
     }

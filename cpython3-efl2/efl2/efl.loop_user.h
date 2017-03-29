@@ -5,7 +5,8 @@ extern "C" {
 #endif
 
 /* The Efl.Loop_User Type */
-extern PyTypeObject PyEfl_Loop_UserType;
+extern PyTypeObject  PyEfl_Loop_UserTypeInternal;
+extern PyTypeObject *PyEfl_Loop_UserType;
 #define Efl_Loop_User_Check(v) (Py_TYPE(v) == Efl_Loop_UserType)
 
 /* The Efl.Loop_User object */

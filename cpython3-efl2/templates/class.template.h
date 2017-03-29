@@ -14,7 +14,8 @@ extern "C" {
 
 
 /* The ${cls.full_name}$ Type */
-extern PyTypeObject ${CLS_OBJECT_TYPE}$;
+extern PyTypeObject  ${CLS_OBJECT_TYPE}$Internal;
+extern PyTypeObject *${CLS_OBJECT_TYPE}$;
 #define ${CLS_OBJECT}$_Check(v) (Py_TYPE(v) == ${CLS_OBJECT_TYPE}$)
 
 

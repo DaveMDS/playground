@@ -308,7 +308,7 @@ static PyMethodDef Efl_Object_methods[] = {
     {NULL, NULL, 0, NULL}  /* sentinel */
 };
 
-PyTypeObject PyEfl_ObjectType = {
+PyTypeObject PyEfl_ObjectTypeInternal = {
     /* The ob_type field must be initialized in the module init function
      * to be portable to Windows without using C++. */
     PyVarObject_HEAD_INIT(NULL, 0)
@@ -356,18 +356,19 @@ PyTypeObject PyEfl_ObjectType = {
     0,                          /*tp_free*/
     0,                          /*tp_is_gc*/
 };
+PyTypeObject *PyEfl_ObjectType = &PyEfl_ObjectTypeInternal;
 
 Eina_Bool
 pyefl_object_object_finalize(PyObject *module)
 {
     DBG("pyefl_init");
 
-    PyEfl_ObjectType.tp_new = PyType_GenericNew;
-    if (PyType_Ready(&PyEfl_ObjectType) < 0)
+    PyEfl_ObjectType->tp_new = PyType_GenericNew;
+    if (PyType_Ready(PyEfl_ObjectType) < 0)
         return EINA_FALSE;
 
-    PyModule_AddObject(module, "_Object", (PyObject *)&PyEfl_ObjectType);
-    Py_INCREF(&PyEfl_ObjectType);
+    PyModule_AddObject(module, "_Object", (PyObject *)PyEfl_ObjectType);
+    Py_INCREF(PyEfl_ObjectType);
 
     return EINA_TRUE;
 }
