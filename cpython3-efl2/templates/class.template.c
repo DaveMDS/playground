@@ -11,11 +11,10 @@
 <!--(if len(list(cls.namespaces)) == 1)-->
 #include "eo_utils.h"
 #include "efl.object.h"
-#include "efl.loop.h"
 <!--(elif len(list(cls.namespaces)) > 1)-->
 #include "../_efl.module.h"
-#include "${cls.full_name.lower()}$.h"
 <!--(end)-->
+#include "${cls.full_name.lower()}$.h"
 
 // #define DBG(...) {}
 #define DBG(_fmt_, ...) printf("[%s:%d] "_fmt_"\n", __FILE__, __LINE__, ##__VA_ARGS__);

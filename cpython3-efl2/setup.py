@@ -182,6 +182,9 @@ class Generate(Command):
         
         cls_c_tmpl.render('efl2/efl.loop.c', cls='Efl.Loop')
         cls_h_tmpl.render('efl2/efl.loop.h', cls='Efl.Loop')
+
+        cls_c_tmpl.render('efl2/efl.loop_user.c', cls='Efl.Loop_User')
+        cls_h_tmpl.render('efl2/efl.loop_user.h', cls='Efl.Loop_User')
         
         cls_c_tmpl.render('efl2/loop/efl.loop.timer.c', cls='Efl.Loop.Timer')
         cls_h_tmpl.render('efl2/loop/efl.loop.timer.h', cls='Efl.Loop.Timer')

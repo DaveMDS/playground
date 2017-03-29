@@ -10,7 +10,7 @@ Py_${cls.full_name.upper().replace('.','_',)}$__H
 extern "C" {
 #endif
 
-#include <Eo.h>
+// #include <Eo.h>
 
 
 /* The ${cls.full_name}$ Type */
