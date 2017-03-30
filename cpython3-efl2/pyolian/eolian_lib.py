@@ -2,9 +2,10 @@
 # encoding: utf-8
 
 from ctypes import CDLL, c_uint, c_char_p, c_void_p
+from ctypes.util import find_library
 
 
-lib = CDLL('libeolian.so')
+lib = CDLL(find_library('eolian'))
 
 
 ### Generic ###
