@@ -128,7 +128,7 @@ class CleanALL(Command):
         self.remove_t(os.path.join(script_path, 'dist'))
 
     def is_generated(self, full_path):
-        if not full_path.endswith(('.h', '.c')):
+        if not full_path.endswith(('.h', '.c', '.py')):
             return False
         with open(full_path, 'r') as f:
             first_line = f.readline()
@@ -177,20 +177,25 @@ class Generate(Command):
             ]
         }
 
-        cls_c_tmpl = Template('templates/class.template.c', data=extra_context)
-        cls_h_tmpl = Template('templates/class.template.h', data=extra_context)
-        
-        cls_c_tmpl.render('efl2/efl.loop.c', cls='Efl.Loop')
-        cls_h_tmpl.render('efl2/efl.loop.h', cls='Efl.Loop')
+        clsc_tmpl = Template('templates/class.template.c', data=extra_context)
+        clsh_tmpl = Template('templates/class.template.h', data=extra_context)
+        init_tmpl = Template('templates/module.__init__.template.py', data=extra_context)
 
-        cls_c_tmpl.render('efl2/efl.loop_user.c', cls='Efl.Loop_User')
-        cls_h_tmpl.render('efl2/efl.loop_user.h', cls='Efl.Loop_User')
-        
-        cls_c_tmpl.render('efl2/loop/efl.loop.timer.c', cls='Efl.Loop.Timer')
-        cls_h_tmpl.render('efl2/loop/efl.loop.timer.h', cls='Efl.Loop.Timer')
+        # Efl
+        clsc_tmpl.render('efl2/efl.loop.c', cls='Efl.Loop')
+        clsh_tmpl.render('efl2/efl.loop.h', cls='Efl.Loop')
 
-        cls_c_tmpl.render('efl2/loop/efl.loop.fd.c', cls='Efl.Loop.Fd')
-        cls_h_tmpl.render('efl2/loop/efl.loop.fd.h', cls='Efl.Loop.Fd')
+        clsc_tmpl.render('efl2/efl.loop_user.c', cls='Efl.Loop_User')
+        clsh_tmpl.render('efl2/efl.loop_user.h', cls='Efl.Loop_User')
+
+        # Efl.Loop
+        init_tmpl.render('efl2/loop/__init__.py', ns='Efl.Loop')
+        
+        clsc_tmpl.render('efl2/loop/efl.loop.timer.c', cls='Efl.Loop.Timer')
+        clsh_tmpl.render('efl2/loop/efl.loop.timer.h', cls='Efl.Loop.Timer')
+
+        clsc_tmpl.render('efl2/loop/efl.loop.fd.c', cls='Efl.Loop.Fd')
+        clsh_tmpl.render('efl2/loop/efl.loop.fd.h', cls='Efl.Loop.Fd')
 
 
 # === augmented build command ===

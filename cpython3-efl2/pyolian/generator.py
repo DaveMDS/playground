@@ -43,30 +43,40 @@ class Template(pyratemp.Template):
                        eval_class=pyratemp.EvalPseudoSandbox):
 
         # Build the global context for the template
-        global_context = {
+        global_ctx = {}
+        # user provided context (low pri)
+        if data:
+            global_ctx.update(data)
+        # standard names (not overwritables)
+        global_ctx.update({
             'date': datetime.datetime.now(),
             'eolian_version': eolian.__version__,
             'eolian_version_info': eolian.__version_info__,
-        }
-        # Augment context with user provided data
-        if data is not None:
-            global_context.update(data)
+        })
+        
 
         # Call the parent __init__ func
         self.template_filename = filename
         pyratemp.Template.__init__(self, filename=filename, encoding=encoding,
-                                   data=global_context, escape=escape,
+                                   data=global_ctx, escape=escape,
                                    loader_class=loader_class,
                                    parser_class=parser_class,
                                    renderer_class=renderer_class,
                                    eval_class=eval_class)
 
-    def render(self, filename=None, cls=None, **kargs):
+    def render(self, filename=None, cls=None, ns=None, **kargs):
 
         # Build the context for the template
         ctx = {}
-        if cls is not None:
-            ctx['cls'] = eolian.Class(class_name=cls)
+        if kargs:
+            ctx.update(data)
+        if cls:
+            ctx['cls'] = eolian.Class(cls)
+        if ns:
+            ctx['namespace'] = ns
+            ctx['namespaces'] = ns.split('.')
+            ctx['classes'] = [ c for c in eolian.all_classes_get()
+                                if c.full_name.startswith(ns + '.') ]
 
         # render with the augmented context
         output = self(**ctx)
