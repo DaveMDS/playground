@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 # encoding: utf-8
 
+import os
 import datetime
 
 from . import eolian
@@ -52,6 +53,7 @@ class Template(pyratemp.Template):
             'date': datetime.datetime.now(),
             'eolian_version': eolian.__version__,
             'eolian_version_info': eolian.__version_info__,
+            'template_file': os.path.basename(filename),
         })
         
 
