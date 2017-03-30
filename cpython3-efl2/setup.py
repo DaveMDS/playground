@@ -180,6 +180,7 @@ class Generate(Command):
         clsc_tmpl = Template('templates/class.template.c', data=extra_context)
         clsh_tmpl = Template('templates/class.template.h', data=extra_context)
         init_tmpl = Template('templates/module.__init__.template.py', data=extra_context)
+        modc_tmpl = Template('templates/module.template.c', data=extra_context)
 
         # Efl
         clsc_tmpl.render('efl2/efl.loop.c', cls='Efl.Loop')
@@ -190,6 +191,7 @@ class Generate(Command):
 
         # Efl.Loop
         init_tmpl.render('efl2/loop/__init__.py', ns='Efl.Loop')
+        modc_tmpl.render('efl2/loop/_loop.module.c', ns='Efl.Loop')
         
         clsc_tmpl.render('efl2/loop/efl.loop.timer.c', cls='Efl.Loop.Timer')
         clsh_tmpl.render('efl2/loop/efl.loop.timer.h', cls='Efl.Loop.Timer')

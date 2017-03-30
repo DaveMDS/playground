@@ -1,27 +1,23 @@
+<!--(include)-->copyright_c.include<!--(end)-->#!
+<!--(include)-->macros.include<!--(end)-->#!
 #include <Python.h>
-
 
 #include <Eo.h>
 #include <Efl.h>
-#include <Ecore.h> // EFL_LOOP_TIMER_CLASS is defined here
+#include <Ecore.h> // EFL_LOOP_TIMER_CLASS is defined here TODO FIXME
 
 #include "../_efl.module.h"
-#include "efl.loop.timer.h"
-#include "efl.loop.fd.h"
+<!--(for cls in classes)-->
+#include "${cls.full_name.lower()}$.h"
+<!--(end)-->
+
 
 // #define DBG(...) {}
 #define DBG(_fmt_, ...) printf("[%s:%d] "_fmt_"\n", __FILE__, __LINE__, ##__VA_ARGS__);
 
 
-///////////////////////////////////////////////////////////////////////////////
-////  The "efl.loop" namespace MODULE  ////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
 /* List of functions defined in the module */
 static PyMethodDef ThisModuleMethods[] = {
-    
-    //TODO can we avoid this struct if no methods are present at module level?
-    
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
@@ -29,16 +25,13 @@ static PyMethodDef ThisModuleMethods[] = {
 /* The module definition */
 static struct PyModuleDef ThisModule = {
    PyModuleDef_HEAD_INIT,
-   "efl._loop",      /* name of module */
-   "module doc",  /* module documentation, may be NULL */
-   -1,            /* size of per-interpreter state of the module,
-                     or -1 if the module keeps state in global variables. */
-   ThisModuleMethods
+   "${('.'.join(namespaces[:-1])).lower()}$._${namespaces[-1].lower()}$",   /* name of module */
+   NULL, -1, ThisModuleMethods
 };
 
 /* Module init function, func name must match module name! (PyInit_XXX) */
 PyMODINIT_FUNC
-PyInit__loop(void)
+PyInit__${namespaces[-1].lower()}$(void)
 {
     PyObject *m;
 
@@ -55,8 +48,9 @@ PyInit__loop(void)
 
     /* Finalize all the type objects including setting type of the new type
      * object; doing it here is required for portability, too. */
-    if (!pyefl_loop_timer_object_finalize(m)) return NULL;
-    if (!pyefl_loop_fd_object_finalize(m)) return NULL;
+<!--(for cls in classes)-->
+    if (!py${cls.full_name.lower().replace('.', '_')}$_object_finalize(m)) return NULL;
+<!--(end)-->
 
     return m;
 }
