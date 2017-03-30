@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 from enum import IntEnum as Enum
-from ctypes import CDLL, cast, byref, c_uint, c_char_p, c_void_p
+from ctypes import cast, byref, c_uint, c_char_p, c_void_p
 
 from .eolian_lib import lib
 
@@ -163,19 +163,19 @@ def _c_str_to_py(s):
     return cast(s, c_char_p).value.decode('utf-8') if s else None
 
 def _c_eolian_class_to_py(cls):
-    return Class(c_class=cls)
+    return Class(cls)
 
 def _c_eolian_function_to_py(func):
-    return Function(c_func=func)
+    return Function(func)
 
 def _c_eolian_parameter_to_py(param):
-    return Parameter(c_param=param)
+    return Parameter(param)
 
 def _c_eolian_event_to_py(event):
-    return Event(c_event=event)
+    return Event(event)
 
 def _c_eolian_constructor_to_py(ctor):
-    return Constructor(c_ctor=ctor)
+    return Constructor(ctor)
 
 
 ###  module init/shutdown  ####################################################
@@ -211,7 +211,8 @@ def all_classes_get():
 
 ###  Classes  #################################################################
 
-class Iterator:
+class Iterator(object):
+    """ Generic eina iterator wrapper """
     def __init__(self, conv_func, iter_obj):
         self.next = self.__next__ # py2 compat
         self._conv = conv_func
@@ -225,7 +226,6 @@ class Iterator:
         if not lib.eina_iterator_next(self._iter, byref(self._tmp)):
             lib.eina_iterator_free(self._iter)
             raise StopIteration
-
         return self._conv(self._tmp)
 
     def free(self):
@@ -233,15 +233,16 @@ class Iterator:
 
 
 class Class(object):
-    def __init__(self, eo_file=None, c_class=None, class_name=None):
-        if eo_file:
-            self._obj = lib.eolian_class_get_by_file(_str_to_bytes(eo_file))
-        elif class_name:
-            self._obj = lib.eolian_class_get_by_name(_str_to_bytes(class_name))
-        elif c_class:
-            self._obj = c_class  # const Eolian_Class *
+    """ TODO DOC """
+    def __init__(self, cls):
+        if isinstance(cls, c_void_p):
+            self._obj = c_void_p(cls.value)  # const Eolian_Class *
+        elif isinstance(cls, str) and cls.startswith('Efl.'):
+            self._obj = lib.eolian_class_get_by_name(_str_to_bytes(cls))
+        elif isinstance(cls, str):
+            self._obj = lib.eolian_class_get_by_file(_str_to_bytes(cls))
         else:
-            ERR('Invalid Class constructor')
+            raise TypeError('Invalid Class constructor')
 
     def __repr__(self):
         return "<eolian.Class '{0.full_name}', prefix '{0.eo_prefix}'>".format(self)
@@ -311,7 +312,7 @@ class Class(object):
     def base_class(self):
         inherits = list(self.inherits)
         if len(inherits) > 0:
-            return Class(class_name=inherits[0])
+            return Class(inherits[0])
 
     @property
     def namespaces(self):
@@ -356,8 +357,12 @@ class Class(object):
 
 
 class Constructor(object):
+    """ TODO DOC """
     def __init__(self, c_ctor):
-        self._obj = c_ctor # const Eolian_Constructor *
+        if isinstance(c_ctor, c_void_p):
+            self._obj = c_void_p(c_ctor.value) # const Eolian_Constructor *
+        else:
+            raise TypeError('Invalid Class constructor')
 
     def __repr__(self):
         return "<eolian.Constructor '{0.full_name}', optional: {0.is_optional}>".format(self)
@@ -380,8 +385,12 @@ class Constructor(object):
 
 
 class Event(object):
+    """ TODO DOC """
     def __init__(self, c_event):
-        self._obj = c_event # const Eolian_Event *
+        if isinstance(c_event, c_void_p):
+            self._obj = c_void_p(c_event.value) # const Eolian_Event *
+        else:
+            raise TypeError('Invalid Class constructor')
 
     def __repr__(self):
         return "<eolian.Event '{0.name}', c_name: '{0.c_name}'>".format(self)
@@ -426,8 +435,12 @@ class Event(object):
 
 
 class Function(object):
+    """ TODO DOC """
     def __init__(self, c_func):
-        self._obj = c_func  # const Eolian_Function *
+        if isinstance(c_func, c_void_p):
+            self._obj = c_void_p(c_func.value)  # const Eolian_Function *
+        else:
+            raise TypeError('Invalid Class constructor')
 
     def __repr__(self):
         return "<eolian.Function '{0.name}'>".format(self)
@@ -541,8 +554,12 @@ class Function(object):
     
 
 class Parameter(object):
+    """ TODO DOC """
     def __init__(self, c_param):
-        self._obj = c_param  # const Eolian_Parameter *
+        if isinstance(c_param, c_void_p):
+            self._obj = c_void_p(c_param.value)  # const Eolian_Parameter *
+        else:
+            raise TypeError('Invalid Class constructor')
 
     def __repr__(self):
         return "<eolian.Parameter '{0.name}', type: {0.type}," \
@@ -584,8 +601,15 @@ class Parameter(object):
 
 
 class Type(object):
+    """ TODO DOC """
     def __init__(self, c_type):
-        self._obj = c_type # const Eolian_Type *
+        # const Eolian_Type *
+        if isinstance(c_type, c_void_p):
+            self._obj = c_void_p(c_type.value)
+        elif isinstance(c_type, int):
+            self._obj = c_void_p(c_type)
+        else:
+            raise TypeError('Invalid Class constructor')
 
     def __repr__(self):
         return "<eolian.Type '{0.full_name}', type: {0.type}, c_type: '{0.c_type}'>".format(self)
@@ -657,8 +681,12 @@ class Type(object):
 
 
 class Typedecl(object):
+    """ TODO DOC """
     def __init__(self, c_typedecl):
-        self._obj = c_typedecl # const Eolian_Typedecl *
+        if isinstance(c_typedecl, c_void_p):
+            self._obj = c_void_p(c_typedecl.value)  # const Eolian_Typedecl *
+        else:
+            raise TypeError('Invalid Class constructor')
 
     def __repr__(self):
         return "<eolian.Typedecl '{0.name}'>".format(self)
@@ -723,8 +751,12 @@ class Typedecl(object):
     
 
 class Documentation(object):
+    """ TODO DOC """
     def __init__(self, c_doc):
-        self._obj = c_doc  # const Eolian_Documentation *
+        if isinstance(c_doc, c_void_p):
+            self._obj = c_void_p(c_doc.value)  # const Eolian_Documentation *
+        else:
+            raise TypeError('Invalid Class constructor')
 
     # def __repr__(self):
         # return "<eolian.Typedecl '{0.name}'>".format(self)
