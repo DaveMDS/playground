@@ -86,8 +86,11 @@ class Template(pyratemp.Template):
         if filename is not None:
             INF('generating "%s" from template "%s"' % (
                 filename, self.template_filename))
+            # create directory tree if needed
+            folder = os.path.dirname(filename)
+            if not os.path.isdir(folder):
+                os.makedirs(folder)
             # write to file
-            # TODO check dest dir exists, and create if necessary
             with open(filename, "w") as f:
                 f.write(output)
         else:

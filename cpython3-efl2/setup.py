@@ -118,10 +118,10 @@ class CleanALL(Command):
                     self.remove_f(full_path)
             for d in dirs:
                 full_path = os.path.join(root, d)
-                if d == '__pycache__':
+                if not os.listdir(full_path): # empty dir ?
+                    self.remove_d(full_path)
+                elif d == '__pycache__':
                     self.remove_t(full_path)
-                # if not os.listdir(full_path): # empty dir ?
-                    # self.remove_d(full_path)
 
         # clean root folder
         self.remove_t(os.path.join(script_path, 'build'))
