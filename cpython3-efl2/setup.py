@@ -1,5 +1,5 @@
-#! /usr/bin/env python3
-# encoding: utf-8
+#!/usr/bin/env python3
+# This Python file uses the following encoding: utf-8
 
 import os
 import sys
@@ -131,9 +131,10 @@ class CleanALL(Command):
         if not full_path.endswith(('.h', '.c', '.py')):
             return False
         with open(full_path, 'r') as f:
-            first_line = f.readline()
-            if self.MAGIC in first_line:
-                return True
+            for i in range(3):
+                line = f.readline()
+                if line and self.MAGIC in line:
+                    return True
         return False
 
     def remove_f(self, full_path):

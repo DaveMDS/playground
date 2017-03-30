@@ -1,5 +1,5 @@
-#! /usr/bin/env python3
-# encoding: utf-8
+#!/usr/bin/env python3
+# This Python file uses the following encoding: utf-8
 
 from enum import IntEnum as Enum
 from ctypes import cast, byref, c_uint, c_char_p, c_void_p
