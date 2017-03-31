@@ -73,10 +73,12 @@ ${CLS_OBJECT}$_dealloc(${CLS_OBJECT}$ *self)
 
 #! // TYPE_IN_FUNC(type)
 <!--(macro TYPE_IN_FUNC)-->
-    <!--(if type.full_name == 'void_ptr')-->
-void_func#!
-    <!--(elif type.full_name == 'Efl.Object')-->
+    <!--(if type.full_name == 'Efl.Class')-->
+pyefl_type_to_class#!
+    <!--(elif type.full_name.startswith('Efl.'))-->
 pyefl_object_to_pointer#!
+    <!--(elif type.full_name == 'void_ptr')-->
+void_func#!
     <!--(elif type.full_name == 'double')-->
 PyFloat_AsDouble#!
     <!--(elif type.full_name == 'int')-->

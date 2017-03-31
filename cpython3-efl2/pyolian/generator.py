@@ -88,7 +88,7 @@ class Template(pyratemp.Template):
                 filename, self.template_filename))
             # create directory tree if needed
             folder = os.path.dirname(filename)
-            if not os.path.isdir(folder):
+            if folder and not os.path.isdir(folder):
                 os.makedirs(folder)
             # write to file
             with open(filename, "w") as f:

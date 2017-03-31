@@ -171,12 +171,13 @@ class Generate(Command):
                 # Efl.Loop
                 'efl_loop_job',                   #  futures
                 'efl_loop_timeout',               #  futures
-                'efl_loop_register',              #  Efl.Class 
-                'efl_loop_unregister',            #  Efl.Class 
                 'efl_loop_app_efl_version_get',   #  Efl.Version (struct)
                 'efl_loop_efl_version_get',       #  Efl.Version (struct)
             ]
         }
+
+        # TEST_tmpl = Template('templates/TESTING.template', data=extra_context)
+        # TEST_tmpl.render('TESTING.OUT', cls="Efl.Class")
 
         clsc_tmpl = Template('templates/class.template.c', data=extra_context)
         clsh_tmpl = Template('templates/class.template.h', data=extra_context)

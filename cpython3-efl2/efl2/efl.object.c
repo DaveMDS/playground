@@ -308,6 +308,7 @@ static PyMethodDef Efl_Object_methods[] = {
     {NULL, NULL, 0, NULL}  /* sentinel */
 };
 
+/* Object Type definition */
 PyTypeObject PyEfl_ObjectTypeInternal = {
     /* The ob_type field must be initialized in the module init function
      * to be portable to Windows without using C++. */
