@@ -285,6 +285,10 @@ class Class(object):
         return _c_str_to_py(lib.eolian_class_eo_prefix_get(self._obj))
 
     @property
+    def type(self):
+        return Eolian_Class_Type(lib.eolian_class_type_get(self._obj))
+    
+    @property
     def data_type(self):
         return _c_str_to_py(lib.eolian_class_data_type_get(self._obj))
 

@@ -191,6 +191,9 @@ class Generate(Command):
         clsc_tmpl.render('efl2/efl.loop_user.c', cls='Efl.Loop_User')
         clsh_tmpl.render('efl2/efl.loop_user.h', cls='Efl.Loop_User')
 
+        clsc_tmpl.render('efl2/efl.animator.c', cls='Efl.Animator')
+        clsh_tmpl.render('efl2/efl.animator.h', cls='Efl.Animator')
+
         # Efl.Loop
         init_tmpl.render('efl2/loop/__init__.py', ns='Efl.Loop')
         modc_tmpl.render('efl2/loop/_loop.module.c', ns='Efl.Loop')
@@ -237,6 +240,7 @@ efl_module('efl2._efl', [
     'efl2/efl.object.c',
     'efl2/efl.loop.c',
     'efl2/efl.loop_user.c',
+    'efl2/efl.animator.c',
 ])
 
 # efl.loop namespace module

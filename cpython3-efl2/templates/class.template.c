@@ -19,14 +19,28 @@
 // #define DBG(...) {}
 #define DBG(_fmt_, ...) printf("[%s:%d] "_fmt_"\n", __FILE__, __LINE__, ##__VA_ARGS__);
 
+///////////////////////////////////////////////////////////////////////////////
+<!--(if cls.type == Eolian_Class_Type.REGULAR)-->
+//  The ${cls.full_name}$ Class
+<!--(elif cls.type == Eolian_Class_Type.INTERFACE)-->
+//  The ${cls.full_name}$ Interface
+<!--(else)-->
+//  ${cls.full_name}$  -- UNKNOW CLS TYPE
+<!--(end)-->
+///////////////////////////////////////////////////////////////////////////////
 
+/* Class __init__ method (constructor) */
 static int
 ${CLS_OBJECT}$_init(${CLS_OBJECT}$ *self, PyObject *args, PyObject *kwds)
 {
+<!--(if cls.type == Eolian_Class_Type.INTERFACE)-->
+    PyErr_SetString(PyExc_TypeError, "Interfaces cannot be instantiated");
+    return -1;
+<!--(else)-->
     DBG("init()")
     PyEfl_Object *parent = NULL;
 
-<!--(if cls.full_name == 'Efl.Loop.Timer')-->
+  <!--(if cls.full_name == 'Efl.Loop.Timer')-->
     /* Timer custom constructor */
     double interval;
     if (!PyArg_ParseTuple(args, "Od:Timer", &parent, &interval))
@@ -35,16 +49,16 @@ ${CLS_OBJECT}$_init(${CLS_OBJECT}$ *self, PyObject *args, PyObject *kwds)
     Eo *o  = efl_add(EFL_LOOP_TIMER_CLASS, parent->obj,
                      efl_loop_timer_interval_set(efl_added, interval));
 
-<!--(elif cls.full_name ==  'Efl.Ui.Win')-->
+  <!--(elif cls.full_name ==  'Efl.Ui.Win')-->
     // TODO Win custom constuctor
-<!--(else)-->
+  <!--(else)-->
     /* Standard Eo constructor */
     if (!PyArg_ParseTuple(args, "|O:${cls.name}$", &parent))
         return -1;
 
     // TODO check parent is a valid Eo object
     Eo *o = efl_add(${cls.c_name}$, parent ? parent->obj : NULL, NULL);
-<!--(end)-->
+  <!--(end)-->
 
     /* Store the Eo object in self._obj */
     ((PyEfl_Object*)self)->obj = o;
@@ -56,13 +70,14 @@ ${CLS_OBJECT}$_init(${CLS_OBJECT}$ *self, PyObject *args, PyObject *kwds)
         return -1;
 
     // TODO FIX this should be at class level, not repeated for every instance */
-<!--(for event in cls.events)-->
+  <!--(for event in cls.events)-->
     pyefl_event_register((PyEfl_Object*)self, ${event.c_name}$);
-<!--(end)-->
+  <!--(end)-->
 
     return 0;
+<!--(end)-->
 }
-
+#!
 #! // TYPE_IN_FUNC(type)
 <!--(macro TYPE_IN_FUNC)-->
     <!--(if type.full_name == 'Efl.Class')-->
@@ -81,7 +96,7 @@ PyFloat_AsDouble#!
 // ERROR: UNSUPPORTED IN PARAM TYPE: ${type}$ //
     <!--(end)-->
 <!--(end)-->
-
+#!
 #! // TYPE_OUT_FUNC(type)
 <!--(macro TYPE_OUT_FUNC)-->
     <!--(if type.full_name == 'double')-->
@@ -302,8 +317,10 @@ ${OBJECT_FINALIZE_FUNC}$(PyObject *module)
     PyModule_AddObject(module, "_${cls.name}$", (PyObject *)${CLS_OBJECT_TYPE}$);
     Py_INCREF(${CLS_OBJECT_TYPE}$);
 
+<!--(if cls.type == Eolian_Class_Type.REGULAR)-->
     /* Link the EO class with the python type object */
     pyefl_class_register(${CLS_EO_NAME}$, ${CLS_OBJECT_TYPE}$);
+<!--(end)-->
 
     return EINA_TRUE;
 }

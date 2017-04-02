@@ -24,7 +24,11 @@ _${cls.name}$
 #!
 #! CLS_BASE_OBJECT ex: "PyEfl_Loop_User"
 <!--(macro CLS_BASE_OBJECT)-->
-Py${cls.base_class.full_name.replace('.', '_')}$
+    <!--(if cls.type == Eolian_Class_Type.INTERFACE)-->
+PyEfl_Object#!
+    <!--(else )-->
+Py${cls.base_class.full_name.replace('.', '_')}$#!
+    <!--(end)-->
 <!--(end)-->
 #!
 #! OBJECT_FINALIZE_FUNC ex: "pyefl_loop_timer_object_finalize"

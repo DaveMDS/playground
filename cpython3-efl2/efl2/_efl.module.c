@@ -58,6 +58,7 @@ static PyEfl_CAPI_t PyEfl_CAPI = {
     &PyEfl_ObjectTypeInternal,
     &PyEfl_LoopTypeInternal,
     &PyEfl_Loop_UserTypeInternal,
+    &PyEfl_AnimatorTypeInternal,
     &pyefl_class_register,
     &pyefl_event_register,
     &pyefl_object_from_instance
@@ -85,6 +86,7 @@ PyInit__efl(void)
     if (!pyefl_object_object_finalize(m)) return NULL;
     if (!pyefl_loop_object_finalize(m)) return NULL;
     if (!pyefl_loop_user_object_finalize(m)) return NULL;
+    if (!pyefl_animator_object_finalize(m)) return NULL;
 
     /* Export C API */
     if (PyModule_AddObject(m, "CAPI",

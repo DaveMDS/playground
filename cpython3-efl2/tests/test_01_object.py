@@ -84,6 +84,9 @@ class TestObject(unittest.TestCase):
         self.assertEqual(expected_calls, 0)
         del expected_calls
 
+    # Test interfaces are not instantiable
+    def test_iface_instance(self):
+        self.assertRaises(TypeError, efl.Animator)
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

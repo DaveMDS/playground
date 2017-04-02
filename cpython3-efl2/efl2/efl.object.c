@@ -202,7 +202,7 @@ Efl_Object_traverse(PyEfl_Object *self, visitproc visit, void *arg)
 
 /* Class methods */
 
-static PyObject *  // Efl.Object.event_callback_add()
+static PyObject *  // Efl.Object event_callback_add()
 Efl_Object_event_callback_add(PyEfl_Object *self, PyObject *args, PyObject *kargs)
 {
     DBG("event_callback_add()")
@@ -240,7 +240,7 @@ Efl_Object_event_callback_add(PyEfl_Object *self, PyObject *args, PyObject *karg
     Py_RETURN_NONE;
 }
 
-static PyObject *  // Efl.Object.event_callback_del()
+static PyObject *  // Efl.Object event_callback_del()
 Efl_Object_event_callback_del(PyEfl_Object *self, PyObject *args, PyObject *kargs)
 {
     DBG("event_callback_del()")

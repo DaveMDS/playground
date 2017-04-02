@@ -50,12 +50,28 @@ class Template(pyratemp.Template):
             global_ctx.update(data)
         # standard names (not overwritables)
         global_ctx.update({
+            # Template info
             'date': datetime.datetime.now(),
+            'template_file': os.path.basename(filename),
+            # Eolian info
             'eolian_version': eolian.__version__,
             'eolian_version_info': eolian.__version_info__,
-            'template_file': os.path.basename(filename),
+            # Eolian Enums
+            'Eolian_Function_Type': eolian.Eolian_Function_Type,
+            'Eolian_Parameter_Dir': eolian.Eolian_Parameter_Dir,
+            'Eolian_Class_Type': eolian.Eolian_Class_Type,
+            'Eolian_Object_Scope': eolian.Eolian_Object_Scope,
+            'Eolian_Typedecl_Type': eolian.Eolian_Typedecl_Type,
+            'Eolian_Type_Type': eolian.Eolian_Type_Type,
+            'Eolian_Expression_Type': eolian.Eolian_Expression_Type,
+            'Eolian_Expression_Mask': eolian.Eolian_Expression_Mask,
+            'Eolian_Variable_Type': eolian.Eolian_Variable_Type,
+            'Eolian_Binary_Operator': eolian.Eolian_Binary_Operator,
+            'Eolian_Unary_Operator': eolian.Eolian_Unary_Operator,
+            'Eolian_Declaration_Type': eolian.Eolian_Declaration_Type,
+            'Eolian_Doc_Token_Type': eolian.Eolian_Doc_Token_Type,
+            'Eolian_Doc_Ref_Type': eolian.Eolian_Doc_Ref_Type,
         })
-        
 
         # Call the parent __init__ func
         self.template_filename = filename

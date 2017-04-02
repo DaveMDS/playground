@@ -26,11 +26,18 @@ __version__ = "2.0.0-test1"
 __version_info__ = ( 2, 0, 0 )
 
 
+# objects
 from ._efl import Object, _Loop, _Loop_User, system
-
 
 class Loop(_Loop):  # Direct subclass of efl._Object
    pass
 
 class Loop_User(_Loop_User):  # Direct subclass of efl._Object
+   pass
+
+
+# interfaces
+from ._efl import _Animator
+
+class Animator(_Animator):  # Direct subclass of efl._Object
    pass

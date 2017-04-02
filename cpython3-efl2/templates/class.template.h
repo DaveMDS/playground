@@ -10,8 +10,6 @@ Py_${cls.full_name.upper().replace('.','_',)}$__H
 extern "C" {
 #endif
 
-// #include <Eo.h>
-
 
 /* The ${cls.full_name}$ Type */
 extern PyTypeObject  ${CLS_OBJECT_TYPE}$Internal;
