@@ -12,6 +12,7 @@ extern "C" {
 #include "efl.loop_user.h"
 #include "efl.animator.h"
 #include "efl.config.h"
+#include "efl.part.h"
 
 
 
@@ -28,6 +29,7 @@ typedef struct {
     PyTypeObject *PyEfl_Loop_UserType;
     PyTypeObject *PyEfl_AnimatorType;
     PyTypeObject *PyEfl_ConfigType;
+    PyTypeObject *PyEfl_PartType;
     // Exported functions
     void (*pyefl_class_register)(const Efl_Class *, const PyTypeObject *type);
     void (*pyefl_event_register)(PyEfl_Object *self, const Efl_Event_Description *desc);
@@ -65,6 +67,7 @@ import_efl(void)
 #define PyEfl_Loop_UserType _EflObject_CAPI->PyEfl_Loop_UserType
 #define PyEfl_AnimatorType _EflObject_CAPI->PyEfl_AnimatorType
 #define PyEfl_ConfigType _EflObject_CAPI->PyEfl_ConfigType
+#define PyEfl_PartType _EflObject_CAPI->PyEfl_PartType
 #define pyefl_class_register _EflObject_CAPI->pyefl_class_register
 #define pyefl_event_register _EflObject_CAPI->pyefl_event_register
 #define pyefl_object_from_instance _EflObject_CAPI->pyefl_object_from_instance

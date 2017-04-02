@@ -88,6 +88,7 @@ class TestObject(unittest.TestCase):
     def test_iface_instance(self):
         self.assertRaises(TypeError, efl.Animator)
         self.assertRaises(TypeError, efl.Config)
+        self.assertRaises(TypeError, efl.Part)
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

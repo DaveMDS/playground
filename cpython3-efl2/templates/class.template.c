@@ -109,7 +109,9 @@ PyLong_FromLong#!
 PyLong_FromLong#!
     <!--(elif type.full_name == 'bool')-->
 PyBool_FromLong#!
-    <!--(elif type.full_name == 'Efl.Loop')-->
+    <!--(elif type.full_name == 'Efl.Class')-->
+TODO #!
+    <!--(elif type.full_name.startswith('Efl.'))-->
 pyefl_object_from_instance#!
     <!--(else)-->
 // ERROR: UNSUPPORTED OUT TYPE: ${type}$
