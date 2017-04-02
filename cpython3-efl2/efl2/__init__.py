@@ -26,11 +26,8 @@ __version__ = "2.0.0-test1"
 __version_info__ = ( 2, 0, 0 )
 
 
-from ._efl import _Object, _Loop, _Loop_User, system
+from ._efl import Object, _Loop, _Loop_User, system
 
-
-class Object(_Object):  # Direct subclass of python object
-   pass
 
 class Loop(_Loop):  # Direct subclass of efl._Object
    pass

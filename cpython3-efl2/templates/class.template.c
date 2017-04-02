@@ -63,14 +63,6 @@ ${CLS_OBJECT}$_init(${CLS_OBJECT}$ *self, PyObject *args, PyObject *kwds)
     return 0;
 }
 
-static void
-${CLS_OBJECT}$_dealloc(${CLS_OBJECT}$ *self)
-{
-    DBG("dealloc()")
-    // Py_XDECREF(self->x_attr);
-    PyObject_Del(self);  //TODO FIXME !!!!
-}
-
 #! // TYPE_IN_FUNC(type)
 <!--(macro TYPE_IN_FUNC)-->
     <!--(if type.full_name == 'Efl.Class')-->
@@ -243,7 +235,9 @@ PyTypeObject ${CLS_OBJECT_TYPE}$Internal = {
     "${CLS_TP_NAME}$",          /*tp_name*/
     sizeof(${CLS_OBJECT}$),     /*tp_basicsize*/
     0,                          /*tp_itemsize*/
-    (destructor)${CLS_OBJECT}$_dealloc,
+    // (destructor)${CLS_OBJECT}$_dealloc,
+    0, /* only efl.Object */    /*tp_dealloc*/ 
+
     0,                          /*tp_print*/
     (getattrfunc)0,             /*tp_getattr*/
     // (setattrfunc)Xxo_setattr,   /*tp_setattr*/

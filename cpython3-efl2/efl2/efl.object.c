@@ -74,9 +74,15 @@ _eo_callback_dispatcher(void *data, const Efl_Event *event)
     obj = pyefl_object_from_instance(event->object);
     
     // Build python args for the callback
-    // FIXME: callback signature: (obj, event_name, event_info, **kargs)
     PyObject *arglist;
-    arglist = Py_BuildValue("(OsO)", obj, event->desc->name, Py_None);
+    if (event->info) {
+        // callback signature: (obj, event_name, event_info, **kargs)
+        // TODO convert event->info to python
+        arglist = Py_BuildValue("(OsO)", obj, event->desc->name, Py_None);
+    } else {
+        // callback signature: (obj, event_name, **kargs)
+        arglist = Py_BuildValue("(Os)", obj, event->desc->name);
+    }
 
     // Call the user python callback
     PyObject *result;
@@ -162,7 +168,10 @@ Efl_Object_init(PyEfl_Object *self, PyObject *args, PyObject *kwds)
     efl_event_callback_priority_add(self->obj, EFL_EVENT_DEL,
                                     EFL_CALLBACK_PRIORITY_AFTER + 9999,
                                     _eo_del_callback, self);
-    
+
+    // TODO FIX this should be at class level, not repeated for every instance */
+    pyefl_event_register(self, EFL_EVENT_DEL);
+
     return 0;
 }
 
@@ -171,15 +180,15 @@ static void
 Efl_Object_dealloc(PyEfl_Object *self)
 {
     DBG("dealloc()")
-    Py_XDECREF(self->x_attr);
-    PyObject_Del(self);
+    Py_XDECREF(self->x_attr);  // TODO REMOVE ME
+    Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
 static int
 Efl_Object_traverse(PyEfl_Object *self, visitproc visit, void *arg)
 {
     DBG("traverse()")
-    Py_VISIT(self->x_attr);
+    Py_VISIT(self->x_attr);  // TODO REMOVE ME
     return 0;
 }
 
@@ -191,6 +200,7 @@ Efl_Object_traverse(PyEfl_Object *self, visitproc visit, void *arg)
     // return 0;
 // }
 
+/* Class methods */
 
 static PyObject *  // Efl.Object.event_callback_add()
 Efl_Object_event_callback_add(PyEfl_Object *self, PyObject *args, PyObject *kargs)
@@ -281,21 +291,7 @@ Efl_Object_delete(PyEfl_Object *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
-static PyObject *  // Efl.Object.parent_get()
-Efl_Object_parent_get(PyEfl_Object *self, PyObject *args)
-{
-    DBG("parent_get()")
-    Efl_Object *obj;
-    PyObject *ret;
-
-    obj = efl_parent_get(self->obj);
-    ret = pyefl_object_from_instance(obj);
-
-    return ret;
-    
-}
-
-/* List of functions defined in the object */
+/* Class methods table */
 static PyMethodDef Efl_Object_methods[] = {
     {"delete", (PyCFunction)Efl_Object_delete,
         METH_NOARGS, NULL},
@@ -303,9 +299,31 @@ static PyMethodDef Efl_Object_methods[] = {
         METH_VARARGS | METH_KEYWORDS, NULL},
     {"event_callback_del", (PyCFunction)Efl_Object_event_callback_del,
         METH_VARARGS | METH_KEYWORDS, NULL},
-    {"parent_get", (PyCFunction)Efl_Object_parent_get,
-        METH_NOARGS, NULL},
     {NULL, NULL, 0, NULL}  /* sentinel */
+};
+
+/* Class Getters */
+
+static PyObject *  // Efl.Object parent  (getter)
+PyEfl_Object_parent_get(PyEfl_Object *self, void *closure)
+{
+    DBG("parent_get()")
+    Efl_Object *obj;
+
+    obj = efl_parent_get(self->obj);
+
+    return pyefl_object_from_instance(obj);
+}
+
+/* Class Setters */
+
+/* Class getsetter table */
+static PyGetSetDef PyEfl_Object_getsetters[] = {
+    {"parent",
+        (getter)PyEfl_Object_parent_get,
+        NULL, /* readonly */
+        NULL, NULL},
+    {NULL, 0, 0, NULL, NULL}  /* sentinel */
 };
 
 /* Object Type definition */
@@ -313,7 +331,7 @@ PyTypeObject PyEfl_ObjectTypeInternal = {
     /* The ob_type field must be initialized in the module init function
      * to be portable to Windows without using C++. */
     PyVarObject_HEAD_INIT(NULL, 0)
-    "_Object",                  /*tp_name*/
+    "efl.Object",               /*tp_name*/
     sizeof(PyEfl_Object),       /*tp_basicsize*/
     0,                          /*tp_itemsize*/
     /* methods */
@@ -345,7 +363,7 @@ PyTypeObject PyEfl_ObjectTypeInternal = {
     0,                          /*tp_iternext*/
     Efl_Object_methods,         /*tp_methods*/
     0,                          /*tp_members*/
-    0,                          /*tp_getset*/
+    PyEfl_Object_getsetters,    /*tp_getset*/
     0,                          /*tp_base*/
     0,                          /*tp_dict*/
     0,                          /*tp_descr_get*/
@@ -368,17 +386,8 @@ pyefl_object_object_finalize(PyObject *module)
     if (PyType_Ready(PyEfl_ObjectType) < 0)
         return EINA_FALSE;
 
-    PyModule_AddObject(module, "_Object", (PyObject *)PyEfl_ObjectType);
+    PyModule_AddObject(module, "Object", (PyObject *)PyEfl_ObjectType);
     Py_INCREF(PyEfl_ObjectType);
 
     return EINA_TRUE;
 }
-
-/* C API table - always add new things to the end for binary compatibility. */
-// static EflObject_CAPI_t EflObjectCAPI = {
-    // &Efl_ObjectType,
-    // &_eo_class_register,
-    // &_eo_event_register,
-    // &_eo_object_from_instance
-// };
-
