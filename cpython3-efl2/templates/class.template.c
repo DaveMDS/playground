@@ -84,6 +84,8 @@ ${CLS_OBJECT}$_init(${CLS_OBJECT}$ *self, PyObject *args, PyObject *kwds)
 pyefl_type_to_class#!
     <!--(elif type.full_name.startswith('Efl.'))-->
 pyefl_object_to_pointer#!
+    <!--(elif type.full_name == 'string')-->
+PyUnicode_AsUTF8#!
     <!--(elif type.full_name == 'void_ptr')-->
 void_func#!
     <!--(elif type.full_name == 'double')-->

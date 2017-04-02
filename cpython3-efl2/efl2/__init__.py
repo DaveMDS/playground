@@ -37,7 +37,10 @@ class Loop_User(_Loop_User):  # Direct subclass of efl._Object
 
 
 # interfaces
-from ._efl import _Animator
+from ._efl import _Animator, _Config
 
 class Animator(_Animator):  # Direct subclass of efl._Object
+   pass
+
+class Config(_Config):  # Direct subclass of efl._Object
    pass

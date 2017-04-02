@@ -173,6 +173,10 @@ class Generate(Command):
                 'efl_loop_timeout',               #  futures
                 'efl_loop_app_efl_version_get',   #  Efl.Version (struct)
                 'efl_loop_efl_version_get',       #  Efl.Version (struct)
+                # Efl.Config
+                'efl_config_set',                 #  Eina_Value *
+                'efl_config_get',                 #  Eina_Value *
+                'efl_config_list_get',            #  Eina_Iterator *
             ]
         }
 
@@ -193,6 +197,9 @@ class Generate(Command):
 
         clsc_tmpl.render('efl2/efl.animator.c', cls='Efl.Animator')
         clsh_tmpl.render('efl2/efl.animator.h', cls='Efl.Animator')
+
+        clsc_tmpl.render('efl2/efl.config.c', cls='Efl.Config')
+        clsh_tmpl.render('efl2/efl.config.h', cls='Efl.Config')
 
         # Efl.Loop
         init_tmpl.render('efl2/loop/__init__.py', ns='Efl.Loop')
@@ -241,6 +248,7 @@ efl_module('efl2._efl', [
     'efl2/efl.loop.c',
     'efl2/efl.loop_user.c',
     'efl2/efl.animator.c',
+    'efl2/efl.config.c',
 ])
 
 # efl.loop namespace module
