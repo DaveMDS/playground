@@ -99,28 +99,6 @@ _eo_callback_dispatcher(void *data, const Efl_Event *event)
     PyGILState_Release(_gil_state);
 }
 
-// static void
-// _eo_event_register(PyEfl_Object *self, const Efl_Event_Description *desc)
-// {
-    // DBG("register event: %s", desc->name);
-    // self->events = eina_list_append(self->events, desc);
-// }
-
-static const Efl_Event_Description *
-_eo_event_find_by_name(PyEfl_Object *self, const char *event_name)
-{
-    const Efl_Event_Description *event_desc;
-    Eina_List *l;
-
-    EINA_LIST_FOREACH(self->events, l, event_desc)
-        if (strcmp(event_desc->name, event_name) == 0)
-            break;
-    if (l == NULL) {
-        PyErr_SetString(PyExc_TypeError, "event name cannot be found");
-        return NULL;
-    }
-    return event_desc;
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 ////  The Efl.Object OBJECT  //////////////////////////////////////////////////
@@ -144,10 +122,6 @@ _eo_del_callback(void *data, const Efl_Event *event)
         _eo_cbdata_free(d);
     self->cbdatas = NULL;
 
-    // Free the list of event descriptions
-    eina_list_free(self->events);
-    self->events = NULL;
-
     // Invalidate the efl object reference
     Py_DECREF(self);
     self->obj = NULL;
@@ -168,9 +142,6 @@ Efl_Object_init(PyEfl_Object *self, PyObject *args, PyObject *kwds)
     efl_event_callback_priority_add(self->obj, EFL_EVENT_DEL,
                                     EFL_CALLBACK_PRIORITY_AFTER + 9999,
                                     _eo_del_callback, self);
-
-    // TODO FIX this should be at class level, not repeated for every instance */
-    pyefl_event_register(self, EFL_EVENT_DEL);
 
     return 0;
 }
@@ -212,23 +183,27 @@ Efl_Object_event_callback_add(PyEfl_Object *self, PyObject *args, PyObject *karg
     PyObject *cb;
     if (!PyArg_ParseTuple(args, "sO:event_callback_add", &event_name, &cb))
         return  NULL;
-    if (!PyCallable_Check(cb)) {
+    if (!PyCallable_Check(cb))
+    {
         PyErr_SetString(PyExc_TypeError, "parameter must be callable");
         return NULL;
     }
 
     // Event name -> event desc
     const Efl_Event_Description *event_desc;
-    event_desc = _eo_event_find_by_name(self, event_name);
-    if (!event_desc) return NULL;
+    event_desc = pyefl_event_find_by_name(self, event_name);
+    if (!event_desc)
+        return PyErr_Format(PyExc_ValueError,
+                            "event '%s' cannot be found for cls '%s'",
+                            event_name, efl_class_name_get(efl_class_get(self->obj)));
 
     // Prepare the data that will be attached with the cb
     struct cb_data_t *cbdata;
     cbdata = _eo_cbdata_new(cb, kargs);
 
     // Actually call the C EFL function
-    if (efl_event_callback_add(self->obj, event_desc,
-                              _eo_callback_dispatcher, cbdata) == EINA_FALSE) {
+    if (!efl_event_callback_add(self->obj, event_desc, _eo_callback_dispatcher, cbdata))
+    {
         PyErr_SetString(PyExc_TypeError, "Unknown error while attaching callback");
         _eo_cbdata_free(cbdata);
         return NULL;
@@ -271,10 +246,18 @@ Efl_Object_event_callback_del(PyEfl_Object *self, PyObject *args, PyObject *karg
 
     // Event name -> event desc
     const Efl_Event_Description *event_desc;
-    event_desc = _eo_event_find_by_name(self, event_name);
-    if (!event_desc) return NULL;
+    event_desc = pyefl_event_find_by_name(self, event_name);
+    if (!event_desc)
+        return PyErr_Format(PyExc_ValueError,
+                            "event '%s' cannot be found for cls '%s'",
+                            event_name, efl_class_name_get(efl_class_get(self->obj)));
 
-    efl_event_callback_del(self->obj, event_desc, _eo_callback_dispatcher, cbdata);
+    // Actually call the C EFL function
+    if (!efl_event_callback_del(self->obj, event_desc, _eo_callback_dispatcher, cbdata))
+    {
+        PyErr_SetString(PyExc_TypeError, "Unknown error while removing callback");
+        return NULL;
+    }
 
     // Free data ad unref it's content
     _eo_cbdata_free(cbdata);
@@ -377,6 +360,16 @@ PyTypeObject PyEfl_ObjectTypeInternal = {
 };
 PyTypeObject *PyEfl_ObjectType = &PyEfl_ObjectTypeInternal;
 
+
+/* Class events (including inherited ones) */
+const Efl_Event_Description *PyEfl_ObjectEvents[] = {
+    EFL_EVENT_CALLBACK_ADD,
+    EFL_EVENT_CALLBACK_DEL,
+    EFL_EVENT_DEL,
+    NULL  /* sentinel */
+};
+
+
 Eina_Bool
 pyefl_object_object_finalize(PyObject *module)
 {
@@ -388,6 +381,11 @@ pyefl_object_object_finalize(PyObject *module)
 
     PyModule_AddObject(module, "Object", (PyObject *)PyEfl_ObjectType);
     Py_INCREF(PyEfl_ObjectType);
+
+    /* Link the EO class with the python type object */
+    pyefl_class_register(EFL_OBJECT_CLASS,
+                         PyEfl_ObjectType,
+                         PyEfl_ObjectEvents);
 
     return EINA_TRUE;
 }

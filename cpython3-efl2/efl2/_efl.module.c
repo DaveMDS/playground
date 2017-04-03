@@ -55,14 +55,15 @@ static struct PyModuleDef ThisModule = {
 
 /* C API table - always add new things to the end for binary compatibility. */
 static PyEfl_CAPI_t PyEfl_CAPI = {
+    // exported types
     &PyEfl_ObjectTypeInternal,
     &PyEfl_LoopTypeInternal,
     &PyEfl_Loop_UserTypeInternal,
     &PyEfl_AnimatorTypeInternal,
     &PyEfl_ConfigTypeInternal,
     &PyEfl_PartTypeInternal,
+    // exported utility functions
     &pyefl_class_register,
-    &pyefl_event_register,
     &pyefl_object_from_instance
 };
 

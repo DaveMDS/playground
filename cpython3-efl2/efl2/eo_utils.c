@@ -16,39 +16,41 @@
 ///////////////////////////////////////////////////////////////////////////////
 ////  Basic Utils ///////// ///////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-static Eina_Hash *_pyefl_class_map = NULL;
-static Eina_Hash *_pyefl_type_map = NULL;
+static Eina_Hash *_pyefl_class_map = NULL;  // Cls name -> PyTypeObject *
+static Eina_Hash *_pyefl_type_map = NULL;   // Cls name -> Efl_Class *
+static Eina_Hash *_pyefl_event_map = NULL;  // Cls name -> Efl_Event_Description **
 
 void
-pyefl_class_register(const Efl_Class *cls, const PyTypeObject *type)
+pyefl_class_register(const Efl_Class *cls, const PyTypeObject *type,
+                     const Efl_Event_Description **events)
 {
     DBG("register class: '%s'%p with type: %s", efl_class_name_get(cls),cls, type->tp_name);
-    // Init the "class name" => PyTypeObject* hash map
+    // The "class name" => PyTypeObject* hash map
     if (_pyefl_class_map == NULL)
     {
         _pyefl_class_map = eina_hash_string_superfast_new(NULL);
         if (!_pyefl_class_map) return;
     }
-    // Add the class to the map
     if (!eina_hash_direct_add(_pyefl_class_map, efl_class_name_get(cls), type))
         DBG("ERROR: cannot register class");
 
-    // Init the "type name" => Efl_Class* hash map
+    // The "type name" => Efl_Class* hash map
     if (_pyefl_type_map == NULL)
     {
         _pyefl_type_map = eina_hash_string_superfast_new(NULL);
         if (!_pyefl_type_map) return;
     }
-    // Add the class to the map
     if (!eina_hash_direct_add(_pyefl_type_map, type->tp_name, cls))
-        DBG("ERROR: cannot register class");
-}
+        DBG("ERROR: cannot register type");
 
-void
-pyefl_event_register(PyEfl_Object *self, const Efl_Event_Description *desc)
-{
-    DBG("register event: %s", desc->name);
-    self->events = eina_list_append(self->events, desc);
+    // The "class name" => Efl_Event_Description ** hash map
+    if (events && _pyefl_event_map == NULL)
+    {
+        _pyefl_event_map = eina_hash_string_superfast_new(NULL);
+        if (!_pyefl_event_map) return;
+    }
+    if (events && !eina_hash_direct_add(_pyefl_event_map, efl_class_name_get(cls), events))
+        DBG("ERROR: cannot register class events");
 }
 
 const Efl_Class*
@@ -120,3 +122,35 @@ pyefl_object_from_instance(Efl_Object *obj)
     DBG("ERROR: cannot convert Efl_Object* object to python") 
     Py_RETURN_NONE;  // or NULL ??
 }
+
+const Efl_Event_Description *
+pyefl_event_find_by_name(PyEfl_Object *obj, const char *event_name)
+{
+    const Efl_Event_Description **events;
+    int i = 0;
+
+    // Get the efl class
+    const Efl_Class *cls = efl_class_get(obj->obj);
+    if (!cls)
+    {
+        DBG("ERROR: cannot get class from object")
+        return NULL;
+    }
+    DBG("class: '%s'%p", efl_class_name_get(cls), cls);
+
+    // Find the registered array of events for this class
+    events = eina_hash_find(_pyefl_event_map, efl_class_name_get(cls));
+    if (!events)
+        return NULL;
+
+    // Search the event in the array
+    while (events[i])
+    {
+        if (!strcmp(events[i]->name, event_name))
+            return events[i];
+        i++;
+    }
+
+    return NULL;
+}
+

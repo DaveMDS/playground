@@ -72,11 +72,6 @@ ${CLS_OBJECT}$_init(${CLS_OBJECT}$ *self, PyObject *args, PyObject *kwds)
     if (PyEfl_ObjectType->tp_init((PyObject *)self, args, kwds) < 0)
         return -1;
 
-    // TODO FIX this should be at class level, not repeated for every instance */
-  <!--(for event in cls.events)-->
-    pyefl_event_register((PyEfl_Object*)self, ${event.c_name}$);
-  <!--(end)-->
-
     return 0;
 <!--(end)-->
 }
@@ -255,6 +250,8 @@ static PyGetSetDef ${CLS_OBJECT}$_getsetters[] = {
     {NULL, 0, 0, NULL, NULL}  /* sentinel */
 };
 
+
+/* Object Type definition */
 PyTypeObject ${CLS_OBJECT_TYPE}$Internal = {
     /* The ob_type field must be initialized in the module init function
      * to be portable to Windows without using C++. */
@@ -307,6 +304,20 @@ PyTypeObject ${CLS_OBJECT_TYPE}$Internal = {
 PyTypeObject *${CLS_OBJECT_TYPE}$ = &${CLS_OBJECT_TYPE}$Internal;
 
 
+/* Class events (including inherited ones) */
+const Efl_Event_Description *${CLS_OBJECT}$Events[] = {
+<!--(for event in cls.events)-->
+    ${event.c_name}$,
+<!--(end)-->
+<!--(for cls2 in cls.inherits_full)-->
+    <!--(for event in cls2.events)-->
+    /* from ${cls2.full_name}$ */ ${event.c_name}$,
+    <!--(end)-->
+<!--(end)-->
+    NULL  /* sentinel */
+};
+
+
 Eina_Bool
 ${OBJECT_FINALIZE_FUNC}$(PyObject *module)
 {
@@ -331,7 +342,9 @@ ${OBJECT_FINALIZE_FUNC}$(PyObject *module)
 
 <!--(if cls.type == Eolian_Class_Type.REGULAR)-->
     /* Link the EO class with the python type object */
-    pyefl_class_register(${CLS_EO_NAME}$, ${CLS_OBJECT_TYPE}$);
+    pyefl_class_register(${CLS_EO_NAME}$,
+                         ${CLS_OBJECT_TYPE}$,
+                         ${CLS_OBJECT}$Events);
 <!--(end)-->
 
     return EINA_TRUE;

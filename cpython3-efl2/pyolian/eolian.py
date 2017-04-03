@@ -315,6 +315,18 @@ class Class(object):
                         lib.eolian_class_inherits_get(self._obj))
 
     @property
+    def inherits_full(self):
+        L = []
+        def do_class_recursive(cls):
+            for other in cls.inherits:
+                if not other in L:
+                    L.append(other)
+                do_class_recursive(other)
+
+        do_class_recursive(self)
+        return L
+
+    @property
     def base_class(self):
         inherits = list(self.inherits)
         if len(inherits) > 0:
