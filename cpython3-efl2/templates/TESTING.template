@@ -1,0 +1,61 @@
+<!--(include)-->macros.include<!--(end)-->#!
+
+
+Class:        ${cls.full_name}$
+Class type:   ${cls.type}$
+Base Class:   ${cls.base_class.full_name if cls.base_class else None}$
+Inherits:     ${list(cls.inherits)}$
+InheritsFull: ${cls.inherits_full}$
+Namespaces:   ${list(cls.namespaces)}$
+File:         ${cls.file}$
+Ctor enable:  ${cls.ctor_enable}$
+Dtor enable:  ${cls.dtor_enable}$
+
+
+Constructors:
+=============
+<!--(for ctor in cls.constructors)-->
+ * ${ctor.name}$
+<!--(else)-->
+ no constructors available
+<!--(end)-->
+
+Methods:
+========
+<!--(for func in cls.methods)-->
+ * ${func.name}$(...) ${func.method_scope}$
+<!--(else)-->
+ no methods available
+<!--(end)-->
+
+Properties:
+===========
+<!--(for func in cls.properties)-->
+ * ${func.name}$
+<!--(else)-->
+ no properties available
+<!--(end)-->
+
+Getters:
+========
+<!--(for func in cls.getters)-->
+ * ${func.name}$
+<!--(else)-->
+ no getters available
+<!--(end)-->
+
+Setters:
+========
+<!--(for func in cls.setters)-->
+ * ${func.name}$
+<!--(else)-->
+ no setters available
+<!--(end)-->
+
+Events:
+=======
+<!--(for event in cls.events)-->
+ * ${event.name}$ -> ${event.c_name}$
+<!--(else)-->
+ no events available
+<!--(end)-->

@@ -179,11 +179,13 @@ class Generate(Command):
                 'efl_config_list_get',            #  Eina_Iterator *
                 # Efl.Part
                 'efl_part',                       #  special lifetime ??
+                # Efl.Config.Global
+                'efl_config_profile_iterate'      #  Eina_Iterator
             ]
         }
 
-        # TEST_tmpl = Template('templates/TESTING.template', data=extra_context)
-        # TEST_tmpl.render('TESTING.OUT', cls="Efl.Class")
+        TEST_tmpl = Template('templates/TESTING.template', data=extra_context)
+        TEST_tmpl.render('TESTING.OUT', cls="Efl.Config.Global")
 
         clsc_tmpl = Template('templates/class.template.c', data=extra_context)
         clsh_tmpl = Template('templates/class.template.h', data=extra_context)
@@ -216,6 +218,12 @@ class Generate(Command):
         clsc_tmpl.render('efl2/loop/efl.loop.fd.c', cls='Efl.Loop.Fd')
         clsh_tmpl.render('efl2/loop/efl.loop.fd.h', cls='Efl.Loop.Fd')
 
+        # Efl.Config
+        init_tmpl.render('efl2/config/__init__.py', ns='Efl.Config')
+        modc_tmpl.render('efl2/config/_config.module.c', ns='Efl.Config')
+        clsc_tmpl.render('efl2/config/efl.config.global.c', cls='Efl.Config.Global')
+        clsh_tmpl.render('efl2/config/efl.config.global.h', cls='Efl.Config.Global')
+
 
 # === augmented build command ===
 class Build(build):
@@ -224,17 +232,21 @@ class Build(build):
         build.run(self)
 
 
-cflags, libs = pkg_config('EFL', 'eina elementary', EFL_MIN_VER)
+cflags, libs = pkg_config('EFL', 'eina evas ecore elementary', EFL_MIN_VER)
 
 ext_modules = []
-packages = ["efl2", "efl2.loop"]
+packages = [
+    'efl2',
+    'efl2.loop',
+    # 'efl2.config', (CRASH on import)
+]
 
 def efl_module(name, sources):
     mod = Extension(name,
             define_macros = [('EFL_BETA_API_SUPPORT', 1),
                              ('EFL_EO_API_SUPPORT', 1),
                              # ('EFL_NOLEGACY_API_SUPPORT', 1),
-                             ],
+                            ],
             # include_dirs = ['/usr/local/include'],
             # libraries = ['tcl83'],
             # library_dirs = ['/usr/local/lib'],
@@ -264,6 +276,12 @@ efl_module('efl2.loop._loop', [
     'efl2/loop/efl.loop.timer.c',
     'efl2/loop/efl.loop.fd.c',
 ])
+
+# efl.config namespace module (CRASH on import)
+# efl_module('efl2.config._config', [
+    # 'efl2/config/_config.module.c',
+    # 'efl2/config/efl.config.global.c',
+# ])
 
 
 setup(

@@ -36,7 +36,9 @@ PyInit__${namespaces[-1].lower()}$(void)
     PyObject *m;
 
     // TODO how can I autogenerate this init call ??
+    eina_init(); // TODO check for errors
     ecore_init(); // TODO check for errors
+    elm_init(); // TODO check for errors
 
     /* Import the Efl namespace C API (pyefl_* and types in the efl namespace) */
     if (import_efl() < 0)

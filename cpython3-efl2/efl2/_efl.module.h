@@ -18,11 +18,13 @@ extern "C" {
 
 /* Python module and C API name */
 #define PyEFL_CAPSULE_NAME "efl2._efl.CAPI"
+#define PyEFL_CAPSULE_MAGIC 0xA5D
 
 
 
 /* C API for usage by other modules */
 typedef struct {
+    unsigned int MAGIC;
     // Exported types
     PyTypeObject *PyEfl_ObjectType;
     PyTypeObject *PyEfl_LoopType;
@@ -57,8 +59,10 @@ static PyEfl_CAPI_t *_EflObject_CAPI;
 static int
 import_efl(void)
 {
-    _EflObject_CAPI = PyCapsule_Import(PyEFL_CAPSULE_NAME, 0); // TODO 0 or 1 ??
-    return (_EflObject_CAPI != NULL) ? 0 : -1;
+    _EflObject_CAPI = PyCapsule_Import(PyEFL_CAPSULE_NAME, 0);
+    if (!_EflObject_CAPI) return -1;
+    if (_EflObject_CAPI->MAGIC != PyEFL_CAPSULE_MAGIC) return -1;
+    return 0;
 }
 
 // defines for faster access in modules

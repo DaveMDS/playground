@@ -55,6 +55,7 @@ static struct PyModuleDef ThisModule = {
 
 /* C API table - always add new things to the end for binary compatibility. */
 static PyEfl_CAPI_t PyEfl_CAPI = {
+    PyEFL_CAPSULE_MAGIC,
     // exported types
     &PyEfl_ObjectTypeInternal,
     &PyEfl_LoopTypeInternal,
