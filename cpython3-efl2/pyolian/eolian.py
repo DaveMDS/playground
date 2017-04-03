@@ -162,6 +162,9 @@ def _str_to_bytes(s):
 def _c_str_to_py(s):
     return cast(s, c_char_p).value.decode('utf-8') if s else None
 
+def _c_str_to_class(class_name):
+    return Class(_c_str_to_py(class_name))
+
 def _c_eolian_class_to_py(cls):
     return Class(cls)
 
@@ -242,7 +245,7 @@ class Class(object):
         elif isinstance(cls, str):
             self._obj = lib.eolian_class_get_by_file(_str_to_bytes(cls))
         else:
-            raise TypeError('Invalid Class constructor')
+            raise TypeError('Invalid Class constructor of type: %s ' % type(cls))
 
     def __repr__(self):
         return "<eolian.Class '{0.full_name}', prefix '{0.eo_prefix}'>".format(self)
@@ -308,15 +311,14 @@ class Class(object):
 
     @property
     def inherits(self):
-        # TODO: return class instances instead ?
-        return Iterator(_c_str_to_py,
+        return Iterator(_c_str_to_class,
                         lib.eolian_class_inherits_get(self._obj))
 
     @property
     def base_class(self):
         inherits = list(self.inherits)
         if len(inherits) > 0:
-            return Class(inherits[0])
+            return inherits[0]
 
     @property
     def namespaces(self):
@@ -478,6 +480,18 @@ class Function(object):
     def scope_get(self, ftype):
         return Eolian_Object_Scope(lib.eolian_function_scope_get(self._obj, ftype))
 
+    @property
+    def method_scope(self):
+        return self.scope_get(Eolian_Function_Type.METHOD)
+
+    @property
+    def getter_scope(self):
+        return self.scope_get(Eolian_Function_Type.PROP_GET)
+
+    @property
+    def setter_scope(self):
+        return self.scope_get(Eolian_Function_Type.PROP_SET)
+
     def legacy_get(self, ftype):
         return _c_str_to_py(lib.eolian_function_legacy_get(self._obj, ftype))
     
@@ -519,11 +533,11 @@ class Function(object):
 
     @property
     def getter_values(self):
-        return self.values_get(Eolian_Function_Type.PROP_GET.value)
+        return self.values_get(Eolian_Function_Type.PROP_GET)
 
     @property
     def setter_values(self):
-        return self.values_get(Eolian_Function_Type.PROP_SET.value)
+        return self.values_get(Eolian_Function_Type.PROP_SET)
 
     def return_type_get(self, ftype):
         t = lib.eolian_function_return_type_get(self._obj, ftype)
@@ -544,14 +558,14 @@ class Function(object):
     @property
     def prop_readable(self):
         # TODO: maybe there is a better way to do this...
-        ftype = Eolian_Function_Type.PROP_GET.value
+        ftype = Eolian_Function_Type.PROP_GET
         scope = lib.eolian_function_scope_get(self._obj, ftype)
         return True if scope != Eolian_Object_Scope.UNKNOWN else False
 
     @property
     def prop_writable(self):
         # TODO: maybe there is a better way to do this...
-        ftype = Eolian_Function_Type.PROP_SET.value
+        ftype = Eolian_Function_Type.PROP_SET
         scope = lib.eolian_function_scope_get(self._obj, ftype)
         return True if scope != Eolian_Object_Scope.UNKNOWN else False
 
