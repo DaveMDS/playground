@@ -3,9 +3,12 @@
 #include <Python.h>
 
 
-#include <Eo.h>
 #include <Efl.h>
-#include <Ecore.h> // EFL_LOOP_TIMER_CLASS is defined here  TODO FIXME
+#include <Eina.h>
+#include <Eo.h>
+#include <Ecore.h>
+#include <Evas.h>
+#include <Elementary.h>
 
 
 <!--(if len(list(cls.namespaces)) == 1)-->
@@ -88,6 +91,8 @@ pyefl_object_to_pointer#!
 PyUnicode_AsUTF8#!
     <!--(elif type.full_name == 'void_ptr')-->
 void_func#!
+    <!--(elif type.full_name == 'bool')-->
+(Eina_Bool)PyLong_AsLong#!
     <!--(elif type.full_name == 'double')-->
 PyFloat_AsDouble#!
     <!--(elif type.full_name == 'int')-->
@@ -109,6 +114,8 @@ PyLong_FromLong#!
 PyLong_FromLong#!
     <!--(elif type.full_name == 'bool')-->
 PyBool_FromLong#!
+    <!--(elif type.full_name in ('string', 'stringshare'))-->
+PyUnicode_FromString#!
     <!--(elif type.full_name == 'Efl.Class')-->
 TODO #!
     <!--(elif type.full_name.startswith('Efl.'))-->
@@ -120,7 +127,7 @@ pyefl_object_from_instance#!
 
 /* Class methods */
 <!--(for func in cls.methods)-->
-  <!--(if not func.full_c_method_name in excludes)-->
+  <!--(if func.method_scope != Eolian_Object_Scope.PROTECTED and not func.full_c_method_name in excludes)-->
 static PyObject *  // ${cls.full_name}$ ${func.name}$()
 ${CLS_OBJECT}$_${func.name}$(${CLS_OBJECT}$ *self, PyObject *args)
 {
@@ -157,13 +164,14 @@ ${CLS_OBJECT}$_${func.name}$(${CLS_OBJECT}$ *self, PyObject *args)
     Py_RETURN_NONE;
     <!--(end)-->
 }
+
   <!--(end)-->
 <!--(end)-->
 
 /* Class methods table */
 static PyMethodDef ${CLS_OBJECT}$_methods[] = {
     <!--(for func in cls.methods)-->
-      <!--(if not func.full_c_method_name in excludes)-->
+      <!--(if func.method_scope != Eolian_Object_Scope.PROTECTED and not func.full_c_method_name in excludes)-->
     {"${func.name}$", (PyCFunction)${CLS_OBJECT}$_${func.name}$,
         <!--(if len(list(func.parameters)) == 0)-->
         METH_NOARGS, NULL},

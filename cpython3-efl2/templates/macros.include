@@ -14,7 +14,7 @@ ${CLS_OBJECT}$Type
 ${cls.full_name.replace('.', '_').upper()}$_CLASS
 <!--(end)-->
 #!
-#! CLS_TP_NAME ex: "efl2.loop._Timer"
+#! CLS_TP_NAME ex: "efl.loop._Timer"
 <!--(macro CLS_TP_NAME)-->
     <!--(for ns in cls.namespaces)-->
 ${ns.lower()}$.#!
