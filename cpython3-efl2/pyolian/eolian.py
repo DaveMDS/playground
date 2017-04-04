@@ -4,7 +4,12 @@
 from enum import IntEnum as Enum
 from ctypes import cast, byref, c_uint, c_char_p, c_void_p
 
-from .eolian_lib import lib
+# Temporary import hack to be importable from tests/*.py
+try:
+    from .eolian_lib import lib
+except:
+    from eolian_lib import lib
+
 
 ### pyolian version ###########################################################
 __version__ = "0.99.0"
@@ -605,7 +610,7 @@ class Parameter(object):
 
     def __repr__(self):
         return "<eolian.Parameter '{0.name}', type: {0.type}," \
-               "optional: {0.is_optional}, nonull: {0.is_nonull}>".format(self)
+               " optional: {0.is_optional}, nonull: {0.is_nonull}>".format(self)
 
     @property
     def name(self):

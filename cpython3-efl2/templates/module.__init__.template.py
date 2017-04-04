@@ -10,11 +10,11 @@ from ._${namespaces[-1].lower()}$ import _${cls.name}$
 <!--(for cls in classes)-->
 class ${cls.name}$(_${cls.name}$#!
    <!--(for i, base in enumerate(cls.inherits))-->
-      <!--(if i > 10)-->#! TODO "i > 0" TODO "i > 0" TODO "i > 0" TODO "i > 0"
+      <!--(if i > 0)-->
 , ${CLS_TP_NAME(cls=base)}$#!
       <!--(end)-->
    <!--(end)-->
-):  # Direct subclass of ${cls.base_class.full_name}$
+):  # Direct subclass of ${cls.base_class.full_name if cls.base_class else 'None'}$
    pass
 
 <!--(end)-->
