@@ -159,11 +159,23 @@ class Eolian_Doc_Ref_Type(Enum):
 def _str_to_bytes(s):
     return s.encode('utf-8')
 
-def _c_str_to_py(s):
-    return cast(s, c_char_p).value.decode('utf-8') if s else None
+def _str_to_py(s):
+    if s:
+        if isinstance(s, bytes):
+            return s.decode('utf-8')
+        if isinstance(s, c_char_p):
+            print("WARNING char* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            return s.value.decode('utf-8')
+        if isinstance(s, c_void_p):
+            print("WARNING void* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            return cast(s, c_char_p).value.decode('utf-8')
+        if isinstance(s, int):
+            print("WARNING int !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            return cast(s, c_char_p).value.decode('utf-8')
+        print('WARNING !!!!!!!!! Unknown type: %s' % type(s))
 
 def _c_str_to_class(class_name):
-    return Class(_c_str_to_py(class_name))
+    return Class(_str_to_py(class_name))
 
 def _c_eolian_class_to_py(cls):
     return Class(cls)
@@ -252,40 +264,40 @@ class Class(object):
 
     @property
     def name(self):
-        return _c_str_to_py(lib.eolian_class_name_get(self._obj))
+        return _str_to_py(lib.eolian_class_name_get(self._obj))
 
     @property
     def full_name(self):
-        return _c_str_to_py(lib.eolian_class_full_name_get(self._obj))
+        return _str_to_py(lib.eolian_class_full_name_get(self._obj))
 
     @property
     def c_name(self):
         s = lib.eolian_class_c_name_get(self._obj)
-        ret = _c_str_to_py(s)
+        ret = _str_to_py(s)
         lib.eina_stringshare_del(s)
         return ret
 
     @property
     def c_get_function_name(self):
         s = lib.eolian_class_c_get_function_name_get(self._obj)
-        ret = _c_str_to_py(s)
+        ret = _str_to_py(s)
         lib.eina_stringshare_del(s)
         return ret
 
     @property
     def c_data_type(self):
         s = lib.eolian_class_c_data_type_get(self._obj)
-        ret = _c_str_to_py(s)
+        ret = _str_to_py(s)
         lib.eina_stringshare_del(s)
         return ret
 
     @property
     def legacy_prefix(self):
-        return _c_str_to_py(lib.eolian_class_legacy_prefix_get(self._obj))
+        return _str_to_py(lib.eolian_class_legacy_prefix_get(self._obj))
 
     @property
     def eo_prefix(self):
-        return _c_str_to_py(lib.eolian_class_eo_prefix_get(self._obj))
+        return _str_to_py(lib.eolian_class_eo_prefix_get(self._obj))
 
     @property
     def type(self):
@@ -293,7 +305,7 @@ class Class(object):
     
     @property
     def data_type(self):
-        return _c_str_to_py(lib.eolian_class_data_type_get(self._obj))
+        return _str_to_py(lib.eolian_class_data_type_get(self._obj))
 
     @property
     def constructors(self):
@@ -334,12 +346,12 @@ class Class(object):
 
     @property
     def namespaces(self):
-        return Iterator(_c_str_to_py,
+        return Iterator(_str_to_py,
                         lib.eolian_class_namespaces_get(self._obj))
 
     @property
     def file(self):
-        return _c_str_to_py(lib.eolian_class_file_get(self._obj))
+        return _str_to_py(lib.eolian_class_file_get(self._obj))
 
     @property
     def ctor_enable(self):
@@ -387,7 +399,7 @@ class Constructor(object):
 
     @property
     def full_name(self):
-        return _c_str_to_py(lib.eolian_constructor_full_name_get(self._obj))
+        return _str_to_py(lib.eolian_constructor_full_name_get(self._obj))
 
     @property
     def function(self):
@@ -415,12 +427,12 @@ class Event(object):
 
     @property
     def name(self):
-        return _c_str_to_py(lib.eolian_event_name_get(self._obj))
+        return _str_to_py(lib.eolian_event_name_get(self._obj))
 
     @property
     def c_name(self):
         s = lib.eolian_event_c_name_get(self._obj)
-        ret = _c_str_to_py(s)
+        ret = _str_to_py(s)
         lib.eina_stringshare_del(s)
         return ret
 
@@ -465,11 +477,11 @@ class Function(object):
 
     @property
     def name(self):
-        return _c_str_to_py(lib.eolian_function_name_get(self._obj))
+        return _str_to_py(lib.eolian_function_name_get(self._obj))
 
     def full_c_name_get(self, ftype, use_legacy=False):
         s = lib.eolian_function_full_c_name_get(self._obj, ftype, use_legacy)
-        ret = _c_str_to_py(s)
+        ret = _str_to_py(s)
         lib.eina_stringshare_del(s)
         return ret
 
@@ -505,7 +517,7 @@ class Function(object):
         return self.scope_get(Eolian_Function_Type.PROP_SET)
 
     def legacy_get(self, ftype):
-        return _c_str_to_py(lib.eolian_function_legacy_get(self._obj, ftype))
+        return _str_to_py(lib.eolian_function_legacy_get(self._obj, ftype))
     
     def is_legacy_only(self, ftype):
         return bool(lib.eolian_function_is_legacy_only(self._obj, ftype))
@@ -597,11 +609,11 @@ class Parameter(object):
 
     @property
     def name(self):
-        return _c_str_to_py(lib.eolian_parameter_name_get(self._obj))
+        return _str_to_py(lib.eolian_parameter_name_get(self._obj))
 
     # @property
     # def name_fixed(self):
-        # name = _c_str_to_py(lib.eolian_parameter_name_get(self._obj))
+        # name = _str_to_py(lib.eolian_parameter_name_get(self._obj))
         # if name in PY_KW:
             # return name + '_'
         # return name
@@ -646,20 +658,20 @@ class Type(object):
 
     @property
     def name(self):
-        return _c_str_to_py(lib.eolian_type_name_get(self._obj))
+        return _str_to_py(lib.eolian_type_name_get(self._obj))
 
     @property
     def full_name(self):
-        return _c_str_to_py(lib.eolian_type_full_name_get(self._obj))
+        return _str_to_py(lib.eolian_type_full_name_get(self._obj))
 
     @property
     def namespaces(self):
-        return Iterator(_c_str_to_py,
+        return Iterator(_str_to_py,
                         lib.eolian_type_namespaces_get(self._obj))
 
     @property
     def free_func(self):
-        return _c_str_to_py(lib.eolian_type_free_func_get(self._obj))
+        return _str_to_py(lib.eolian_type_free_func_get(self._obj))
 
     @property
     def type(self):
@@ -687,7 +699,7 @@ class Type(object):
 
     @property
     def file(self):
-        return _c_str_to_py(lib.eolian_type_file_get(self._obj))
+        return _str_to_py(lib.eolian_type_file_get(self._obj))
     
     @property
     def array_size(self):
@@ -707,7 +719,7 @@ class Type(object):
 
     @property
     def c_type(self):
-        return _c_str_to_py(lib.eolian_type_c_type_get(self._obj))
+        return _str_to_py(lib.eolian_type_c_type_get(self._obj))
 
 
 class Typedecl(object):
@@ -723,15 +735,15 @@ class Typedecl(object):
 
     @property
     def name(self):
-        return _c_str_to_py(lib.eolian_typedecl_name_get(self._obj))
+        return _str_to_py(lib.eolian_typedecl_name_get(self._obj))
 
     @property
     def full_name(self):
-        return _c_str_to_py(lib.eolian_typedecl_full_name_get(self._obj))
+        return _str_to_py(lib.eolian_typedecl_full_name_get(self._obj))
 
     @property
     def file(self):
-        return _c_str_to_py(lib.eolian_typedecl_file_get(self._obj))
+        return _str_to_py(lib.eolian_typedecl_file_get(self._obj))
 
     @property
     def type(self):
@@ -739,16 +751,16 @@ class Typedecl(object):
 
     @property
     def c_type(self):
-        return _c_str_to_py(lib.eolian_typedecl_c_type_get(self._obj))
+        return _str_to_py(lib.eolian_typedecl_c_type_get(self._obj))
 
     @property
     def namespaces(self):
-        return Iterator(_c_str_to_py,
+        return Iterator(_str_to_py,
                         lib.eolian_typedecl_namespaces_get(self._obj))
 
     @property
     def free_func(self):
-        return _c_str_to_py(lib.eolian_typedecl_free_func_get(self._obj))
+        return _str_to_py(lib.eolian_typedecl_free_func_get(self._obj))
 
     @property
     def is_extern(self):
@@ -776,7 +788,7 @@ class Typedecl(object):
 
     @property
     def enum_legacy_prefix(self):
-        return _c_str_to_py(lib.eolian_typedecl_enum_legacy_prefix_get(self._obj))
+        return _str_to_py(lib.eolian_typedecl_enum_legacy_prefix_get(self._obj))
     
     
 
