@@ -13,6 +13,7 @@ extern "C" {
 #include "efl.animator.h"
 #include "efl.config.h"
 #include "efl.part.h"
+#include "efl.gfx.h"
 
 
 
@@ -32,6 +33,7 @@ typedef struct {
     PyTypeObject *PyEfl_AnimatorType;
     PyTypeObject *PyEfl_ConfigType;
     PyTypeObject *PyEfl_PartType;
+    PyTypeObject *PyEfl_GfxType;
     // Exported functions
     void (*pyefl_class_register)(const Efl_Class *, const PyTypeObject *type,
                                  const Efl_Event_Description **events);
@@ -72,6 +74,7 @@ import_efl(void)
 #define PyEfl_AnimatorType _EflObject_CAPI->PyEfl_AnimatorType
 #define PyEfl_ConfigType _EflObject_CAPI->PyEfl_ConfigType
 #define PyEfl_PartType _EflObject_CAPI->PyEfl_PartType
+#define PyEfl_GfxType _EflObject_CAPI->PyEfl_GfxType
 #define pyefl_class_register _EflObject_CAPI->pyefl_class_register
 #define pyefl_object_from_instance _EflObject_CAPI->pyefl_object_from_instance
 

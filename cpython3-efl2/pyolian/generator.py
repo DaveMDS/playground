@@ -96,12 +96,14 @@ class Template(pyratemp.Template):
             ctx['classes'] = [ c for c in eolian.all_classes_get()
                                 if c.full_name.startswith(ns + '.') ]
 
+        if filename is not None:
+            INF('generating "%s" from template "%s"' % (
+                filename, self.template_filename))
+
         # render with the augmented context
         output = self(**ctx)
 
         if filename is not None:
-            INF('generating "%s" from template "%s"' % (
-                filename, self.template_filename))
             # create directory tree if needed
             folder = os.path.dirname(filename)
             if folder and not os.path.isdir(folder):

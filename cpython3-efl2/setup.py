@@ -180,12 +180,17 @@ class Generate(Command):
                 # Efl.Part
                 'efl_part',                       #  special lifetime ??
                 # Efl.Config.Global
-                'efl_config_profile_iterate'      #  Eina_Iterator
+                'efl_config_profile_iterate',     #  Eina_Iterator
+                # Efl.Gfx
+                'efl_gfx_color_part_get',         #  keyed property
+                'efl_gfx_color_part_set',         #  keyed property
             ]
         }
 
         TEST_tmpl = Template('templates/TESTING.template', data=extra_context)
-        TEST_tmpl.render('TESTING.OUT', cls="Efl.Config.Global")
+        TEST_tmpl.render('TESTING.OUT', cls="Efl.Gfx")
+        # TEST_tmpl.render('TESTING.OUT', cls="Efl.Ui.Win")
+        # TEST_tmpl.render('TESTING.OUT', cls="Efl.Loop.Timer")
 
         clsc_tmpl = Template('templates/class.template.c', data=extra_context)
         clsh_tmpl = Template('templates/class.template.h', data=extra_context)
@@ -208,6 +213,9 @@ class Generate(Command):
         clsc_tmpl.render('efl2/efl.part.c', cls='Efl.Part')
         clsh_tmpl.render('efl2/efl.part.h', cls='Efl.Part')
 
+        clsh_tmpl.render('efl2/efl.gfx.h', cls='Efl.Gfx')
+        clsc_tmpl.render('efl2/efl.gfx.c', cls='Efl.Gfx')
+
         # Efl.Loop
         init_tmpl.render('efl2/loop/__init__.py', ns='Efl.Loop')
         modc_tmpl.render('efl2/loop/_loop.module.c', ns='Efl.Loop')
@@ -223,6 +231,13 @@ class Generate(Command):
         modc_tmpl.render('efl2/config/_config.module.c', ns='Efl.Config')
         clsc_tmpl.render('efl2/config/efl.config.global.c', cls='Efl.Config.Global')
         clsh_tmpl.render('efl2/config/efl.config.global.h', cls='Efl.Config.Global')
+
+        # Efl.Gfx
+        # init_tmpl.render('efl2/gfx/__init__.py', ns='Efl.Gfx')
+        # modc_tmpl.render('efl2/gfx/_gfx.module.c', ns='Efl.Gfx')
+
+        # clsc_tmpl.render('efl2/gfx/efl.gfx.map.c', cls='Efl.Gfx.Map')
+        # clsh_tmpl.render('efl2/gfx/efl.gfx.map.h', cls='Efl.Gfx.Map')
 
 
 # === augmented build command ===
@@ -268,6 +283,7 @@ efl_module('efl2._efl', [
     'efl2/efl.animator.c',
     'efl2/efl.config.c',
     'efl2/efl.part.c',
+    'efl2/efl.gfx.c',
 ])
 
 # efl.loop namespace module

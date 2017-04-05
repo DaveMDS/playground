@@ -15,7 +15,7 @@ Dtor enable:  ${cls.dtor_enable}$
 Constructors:
 =============
 <!--(for ctor in cls.constructors)-->
- * ${ctor.name}$
+ * ${ctor}$
 <!--(else)-->
  no constructors available
 <!--(end)-->
@@ -31,7 +31,7 @@ Methods:
 Properties:
 ===========
 <!--(for func in cls.properties)-->
- * ${func.name}$
+ * ${func.name}$ (<!--(for v in func.getter_values)-->${v.type.c_type}$ ${v.name}$, <!--(end)-->)
 <!--(else)-->
  no properties available
 <!--(end)-->
@@ -39,7 +39,7 @@ Properties:
 Getters:
 ========
 <!--(for func in cls.getters)-->
- * ${func.name}$
+ * ${func.name}$ (<!--(for v in func.getter_values)-->${v.type.c_type}$ ${v.name}$, <!--(end)-->)
 <!--(else)-->
  no getters available
 <!--(end)-->
@@ -47,15 +47,15 @@ Getters:
 Setters:
 ========
 <!--(for func in cls.setters)-->
- * ${func.name}$
+ * ${func.name}$ (<!--(for v in func.setter_values)-->${v.type.c_type}$ ${v.name}$, <!--(end)-->)
 <!--(else)-->
  no setters available
 <!--(end)-->
 
 Events:
 =======
-<!--(for event in cls.events)-->
- * ${event.name}$ -> ${event.c_name}$
-<!--(else)-->
- no events available
-<!--(end)-->
+#!<!--(for event in cls.events)-->
+#! * ${event.name}$ -> ${event.c_name}$
+#!<!--(else)-->
+#! no events available
+#!<!--(end)-->
