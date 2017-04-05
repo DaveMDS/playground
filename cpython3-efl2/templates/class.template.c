@@ -183,51 +183,97 @@ static PyMethodDef ${CLS_OBJECT}$_methods[] = {
 
 /* Class Getters */
 <!--(for func in cls.properties)-->
-    <!--(if func.prop_readable)-->
-      <!--(if not func.full_c_getter_name in excludes)-->
+    <!--(if func.prop_readable and func.full_c_getter_name not in excludes)-->
 static PyObject *  // ${cls.full_name}$ ${func.name}$  (getter)
 ${CLS_OBJECT}$_${func.name}$_get(${CLS_OBJECT}$ *self, void *closure)
 {
+${setvar("num_values", "len(list(func.getter_values))")}$#!
         <!--(if func.getter_return_type)-->
+    // single (returned) return_type
     ${func.getter_return_type.c_type}$ val;
-        <!--(else)-->
-    // TODO FIX for multiple vals !
-            <!--(for val in func.setter_values)-->
-    ${val.type.c_type}$ val;
-            <!--(end)-->
-        <!--(end)-->
-
     val = ${func.full_c_getter_name}$(((PyEfl_Object *)(self))->obj);
-
-        <!--(if func.getter_return_type)-->
     return ${TYPE_OUT_FUNC(type=func.getter_return_type)}$(val);
-        <!--(else)-->
-    // TODO FIX for multiple vals !
+        <!--(elif num_values == 1)-->
+    // single (returned) value
             <!--(for val in func.getter_values)-->
+    ${val.type.c_type}$ val;
+    val = ${func.full_c_getter_name}$(((PyEfl_Object *)(self))->obj);
     return ${TYPE_OUT_FUNC(type=val.type)}$(val);
             <!--(end)-->
+        <!--(else)-->
+    // multiple values (by ref)
+    PyObject* ret;
+            <!--(for i, val in enumerate(func.getter_values, 1))-->
+    ${val.type.c_type}$ val${i}$_${val.name}$;
+            <!--(end)-->
+
+    ${func.full_c_getter_name}$(((PyEfl_Object *)(self))->obj
+            <!--(for i, val in enumerate(func.getter_values, 1))-->
+        ,&val${i}$_${val.name}$
+            <!--(end)-->
+    );
+
+    // return a named tuple (lazy inited)
+    static PyTypeObject ResultType = {0, 0, 0, 0, 0, 0};
+    static PyStructSequence_Field namedtuple_fields[] = {
+            <!--(for val in func.getter_values)-->
+        {"${val.name}$", NULL},
+            <!--(end)-->
+        {NULL}
+    };
+    static PyStructSequence_Desc namedtuple_desc = {
+        "return type", NULL, namedtuple_fields, ${num_values}$
+    };
+    if (ResultType.tp_name == 0)
+        PyStructSequence_InitType(&ResultType, &namedtuple_desc);
+
+    ret = PyStructSequence_New(&ResultType);
+            <!--(for i, val in enumerate(func.getter_values, 1))-->
+    PyStructSequence_SetItem(ret, ${i-1}$, ${TYPE_OUT_FUNC(type=val.type)}$(val${i}$_${val.name}$));
+            <!--(end)-->
+    return ret;
         <!--(end)-->
 }
-      <!--(end)-->
+
     <!--(end)-->
 <!--(end)-->
 
 /* Class Setters */
 <!--(for func in cls.properties)-->
-    <!--(if func.prop_writable)-->
-      <!--(if not func.full_c_setter_name in excludes)-->
-static PyObject *  // ${cls.full_name}$ ${func.name}$  (setter)
+    <!--(if func.prop_writable and func.full_c_setter_name not in excludes)-->
+static int  // ${cls.full_name}$ ${func.name}$  (setter)
 ${CLS_OBJECT}$_${func.name}$_set(${CLS_OBJECT}$ *self, PyObject *value, void *closure)
 {
-    // TODO FIX for multiple vals !
-        <!--(for param in func.setter_values)-->
+${setvar("num_values", "len(list(func.setter_values))")}$#!
+        <!--(if num_values == 1)-->
+            <!--(for param in func.setter_values)-->
     ${param.type.c_type}$ ${param.name}$ = ${TYPE_IN_FUNC(type=param.type)}$(value);
+            <!--(end)-->
+        <!--(else)-->
+    if (!PyTuple_Check(value))
+    {
+        PyErr_SetString(PyExc_TypeError, "property value must be a tuple");
+        return -1;
+    }
+    if (PyTuple_GET_SIZE(value) != ${num_values}$)
+    {
+        PyErr_SetString(PyExc_TypeError, "property value must be a ${num_values}$ items tuple");
+        return -1;
+    }
+            <!--(for i, param in enumerate(func.setter_values))-->
+    ${param.type.c_type}$ ${param.name}$ = ${TYPE_IN_FUNC(type=param.type)}$(PyTuple_GET_ITEM(value, ${i}$));
+            <!--(end)-->
         <!--(end)-->
 
-    ${func.full_c_setter_name}$(((PyEfl_Object *)(self))->obj, ${val.name}$);
-    return 0; // TODO is 0 correct ??
+    ${func.full_c_setter_name}$(((PyEfl_Object *)(self))->obj
+            <!--(for param in func.setter_values)-->
+        ,${param.name}$
+            <!--(end)-->
+    );
+
+    return 0;
 }
-      <!--(end)-->
+
     <!--(end)-->
 <!--(end)-->
 
@@ -235,12 +281,12 @@ ${CLS_OBJECT}$_${func.name}$_set(${CLS_OBJECT}$ *self, PyObject *value, void *cl
 static PyGetSetDef ${CLS_OBJECT}$_getsetters[] = {
     <!--(for func in cls.properties)-->
     {"${func.name}$",
-        <!--(if func.prop_readable and not func.full_c_getter_name in excludes)-->
+        <!--(if func.prop_readable and func.full_c_getter_name not in excludes)-->
         (getter)${CLS_OBJECT}$_${func.name}$_get,
         <!--(else)-->
         NULL, /* writeonly */
         <!--(end)-->
-        <!--(if func.prop_writable and not func.full_c_setter_name in excludes)-->
+        <!--(if func.prop_writable and func.full_c_setter_name not in excludes)-->
         (setter)${CLS_OBJECT}$_${func.name}$_set,
         <!--(else)-->
         NULL, /* readonly */
@@ -349,3 +395,4 @@ ${OBJECT_FINALIZE_FUNC}$(PyObject *module)
 
     return EINA_TRUE;
 }
+

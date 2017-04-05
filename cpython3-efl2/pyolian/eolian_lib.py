@@ -25,29 +25,34 @@ lib.eolian_class_get_by_file.argtypes = [c_char_p,]
 # EAPI const Eolian_Class *eolian_class_get_by_name(const char *class_name)
 lib.eolian_class_get_by_name.argtypes = [c_char_p,]
 
-# EAPI Eina_Stringshare *eolian_class_c_get_function_name_get(const Eolian_Class *klass)
-lib.eolian_class_c_get_function_name_get.restype = c_char_p
-
 # EAPI Eina_Iterator *eolian_class_functions_get(const Eolian_Class *klass, Eolian_Function_Type func_type)
 lib.eolian_class_functions_get.argtypes = [c_void_p, c_uint]
 
 # EAPI const Eolian_Event *eolian_class_event_get_by_name(const Eolian_Class *klass, const char *event_name)
 lib.eolian_class_event_get_by_name.argtypes = [c_void_p, c_char_p]
 
+
+# All of the following just return a stringshare (THAT NEED TO BE FREED)
+lib.eolian_event_c_name_get.restype = c_void_p
+lib.eolian_class_c_name_get.restype = c_void_p
+lib.eolian_class_c_get_function_name_get.restype = c_void_p
+lib.eolian_class_c_data_type_get.restype = c_void_p
+lib.eolian_function_full_c_name_get.restype = c_void_p
+
+
 # All of the following just return a string
 lib.eolian_parameter_name_get.restype = c_char_p
 lib.eolian_class_name_get.restype = c_char_p
 lib.eolian_class_full_name_get.restype = c_char_p
-lib.eolian_class_c_name_get.restype = c_char_p
-lib.eolian_class_c_data_type_get.restype = c_char_p
+
+
 lib.eolian_class_legacy_prefix_get.restype = c_char_p
 lib.eolian_class_eo_prefix_get.restype = c_char_p
 lib.eolian_class_data_type_get.restype = c_char_p
 lib.eolian_constructor_full_name_get.restype = c_char_p
 lib.eolian_event_name_get.restype = c_char_p
-lib.eolian_event_c_name_get.restype = c_char_p
 lib.eolian_function_name_get.restype = c_char_p
-lib.eolian_function_full_c_name_get.restype = c_char_p
+
 lib.eolian_function_legacy_get.restype = c_char_p
 lib.eolian_type_name_get.restype = c_char_p
 lib.eolian_type_full_name_get.restype = c_char_p

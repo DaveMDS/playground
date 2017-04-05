@@ -156,9 +156,6 @@ class Eolian_Doc_Ref_Type(Enum):
     VAR = 9
 
 
-
-
-
 ###  type converters  #########################################################
 
 def _str_to_bytes(s):
@@ -180,7 +177,7 @@ def _str_to_py(s):
         print('WARNING !!!!!!!!! Unknown type: %s' % type(s))
 
 def _c_str_to_class(class_name):
-    return Class(_str_to_py(class_name))
+    return Class(_str_to_py(class_name)) if class_name else None
 
 def _c_eolian_class_to_py(cls):
     return Class(cls)
@@ -265,7 +262,7 @@ class Class(object):
             raise TypeError('Invalid Class constructor of type: %s ' % type(cls))
 
     def __repr__(self):
-        return "<eolian.Class '{0.full_name}', prefix '{0.eo_prefix}'>".format(self)
+        return "<eolian.Class '{0.full_name}'>".format(self)
 
     @property
     def name(self):
@@ -468,7 +465,6 @@ class Event(object):
         return bool(lib.eolian_event_is_restart(self._obj))
 
 
-
 class Function(object):
     """ TODO DOC """
     def __init__(self, c_func):
@@ -598,7 +594,6 @@ class Function(object):
         scope = lib.eolian_function_scope_get(self._obj, ftype)
         return True if scope != Eolian_Object_Scope.UNKNOWN else False
 
-    
 
 class Parameter(object):
     """ TODO DOC """
@@ -794,8 +789,7 @@ class Typedecl(object):
     @property
     def enum_legacy_prefix(self):
         return _str_to_py(lib.eolian_typedecl_enum_legacy_prefix_get(self._obj))
-    
-    
+
 
 class Documentation(object):
     """ TODO DOC """
