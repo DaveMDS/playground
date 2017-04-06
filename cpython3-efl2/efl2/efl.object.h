@@ -11,7 +11,7 @@ extern "C" {
 /* The object type */
 extern PyTypeObject  PyEfl_ObjectTypeInternal;
 extern PyTypeObject *PyEfl_ObjectType;
-#define Efl_Object_Check(v) (Py_TYPE(v) == Efl_ObjectType)
+#define PyEfl_Object_Check(v) (Py_TYPE(v) == PyEfl_ObjectType)
 
 typedef struct {
     PyObject_HEAD

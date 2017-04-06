@@ -214,7 +214,7 @@ ${setvar("num_values", "len(list(func.getter_values))")}$#!
     );
 
     // return a named tuple (lazy inited)
-    static PyTypeObject ResultType = {0, 0, 0, 0, 0, 0};
+    static PyTypeObject ResultType = {0};
     static PyStructSequence_Field namedtuple_fields[] = {
             <!--(for val in func.getter_values)-->
         {"${val.name}$", NULL},
