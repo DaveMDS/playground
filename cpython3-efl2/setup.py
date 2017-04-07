@@ -166,32 +166,49 @@ class Generate(Command):
         print('generating bindings source code using pyolian')
         from pyolian.generator import Template
 
+        # # #  T E S T  # # #
+        TEST_tmpl = Template('templates/TESTING.template', data=extra_context)
+        TEST_tmpl.render('TESTING.OUT', cls="Efl.Gfx")
+        # # #  T E S T  # # #
+
         extra_context = {
             'excludes': [
                 # Efl.Loop
-                'efl_loop_job',                   #  futures
-                'efl_loop_timeout',               #  futures
-                'efl_loop_app_efl_version_get',   #  Efl.Version (struct)
-                'efl_loop_efl_version_get',       #  Efl.Version (struct)
-                # Efl.Config
-                'efl_config_set',                 #  Eina_Value *
-                'efl_config_get',                 #  Eina_Value *
-                'efl_config_list_get',            #  Eina_Iterator *
-                # Efl.Part
-                'efl_part',                       #  special lifetime ??
-                # Efl.Config.Global
-                'efl_config_profile_iterate',     #  Eina_Iterator
-                # Efl.Gfx
-                'efl_gfx_color_part_get',         #  keyed property
-                'efl_gfx_color_part_set',         #  keyed property
+                'efl_loop_job',                         #  futures
+                'efl_loop_timeout',                     #  futures
+                'efl_loop_app_efl_version_get',         #  Efl.Version (struct)
+                'efl_loop_efl_version_get',             #  Efl.Version (struct)
+                # Efl.Config        
+                'efl_config_set',                       #  Eina_Value *
+                'efl_config_get',                       #  Eina_Value *
+                'efl_config_list_get',                  #  Eina_Iterator *
+                # Efl.Part      
+                'efl_part',                             #  special lifetime ??
+                # Efl.Config.Global     
+                'efl_config_profile_iterate',           #  Eina_Iterator
+                # Efl.Gfx       
+                'efl_gfx_color_part_get',               #  keyed property
+                'efl_gfx_color_part_set',               #  keyed property
+                # Efl.Gfx.Path      
+                'efl_gfx_path_bounds_get',              #  Eina.Rectangle
+                # Efl.Gfx.Buffer        
+                'efl_gfx_buffer_map',                   #  Eina.Rw_Slice
+                'efl_gfx_buffer_unmap',                 #  Eina.Rw_Slice
+                'efl_gfx_buffer_copy_set',              #  Eina.Slice
+                'efl_gfx_buffer_managed_set',           #  Eina.Slice
+                'efl_gfx_buffer_managed_get',           #  Eina.Slice
+                # Efl.Gfx.Map       
+                'efl_gfx_map_point_coord_get',          #  keyed property
+                'efl_gfx_map_point_image_uv_get',       #  keyed property
+                'efl_gfx_map_color_get',                #  keyed property
+                'efl_gfx_map_color_set',                #  keyed property
+                'efl_gfx_map_point_z_get',              #  keyed property
+                'efl_gfx_map_point_coord_set',          #  keyed property
+                'efl_gfx_map_point_image_uv_set',       #  keyed property
             ]
         }
 
-        TEST_tmpl = Template('templates/TESTING.template', data=extra_context)
-        TEST_tmpl.render('TESTING.OUT', cls="Efl.Gfx")
-        # TEST_tmpl.render('TESTING.OUT', cls="Efl.Ui.Win")
-        # TEST_tmpl.render('TESTING.OUT', cls="Efl.Loop.Timer")
-
+        # Warm-up the templates
         clsc_tmpl = Template('templates/class.template.c', data=extra_context)
         clsh_tmpl = Template('templates/class.template.h', data=extra_context)
         init_tmpl = Template('templates/module.__init__.template.py', data=extra_context)
@@ -233,11 +250,39 @@ class Generate(Command):
         clsh_tmpl.render('efl2/config/efl.config.global.h', cls='Efl.Config.Global')
 
         # Efl.Gfx
-        # init_tmpl.render('efl2/gfx/__init__.py', ns='Efl.Gfx')
-        # modc_tmpl.render('efl2/gfx/_gfx.module.c', ns='Efl.Gfx')
+        init_tmpl.render('efl2/gfx/__init__.py', ns='Efl.Gfx')
+        modc_tmpl.render('efl2/gfx/_gfx.module.c', ns='Efl.Gfx')
 
-        # clsc_tmpl.render('efl2/gfx/efl.gfx.map.c', cls='Efl.Gfx.Map')
-        # clsh_tmpl.render('efl2/gfx/efl.gfx.map.h', cls='Efl.Gfx.Map')
+        clsc_tmpl.render('efl2/gfx/efl.gfx.stack.c', cls='Efl.Gfx.Stack')
+        clsh_tmpl.render('efl2/gfx/efl.gfx.stack.h', cls='Efl.Gfx.Stack')
+
+        clsc_tmpl.render('efl2/gfx/efl.gfx.map.c', cls='Efl.Gfx.Map')
+        clsh_tmpl.render('efl2/gfx/efl.gfx.map.h', cls='Efl.Gfx.Map')
+
+        clsc_tmpl.render('efl2/gfx/efl.gfx.fill.c', cls='Efl.Gfx.Fill')
+        clsh_tmpl.render('efl2/gfx/efl.gfx.fill.h', cls='Efl.Gfx.Fill')
+
+        clsc_tmpl.render('efl2/gfx/efl.gfx.view.c', cls='Efl.Gfx.View')
+        clsh_tmpl.render('efl2/gfx/efl.gfx.view.h', cls='Efl.Gfx.View')
+
+        clsc_tmpl.render('efl2/gfx/efl.gfx.shape.c', cls='Efl.Gfx.Shape')
+        clsh_tmpl.render('efl2/gfx/efl.gfx.shape.h', cls='Efl.Gfx.Shape')
+
+        clsc_tmpl.render('efl2/gfx/efl.gfx.gradient.c', cls='Efl.Gfx.Gradient')
+        clsh_tmpl.render('efl2/gfx/efl.gfx.gradient.h', cls='Efl.Gfx.Gradient')
+
+        clsc_tmpl.render('efl2/gfx/efl.gfx.path.c', cls='Efl.Gfx.Path')
+        clsh_tmpl.render('efl2/gfx/efl.gfx.path.h', cls='Efl.Gfx.Path')
+
+        clsc_tmpl.render('efl2/gfx/efl.gfx.buffer.c', cls='Efl.Gfx.Buffer')
+        clsh_tmpl.render('efl2/gfx/efl.gfx.buffer.h', cls='Efl.Gfx.Buffer')
+
+        clsc_tmpl.render('efl2/gfx/efl.gfx.filter.c', cls='Efl.Gfx.Filter')
+        clsh_tmpl.render('efl2/gfx/efl.gfx.filter.h', cls='Efl.Gfx.Filter')
+
+        # TODO sub-sub-module
+        # clsc_tmpl.render('efl2/gfx/size/efl.gfx.size.hint.c', cls='Efl.Gfx.Size.Hint')
+        # clsh_tmpl.render('efl2/gfx/size/efl.gfx.size.hint.h', cls='Efl.Gfx.Size.Hint')
 
 
 # === augmented build command ===
@@ -297,6 +342,20 @@ efl_module('efl2.loop._loop', [
 # efl_module('efl2.config._config', [
     # 'efl2/config/_config.module.c',
     # 'efl2/config/efl.config.global.c',
+# ])
+
+# efl.gfx namespace module (not complete)
+# efl_module('efl2.gfx._gfx', [
+    # 'efl2/gfx/_gfx.module.c',
+    # 'efl2/gfx/efl.gfx.stack.c',
+    # 'efl2/gfx/efl.gfx.map.c',
+    # 'efl2/gfx/efl.gfx.fill.c',
+    # 'efl2/gfx/efl.gfx.view.c',
+    # 'efl2/gfx/efl.gfx.shape.c',
+    # 'efl2/gfx/efl.gfx.gradient.c',
+    # 'efl2/gfx/efl.gfx.path.c',
+    # 'efl2/gfx/efl.gfx.buffer.c',
+    # 'efl2/gfx/efl.gfx.filter.c',
 # ])
 
 

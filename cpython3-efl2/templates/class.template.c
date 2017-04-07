@@ -39,6 +39,9 @@ ${CLS_OBJECT}$_init(${CLS_OBJECT}$ *self, PyObject *args, PyObject *kwds)
 <!--(if cls.type == Eolian_Class_Type.INTERFACE)-->
     PyErr_SetString(PyExc_TypeError, "Interfaces cannot be instantiated");
     return -1;
+<!--(elif cls.type == Eolian_Class_Type.MIXIN)-->
+    PyErr_SetString(PyExc_TypeError, "Mixins cannot be instantiated");
+    return -1;
 <!--(else)-->
     DBG("init()")
     PyEfl_Object *parent = NULL;
@@ -86,14 +89,12 @@ pyefl_object_to_pointer#!
 PyUnicode_AsUTF8#!
     <!--(elif type.full_name == 'void_ptr')-->
 void_func#!
-    <!--(elif type.full_name == 'bool')-->
-(Eina_Bool)PyLong_AsLong#!
     <!--(elif type.full_name == 'double')-->
 PyFloat_AsDouble#!
-    <!--(elif type.full_name == 'int')-->
-(int)PyLong_AsLong#!
-    <!--(elif type.full_name == 'ubyte')-->
+    <!--(elif type.full_name in ('int', 'bool', 'ubyte', 'short'))-->
 (${type.c_type}$)PyLong_AsLong#!
+    <!--(elif type.full_name in ('uint',))-->
+(${type.c_type}$) PyLong_AsUnsignedLong#!
     <!--(else)-->
 // ERROR: UNSUPPORTED IN PARAM TYPE: ${type}$ //
     <!--(end)-->
@@ -103,10 +104,10 @@ PyFloat_AsDouble#!
 <!--(macro TYPE_OUT_FUNC)-->
     <!--(if type.full_name == 'double')-->
 PyFloat_FromDouble#!
-    <!--(elif type.full_name == 'int')-->
+    <!--(elif type.full_name in ('int', 'short'))-->
 PyLong_FromLong#!
-    <!--(elif type.full_name == 'ubyte')-->
-PyLong_FromLong#!
+    <!--(elif type.full_name in ('uint', 'ubyte'))-->
+PyLong_FromUnsignedLong#!
     <!--(elif type.full_name == 'bool')-->
 PyBool_FromLong#!
     <!--(elif type.full_name in ('string', 'stringshare'))-->
@@ -123,20 +124,31 @@ pyefl_object_from_instance#!
 /* Class methods */
 <!--(for func in cls.methods)-->
   <!--(if func.method_scope != Eolian_Object_Scope.PROTECTED and not func.full_c_method_name in excludes)-->
+${setvar("num_params", "len(list(func.parameters))")}$#!
 static PyObject *  // ${cls.full_name}$ ${func.name}$()
-${CLS_OBJECT}$_${func.name}$(${CLS_OBJECT}$ *self, PyObject *args)
+${CLS_OBJECT}$_${func.name}$(PyEfl_Object *self, PyObject *arg<!--(if num_params > 1)-->s<!--(end)-->)
 {
     DBG("${func.name}$()")
 
-    <!--(if len(list(func.parameters)) == 1)-->
+    <!--(if num_params == 1)-->
     // single param
         <!--(for param in func.parameters)-->
-    ${param.type.c_type}$ ${param.name}$ = ${TYPE_IN_FUNC(type=param.type)}$(args);
+    ${param.type.c_type}$ prm1_${param.name}$ = ${TYPE_IN_FUNC(type=param.type)}$(arg);
         <!--(end)-->
-    <!--(elif len(list(func.parameters)) > 1)-->
+    <!--(elif num_params > 1)-->
     // multiple params
+    if (!PyTuple_Check(args))
+    {
+        PyErr_SetString(PyExc_TypeError, "${func.name}$ called with wrong args");
+        return NULL;
+    }
+    if (PyTuple_GET_SIZE(args) != ${num_params}$)
+    {
+        PyErr_SetString(PyExc_TypeError, "${func.name}$ called with wrong args num, ${num_params}$ expected");
+        return NULL;
+    }
         <!--(for i, param in enumerate(func.parameters))-->
-    ${param.type.c_type}$ ${param.name}$ = ${TYPE_IN_FUNC(type=param.type)}$(PyTuple_GetItem(args, ${i}$));
+    ${param.type.c_type}$ prm${i+1}$_${param.name}$ = ${TYPE_IN_FUNC(type=param.type)}$(PyTuple_GetItem(args, ${i}$));
         <!--(end)-->
     <!--(end)-->
 
@@ -144,11 +156,13 @@ ${CLS_OBJECT}$_${func.name}$(${CLS_OBJECT}$ *self, PyObject *args)
     <!--(if func.method_return_type)-->
     ${func.method_return_type.c_type}$ ret =
     <!--(end)-->
-    <!--(if len(list(func.parameters)) == 0)-->
-    ${func.full_c_method_name}$(((PyEfl_Object *)(self))->obj);
+    <!--(if num_params == 0)-->
+    ${func.full_c_method_name}$(self->obj);
     <!--(else)-->
-    ${func.full_c_method_name}$(((PyEfl_Object *)(self))->obj
-        <!--(for param in func.parameters)-->,${param.name}$<!--(end)-->
+    ${func.full_c_method_name}$(self->obj
+        <!--(for i, param in enumerate(func.parameters))-->
+        ,prm${i+1}$_${param.name}$
+        <!--(end)-->
     );
     <!--(end)-->
 
@@ -184,20 +198,20 @@ static PyMethodDef ${CLS_OBJECT}$_methods[] = {
 /* Class Getters */
 <!--(for func in cls.properties)-->
     <!--(if func.prop_readable and func.full_c_getter_name not in excludes)-->
-static PyObject *  // ${cls.full_name}$ ${func.name}$  (getter)
-${CLS_OBJECT}$_${func.name}$_get(${CLS_OBJECT}$ *self, void *closure)
-{
 ${setvar("num_values", "len(list(func.getter_values))")}$#!
+static PyObject *  // ${cls.full_name}$ ${func.name}$  (getter)
+${CLS_OBJECT}$_${func.name}$_get(PyEfl_Object *self, void *closure)
+{
         <!--(if func.getter_return_type)-->
     // single (returned) return_type
     ${func.getter_return_type.c_type}$ val;
-    val = ${func.full_c_getter_name}$(((PyEfl_Object *)(self))->obj);
+    val = ${func.full_c_getter_name}$(self->obj);
     return ${TYPE_OUT_FUNC(type=func.getter_return_type)}$(val);
         <!--(elif num_values == 1)-->
     // single (returned) value
             <!--(for val in func.getter_values)-->
     ${val.type.c_type}$ val;
-    val = ${func.full_c_getter_name}$(((PyEfl_Object *)(self))->obj);
+    val = ${func.full_c_getter_name}$(self->obj);
     return ${TYPE_OUT_FUNC(type=val.type)}$(val);
             <!--(end)-->
         <!--(else)-->
@@ -207,13 +221,13 @@ ${setvar("num_values", "len(list(func.getter_values))")}$#!
     ${val.type.c_type}$ val${i}$_${val.name}$;
             <!--(end)-->
 
-    ${func.full_c_getter_name}$(((PyEfl_Object *)(self))->obj
+    ${func.full_c_getter_name}$(self->obj
             <!--(for i, val in enumerate(func.getter_values, 1))-->
         ,&val${i}$_${val.name}$
             <!--(end)-->
     );
 
-    // return a named tuple (lazy inited)
+    // return a named tuple (StructSequence type lazy inited)
     static PyTypeObject ResultType = {0};
     static PyStructSequence_Field namedtuple_fields[] = {
             <!--(for val in func.getter_values)-->
@@ -241,13 +255,13 @@ ${setvar("num_values", "len(list(func.getter_values))")}$#!
 /* Class Setters */
 <!--(for func in cls.properties)-->
     <!--(if func.prop_writable and func.full_c_setter_name not in excludes)-->
-static int  // ${cls.full_name}$ ${func.name}$  (setter)
-${CLS_OBJECT}$_${func.name}$_set(${CLS_OBJECT}$ *self, PyObject *value, void *closure)
-{
 ${setvar("num_values", "len(list(func.setter_values))")}$#!
+static int  // ${cls.full_name}$ ${func.name}$  (setter)
+${CLS_OBJECT}$_${func.name}$_set(PyEfl_Object *self, PyObject *value, void *closure)
+{
         <!--(if num_values == 1)-->
             <!--(for param in func.setter_values)-->
-    ${param.type.c_type}$ ${param.name}$ = ${TYPE_IN_FUNC(type=param.type)}$(value);
+    ${param.type.c_type}$ val1_${param.name}$ = ${TYPE_IN_FUNC(type=param.type)}$(value);
             <!--(end)-->
         <!--(else)-->
     if (!PyTuple_Check(value))
@@ -261,13 +275,13 @@ ${setvar("num_values", "len(list(func.setter_values))")}$#!
         return -1;
     }
             <!--(for i, param in enumerate(func.setter_values))-->
-    ${param.type.c_type}$ ${param.name}$ = ${TYPE_IN_FUNC(type=param.type)}$(PyTuple_GET_ITEM(value, ${i}$));
+    ${param.type.c_type}$ val${i+1}$_${param.name}$ = ${TYPE_IN_FUNC(type=param.type)}$(PyTuple_GET_ITEM(value, ${i}$));
             <!--(end)-->
         <!--(end)-->
 
-    ${func.full_c_setter_name}$(((PyEfl_Object *)(self))->obj
-            <!--(for param in func.setter_values)-->
-        ,${param.name}$
+    ${func.full_c_setter_name}$(self->obj
+            <!--(for i, param in enumerate(func.setter_values))-->
+        ,val${i+1}$_${param.name}$
             <!--(end)-->
     );
 
