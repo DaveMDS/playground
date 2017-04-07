@@ -13,20 +13,6 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-////  Conversion functions  ///////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-// static void
-// _eo_class_register(const Efl_Class *cls, const PyTypeObject *type)
-// {
-    // DBG("register class: '%s'%p with type: %s", efl_class_name_get(cls),cls, type->tp_name);
-    // if (!eina_hash_direct_add(_eo_class_map, efl_class_name_get(cls), type))
-        // DBG("ERROR: cannot register class");
-// }
-
-
-
-
-///////////////////////////////////////////////////////////////////////////////
 ////  Event callbacks and cbdata handling  ////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -146,7 +132,6 @@ Efl_Object_init(PyEfl_Object *self, PyObject *args, PyObject *kwds)
     return 0;
 }
 
-
 static void
 Efl_Object_dealloc(PyEfl_Object *self)
 {
@@ -170,6 +155,7 @@ Efl_Object_traverse(PyEfl_Object *self, visitproc visit, void *arg)
     // Py_CLEAR(self->x_attr);
     // return 0;
 // }
+
 
 /* Class methods */
 
@@ -266,7 +252,97 @@ Efl_Object_event_callback_del(PyEfl_Object *self, PyObject *args, PyObject *karg
 }
 
 
-static PyObject *  // Efl.Object.delete()
+static PyObject *  // Efl.Object efl_event_callback_stop()
+Efl_Object_event_callback_stop(PyEfl_Object *self, PyObject *args)
+{
+    DBG("callback_stop()")
+    efl_event_callback_stop(self->obj);
+    Py_RETURN_NONE;
+}
+
+static PyObject *  // Efl.Object event_freeze()
+Efl_Object_event_freeze(PyEfl_Object *self, PyObject *args)
+{
+    DBG("event_freeze()")
+    efl_event_freeze(self->obj);
+    Py_RETURN_NONE;
+}
+
+static PyObject *  // Efl.Object event_thaw()
+Efl_Object_event_thaw(PyEfl_Object *self, PyObject *args)
+{
+    DBG("event_thaw()")
+    efl_event_thaw(self->obj);
+    Py_RETURN_NONE;
+}
+
+static PyObject *  // Efl.Object event_global_freeze()
+Efl_Object_event_global_freeze(PyEfl_Object *self, PyObject *args)
+{
+    DBG("event_global_freeze()")
+    efl_event_global_freeze(self->obj);
+    Py_RETURN_NONE;
+}
+
+static PyObject *  // Efl.Object event_global_thaw()
+Efl_Object_event_global_thaw(PyEfl_Object *self, PyObject *args)
+{
+    DBG("event_global_thaw()")
+    efl_event_global_thaw(self->obj);
+    Py_RETURN_NONE;
+}
+
+static PyObject *  // Efl.Object name_find()
+Efl_Object_name_find(PyEfl_Object *self, PyObject *arg)
+{
+    DBG("name_find()")
+    if (!PyUnicode_Check(arg))
+    {
+        PyErr_SetString(PyExc_TypeError, "name must be a string");
+        return NULL;
+    }
+    const char *name = PyUnicode_AsUTF8(arg);
+    Efl_Object *obj = efl_name_find(self->obj, name);
+    return pyefl_object_from_instance(obj);
+}
+
+static PyObject *  // Efl.Object composite_attach()
+Efl_Object_composite_attach(PyEfl_Object *self, PyObject *arg)
+{
+    DBG("composite_attach()")
+    if (!PyObject_TypeCheck(arg, PyEfl_ObjectType))
+    {
+        PyErr_SetString(PyExc_TypeError, "comp_obj must be an Efl Object");
+        return NULL;
+    }
+    Efl_Object *comp_obj = pyefl_object_to_pointer(arg);
+    Eina_Bool ret = efl_composite_attach(self->obj, comp_obj);
+    return PyBool_FromLong(ret);
+}
+
+static PyObject *  // Efl.Object composite_detach()
+Efl_Object_composite_detach(PyEfl_Object *self, PyObject *arg)
+{
+    DBG("composite_detach()")
+    if (!PyObject_TypeCheck(arg, PyEfl_ObjectType))
+    {
+        PyErr_SetString(PyExc_TypeError, "comp_obj must be an Efl Object");
+        return NULL;
+    }
+    Efl_Object *comp_obj = pyefl_object_to_pointer(arg);
+    Eina_Bool ret = efl_composite_detach(self->obj, comp_obj);
+    return PyBool_FromLong(ret);
+}
+
+static PyObject *  // Efl.Object composite_part_is()
+Efl_Object_composite_part_is(PyEfl_Object *self, PyObject *args)
+{
+    DBG("composite_part_is()")
+    Eina_Bool ret = efl_composite_part_is(self->obj);
+    return PyBool_FromLong(ret);
+}
+
+static PyObject *  // Efl.Object delete()
 Efl_Object_delete(PyEfl_Object *self, PyObject *args)
 {
     DBG("delete()")
@@ -282,29 +358,130 @@ static PyMethodDef Efl_Object_methods[] = {
         METH_VARARGS | METH_KEYWORDS, NULL},
     {"event_callback_del", (PyCFunction)Efl_Object_event_callback_del,
         METH_VARARGS | METH_KEYWORDS, NULL},
+    {"event_callback_stop", (PyCFunction)Efl_Object_event_callback_stop,
+        METH_NOARGS, NULL},
+    {"event_freeze", (PyCFunction)Efl_Object_event_freeze,
+        METH_NOARGS, NULL},
+    {"event_thaw", (PyCFunction)Efl_Object_event_thaw,
+        METH_NOARGS, NULL},
+    {"event_global_freeze", (PyCFunction)Efl_Object_event_global_freeze,
+        METH_NOARGS, NULL},
+    {"event_global_thaw", (PyCFunction)Efl_Object_event_global_thaw,
+        METH_NOARGS, NULL},
+    {"name_find", (PyCFunction)Efl_Object_name_find,
+        METH_O, NULL},
+    {"composite_attach", (PyCFunction)Efl_Object_composite_attach,
+        METH_O, NULL},
+    {"composite_detach", (PyCFunction)Efl_Object_composite_detach,
+        METH_O, NULL},
+    {"composite_part_is", (PyCFunction)Efl_Object_composite_part_is,
+        METH_NOARGS, NULL},
     {NULL, NULL, 0, NULL}  /* sentinel */
 };
 
-/* Class Getters */
+
+/* Properties */
 
 static PyObject *  // Efl.Object parent  (getter)
 PyEfl_Object_parent_get(PyEfl_Object *self, void *closure)
 {
-    DBG("parent_get()")
-    Efl_Object *obj;
-
-    obj = efl_parent_get(self->obj);
-
+    DBG("parent_get")
+    Efl_Object *obj = efl_parent_get(self->obj);
     return pyefl_object_from_instance(obj);
 }
+static int  // (setter)
+PyEfl_Object_parent_set(PyEfl_Object *self, PyObject *value, void *closure)
+{
+    DBG("parent_set")
+    if (value != Py_None && !PyObject_TypeCheck(value, PyEfl_ObjectType))
+    {
+        PyErr_SetString(PyExc_TypeError, "parent must be an Efl Object, or None");
+        return -1;
+    }
+    Efl_Object *parent = pyefl_object_to_pointer(value);
+    efl_parent_set(self->obj, parent);
+    return 0;
+}
 
-/* Class Setters */
+static PyObject *  // Efl.Object name  (getter)
+PyEfl_Object_name_get(PyEfl_Object *self, void *closure)
+{
+    DBG("name_get")
+    const char *name = efl_name_get(self->obj);
+    return PyUnicode_FromStringOrNull(name);
+}
+static int  // (setter)
+PyEfl_Object_name_set(PyEfl_Object *self, PyObject *value, void *closure)
+{
+    DBG("name_set")
+    if (value != Py_None && !PyUnicode_Check(value))
+    {
+        PyErr_SetString(PyExc_TypeError, "name must be a string, or None");
+        return -1;
+    }
+    const char *name = PyUnicodeOrNone_AsUTF8(value);
+    efl_name_set(self->obj, name);
+    return 0;
+}
+
+static PyObject *  // Efl.Object comment  (getter)
+PyEfl_Object_comment_get(PyEfl_Object *self, void *closure)
+{
+    DBG("comment_get")
+    const char *comment = efl_comment_get(self->obj);
+    return PyUnicode_FromStringOrNull(comment);
+}
+static int  // (setter)
+PyEfl_Object_comment_set(PyEfl_Object *self, PyObject *value, void *closure)
+{
+    DBG("comment_set")
+    if (value != Py_None && !PyUnicode_Check(value))
+    {
+        PyErr_SetString(PyExc_TypeError, "comment must be a string, or None");
+        return -1;
+    }
+    const char *comment = PyUnicodeOrNone_AsUTF8(value);
+    efl_comment_set(self->obj, comment);
+    return 0;
+}
+
+static PyObject *  // Efl.Object event_freeze_count  (getter)
+PyEfl_Object_event_freeze_count_get(PyEfl_Object *self, void *closure)
+{
+    DBG("event_freeze_count_get")
+    int fcount = efl_event_freeze_count_get(self->obj);
+    return PyLong_FromLong(fcount);
+}
+
+static PyObject *  // Efl.Object event_global_freeze_count  (getter)
+PyEfl_Object_event_global_freeze_count_get(PyEfl_Object *self, void *closure)
+{
+    DBG("event_global_freeze_count_get")
+    int fcount = efl_event_global_freeze_count_get(self->obj);
+    return PyLong_FromLong(fcount);
+}
 
 /* Class getsetter table */
 static PyGetSetDef PyEfl_Object_getsetters[] = {
     {"parent",
         (getter)PyEfl_Object_parent_get,
-        NULL, /* readonly */
+        (setter)PyEfl_Object_parent_set,
+        NULL, NULL},
+    {"name",
+        (getter)PyEfl_Object_name_get,
+        (setter)PyEfl_Object_name_set,
+        NULL, NULL},
+    {"comment",
+        (getter)PyEfl_Object_comment_get,
+        (setter)PyEfl_Object_comment_set,
+        NULL, NULL},
+    {"event_freeze_count",
+        (getter)PyEfl_Object_event_freeze_count_get,
+        NULL, /* read-only */
+        NULL, NULL},
+    {"event_global_freeze_count",
+        (getter)PyEfl_Object_event_global_freeze_count_get,
+        NULL, /* read-only */
         NULL, NULL},
     {NULL, 0, 0, NULL, NULL}  /* sentinel */
 };

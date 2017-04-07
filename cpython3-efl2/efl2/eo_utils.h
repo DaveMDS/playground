@@ -15,6 +15,11 @@ extern "C" {
 
 #define PY_EO_DATA_KEY "_py_eo_"
 
+
+#define PyUnicode_FromStringOrNull(_S_) _S_ ? PyUnicode_FromString(_S_) : Py_BuildValue("")
+#define PyUnicodeOrNone_AsUTF8(_S_) _S_ == Py_None ? NULL: PyUnicode_AsUTF8(_S_)
+
+
 void        pyefl_class_register(const Efl_Class *cls,
                                  const PyTypeObject *type,
                                  const Efl_Event_Description **events);
