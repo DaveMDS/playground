@@ -16,8 +16,17 @@ lib.eolian_directory_scan.argtypes = [c_char_p,]
 # EAPI Eina_Bool eolian_file_parse(const char *filepath)
 lib.eolian_file_parse.argtypes = [c_char_p,]
 
+# EAPI Eina_Iterator *eolian_typedecl_aliases_get_by_file(const char *fname)
+lib.eolian_typedecl_aliases_get_by_file.argtypes = [c_char_p,]
 
-### Eolian_Class ###
+# EAPI Eina_Iterator *eolian_typedecl_structs_get_by_file(const char *fname)
+lib.eolian_typedecl_structs_get_by_file.argtypes = [c_char_p,]
+
+# EAPI Eina_Iterator *eolian_typedecl_enums_get_by_file(const char *fname)
+lib.eolian_typedecl_enums_get_by_file.argtypes = [c_char_p,]
+
+
+### Various ###
 
 # EAPI const Eolian_Class *eolian_class_get_by_file(const char *file_name)
 lib.eolian_class_get_by_file.argtypes = [c_char_p,]
@@ -31,6 +40,12 @@ lib.eolian_class_functions_get.argtypes = [c_void_p, c_uint]
 # EAPI const Eolian_Event *eolian_class_event_get_by_name(const Eolian_Class *klass, const char *event_name)
 lib.eolian_class_event_get_by_name.argtypes = [c_void_p, c_char_p]
 
+# EAPI const Eolian_Enum_Type_Field *eolian_typedecl_enum_field_get(const Eolian_Typedecl *tp, const char *field)
+lib.eolian_typedecl_enum_field_get.argtypes = [c_void_p, c_char_p]
+
+# EAPI const Eolian_Struct_Type_Field *eolian_typedecl_struct_field_get(const Eolian_Typedecl *tp, const char *field)
+lib.eolian_typedecl_struct_field_get.argtypes = [c_void_p, c_char_p]
+
 
 # All of the following just return a stringshare (THAT NEED TO BE FREED)
 lib.eolian_event_c_name_get.restype = c_void_p
@@ -38,13 +53,14 @@ lib.eolian_class_c_name_get.restype = c_void_p
 lib.eolian_class_c_get_function_name_get.restype = c_void_p
 lib.eolian_class_c_data_type_get.restype = c_void_p
 lib.eolian_function_full_c_name_get.restype = c_void_p
+lib.eolian_typedecl_enum_field_c_name_get.restype = c_void_p
+lib.eolian_expression_serialize.restype = c_void_p
 
 
 # All of the following just return a string
 lib.eolian_parameter_name_get.restype = c_char_p
 lib.eolian_class_name_get.restype = c_char_p
 lib.eolian_class_full_name_get.restype = c_char_p
-
 
 lib.eolian_class_legacy_prefix_get.restype = c_char_p
 lib.eolian_class_eo_prefix_get.restype = c_char_p
@@ -65,4 +81,8 @@ lib.eolian_typedecl_file_get.restype = c_char_p
 lib.eolian_typedecl_c_type_get.restype = c_char_p
 lib.eolian_typedecl_free_func_get.restype = c_char_p
 lib.eolian_typedecl_enum_legacy_prefix_get.restype = c_char_p
+
+lib.eolian_typedecl_enum_field_name_get.restype = c_char_p
+lib.eolian_typedecl_enum_legacy_prefix_get.restype = c_char_p
+lib.eolian_typedecl_struct_field_name_get.restype = c_char_p
 

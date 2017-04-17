@@ -94,7 +94,13 @@ class Template(pyratemp.Template):
             ctx['namespace'] = ns
             ctx['namespaces'] = ns.split('.')
             ctx['classes'] = [ c for c in eolian.all_classes_get()
-                                if c.full_name.startswith(ns + '.') ]
+                                    if c.full_name.startswith(ns + '.') ]
+            ctx['aliases'] = [ a for a in eolian.typedecl_all_aliases_get()
+                                    if a.full_name.startswith(ns + '.') ]
+            ctx['structs'] = [ s for s in eolian.typedecl_all_structs_get()
+                                    if s.full_name.startswith(ns + '.') ]
+            ctx['enums']   = [ e for e in eolian.typedecl_all_enums_get()
+                                    if e.full_name.startswith(ns + '.') ]
 
         if filename is not None:
             INF('generating "%s" from template "%s"' % (

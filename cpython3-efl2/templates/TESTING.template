@@ -1,7 +1,8 @@
 <!--(include)-->macros.include<!--(end)-->#!
 
-
+================================================================================
 Class:        ${cls.full_name}$
+================================================================================
 Class type:   ${cls.type}$
 Base Class:   ${cls.base_class.full_name if cls.base_class else None}$
 Inherits:     ${list(cls.inherits)}$
@@ -10,7 +11,6 @@ Namespaces:   ${list(cls.namespaces)}$
 File:         ${cls.file}$
 Ctor enable:  ${cls.ctor_enable}$
 Dtor enable:  ${cls.dtor_enable}$
-
 
 Constructors:
 =============
@@ -54,8 +54,54 @@ Setters:
 
 Events:
 =======
-#!<!--(for event in cls.events)-->
-#! * ${event.name}$ -> ${event.c_name}$
-#!<!--(else)-->
-#! no events available
-#!<!--(end)-->
+<!--(for event in cls.events)-->
+ * ${event.name}$ -> ${event.c_name}$
+<!--(else)-->
+ no events available
+<!--(end)-->
+
+
+
+
+================================================================================
+Namespace:    ${namespace}$  ${namespaces}$
+================================================================================
+
+Classes:
+========
+<!--(for cls in classes)-->
+ * ${cls.full_name}$   (${cls.type}$)
+<!--(else)-->
+ no classes available
+<!--(end)-->
+
+Aliases:
+========
+<!--(for typedecl in aliases)-->
+ * ${typedecl.full_name}$
+<!--(else)-->
+ no alias available
+<!--(end)-->
+
+Structs:
+========
+<!--(for typedecl in structs)-->
+ * ${typedecl.full_name}$
+    <!--(for field in typedecl.struct_fields)-->
+    ${field}$
+    <!--(end)-->
+<!--(else)-->
+ no structs available
+<!--(end)-->
+
+Enums:
+======
+<!--(for typedecl in enums)-->
+ * ${typedecl.full_name}$
+    <!--(for field in typedecl.enum_fields)-->
+    ${field}$
+    <!--(end)-->
+<!--(else)-->
+ no enums available
+<!--(end)-->
+

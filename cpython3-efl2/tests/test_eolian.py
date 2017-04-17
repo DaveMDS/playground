@@ -7,6 +7,7 @@
 import eolian
 
 
+# Parse all known eo files
 if not eolian.system_directory_scan():
     raise(RuntimeError('Eolian, failed to scan system directories'))
 
@@ -20,10 +21,28 @@ if not eolian.database_validate():
     raise(RuntimeError('Eolian, database validation failed'))
 
 
+# ALL enums
+print('# ' * 40)
+for typedecl in eolian.typedecl_all_enums_get():
+    print(typedecl)
+    for field in typedecl.enum_fields:
+        print("  " + str(field))
 
+# ALL structs
+print('# ' * 40)
+for typedecl in eolian.typedecl_all_structs_get():
+    print(typedecl)
+
+# ALL aliases
+print('# ' * 40)
+for typedecl in eolian.typedecl_all_aliases_get():
+    print(typedecl)
+
+
+# A single class
+print('# ' * 40)
 cls = eolian.Class('Efl.Gfx')
 print('Class: %s' % cls)
-
 
 for func in cls.properties:
     print('  %s' % func)

@@ -167,8 +167,8 @@ class Generate(Command):
         from pyolian.generator import Template
 
         # # #  T E S T  # # #
-        TEST_tmpl = Template('templates/TESTING.template', data=extra_context)
-        TEST_tmpl.render('TESTING.OUT', cls="Efl.Gfx")
+        TEST_tmpl = Template('templates/TESTING.template')
+        TEST_tmpl.render('TESTING.OUT', cls='Efl.Gfx', ns='Efl.Gfx')
         # # #  T E S T  # # #
 
         extra_context = {
@@ -215,69 +215,70 @@ class Generate(Command):
         modc_tmpl = Template('templates/module.template.c', data=extra_context)
 
         # Efl
-        clsc_tmpl.render('efl2/efl.loop.c', cls='Efl.Loop')
+        clsc_tmpl.render('efl2/efl.loop.c', cls='Efl.Loop')  # Class
         clsh_tmpl.render('efl2/efl.loop.h', cls='Efl.Loop')
 
-        clsc_tmpl.render('efl2/efl.loop_user.c', cls='Efl.Loop_User')
+        clsc_tmpl.render('efl2/efl.loop_user.c', cls='Efl.Loop_User')  # Class
         clsh_tmpl.render('efl2/efl.loop_user.h', cls='Efl.Loop_User')
 
-        clsc_tmpl.render('efl2/efl.animator.c', cls='Efl.Animator')
+        clsc_tmpl.render('efl2/efl.animator.c', cls='Efl.Animator')  # Iface
         clsh_tmpl.render('efl2/efl.animator.h', cls='Efl.Animator')
 
-        clsc_tmpl.render('efl2/efl.config.c', cls='Efl.Config')
+        clsc_tmpl.render('efl2/efl.config.c', cls='Efl.Config')  # Iface
         clsh_tmpl.render('efl2/efl.config.h', cls='Efl.Config')
 
-        clsc_tmpl.render('efl2/efl.part.c', cls='Efl.Part')
+        clsc_tmpl.render('efl2/efl.part.c', cls='Efl.Part')  # Iface
         clsh_tmpl.render('efl2/efl.part.h', cls='Efl.Part')
 
-        clsh_tmpl.render('efl2/efl.gfx.h', cls='Efl.Gfx')
+        clsh_tmpl.render('efl2/efl.gfx.h', cls='Efl.Gfx')  # Iface
         clsc_tmpl.render('efl2/efl.gfx.c', cls='Efl.Gfx')
 
         # Efl.Loop
-        init_tmpl.render('efl2/loop/__init__.py', ns='Efl.Loop')
+        init_tmpl.render('efl2/loop/__init__.py', ns='Efl.Loop')  # Namespace
         modc_tmpl.render('efl2/loop/_loop.module.c', ns='Efl.Loop')
         
-        clsc_tmpl.render('efl2/loop/efl.loop.timer.c', cls='Efl.Loop.Timer')
+        clsc_tmpl.render('efl2/loop/efl.loop.timer.c', cls='Efl.Loop.Timer')  # Class
         clsh_tmpl.render('efl2/loop/efl.loop.timer.h', cls='Efl.Loop.Timer')
 
-        clsc_tmpl.render('efl2/loop/efl.loop.fd.c', cls='Efl.Loop.Fd')
+        clsc_tmpl.render('efl2/loop/efl.loop.fd.c', cls='Efl.Loop.Fd')  # Class
         clsh_tmpl.render('efl2/loop/efl.loop.fd.h', cls='Efl.Loop.Fd')
 
         # Efl.Config
-        init_tmpl.render('efl2/config/__init__.py', ns='Efl.Config')
+        init_tmpl.render('efl2/config/__init__.py', ns='Efl.Config')  # Namespace
         modc_tmpl.render('efl2/config/_config.module.c', ns='Efl.Config')
-        clsc_tmpl.render('efl2/config/efl.config.global.c', cls='Efl.Config.Global')
+
+        clsc_tmpl.render('efl2/config/efl.config.global.c', cls='Efl.Config.Global')  # Class
         clsh_tmpl.render('efl2/config/efl.config.global.h', cls='Efl.Config.Global')
 
         # Efl.Gfx
-        init_tmpl.render('efl2/gfx/__init__.py', ns='Efl.Gfx')
+        init_tmpl.render('efl2/gfx/__init__.py', ns='Efl.Gfx')  # Namespace
         modc_tmpl.render('efl2/gfx/_gfx.module.c', ns='Efl.Gfx')
 
-        clsc_tmpl.render('efl2/gfx/efl.gfx.stack.c', cls='Efl.Gfx.Stack')
+        clsc_tmpl.render('efl2/gfx/efl.gfx.stack.c', cls='Efl.Gfx.Stack')  # Iface
         clsh_tmpl.render('efl2/gfx/efl.gfx.stack.h', cls='Efl.Gfx.Stack')
 
-        clsc_tmpl.render('efl2/gfx/efl.gfx.map.c', cls='Efl.Gfx.Map')
+        clsc_tmpl.render('efl2/gfx/efl.gfx.map.c', cls='Efl.Gfx.Map')  # Mixin
         clsh_tmpl.render('efl2/gfx/efl.gfx.map.h', cls='Efl.Gfx.Map')
 
-        clsc_tmpl.render('efl2/gfx/efl.gfx.fill.c', cls='Efl.Gfx.Fill')
+        clsc_tmpl.render('efl2/gfx/efl.gfx.fill.c', cls='Efl.Gfx.Fill')  # Iface
         clsh_tmpl.render('efl2/gfx/efl.gfx.fill.h', cls='Efl.Gfx.Fill')
 
-        clsc_tmpl.render('efl2/gfx/efl.gfx.view.c', cls='Efl.Gfx.View')
+        clsc_tmpl.render('efl2/gfx/efl.gfx.view.c', cls='Efl.Gfx.View')  # Iface
         clsh_tmpl.render('efl2/gfx/efl.gfx.view.h', cls='Efl.Gfx.View')
 
-        clsc_tmpl.render('efl2/gfx/efl.gfx.shape.c', cls='Efl.Gfx.Shape')
+        clsc_tmpl.render('efl2/gfx/efl.gfx.shape.c', cls='Efl.Gfx.Shape')  # Mixin
         clsh_tmpl.render('efl2/gfx/efl.gfx.shape.h', cls='Efl.Gfx.Shape')
 
-        clsc_tmpl.render('efl2/gfx/efl.gfx.gradient.c', cls='Efl.Gfx.Gradient')
+        clsc_tmpl.render('efl2/gfx/efl.gfx.gradient.c', cls='Efl.Gfx.Gradient')  # Iface
         clsh_tmpl.render('efl2/gfx/efl.gfx.gradient.h', cls='Efl.Gfx.Gradient')
 
-        clsc_tmpl.render('efl2/gfx/efl.gfx.path.c', cls='Efl.Gfx.Path')
+        clsc_tmpl.render('efl2/gfx/efl.gfx.path.c', cls='Efl.Gfx.Path')  # Mixin
         clsh_tmpl.render('efl2/gfx/efl.gfx.path.h', cls='Efl.Gfx.Path')
 
-        clsc_tmpl.render('efl2/gfx/efl.gfx.buffer.c', cls='Efl.Gfx.Buffer')
+        clsc_tmpl.render('efl2/gfx/efl.gfx.buffer.c', cls='Efl.Gfx.Buffer')  # Iface
         clsh_tmpl.render('efl2/gfx/efl.gfx.buffer.h', cls='Efl.Gfx.Buffer')
 
-        clsc_tmpl.render('efl2/gfx/efl.gfx.filter.c', cls='Efl.Gfx.Filter')
+        clsc_tmpl.render('efl2/gfx/efl.gfx.filter.c', cls='Efl.Gfx.Filter')  # Iface
         clsh_tmpl.render('efl2/gfx/efl.gfx.filter.h', cls='Efl.Gfx.Filter')
 
         # TODO sub-sub-module
