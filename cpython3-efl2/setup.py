@@ -211,6 +211,8 @@ class Generate(Command):
         # Warm-up the templates
         clsc_tmpl = Template('templates/class.template.c', data=extra_context)
         clsh_tmpl = Template('templates/class.template.h', data=extra_context)
+        strc_tmpl = Template('templates/struct.template.c', data=extra_context)
+        strh_tmpl = Template('templates/struct.template.h', data=extra_context)
         init_tmpl = Template('templates/module.__init__.template.py', data=extra_context)
         modc_tmpl = Template('templates/module.template.c', data=extra_context)
 
@@ -280,6 +282,9 @@ class Generate(Command):
 
         clsc_tmpl.render('efl2/gfx/efl.gfx.filter.c', cls='Efl.Gfx.Filter')  # Iface
         clsh_tmpl.render('efl2/gfx/efl.gfx.filter.h', cls='Efl.Gfx.Filter')
+
+        strc_tmpl.render('efl2/gfx/efl.gfx.dash.c', struct='Efl.Gfx.Dash')  # Struct
+        strh_tmpl.render('efl2/gfx/efl.gfx.dash.h', struct='Efl.Gfx.Dash')
 
         # TODO sub-sub-module
         # clsc_tmpl.render('efl2/gfx/size/efl.gfx.size.hint.c', cls='Efl.Gfx.Size.Hint')
@@ -357,6 +362,7 @@ efl_module('efl2.loop._loop', [
     # 'efl2/gfx/efl.gfx.path.c',
     # 'efl2/gfx/efl.gfx.buffer.c',
     # 'efl2/gfx/efl.gfx.filter.c',
+    # 'efl2/gfx/efl.gfx.dash.c', # struct
 # ])
 
 

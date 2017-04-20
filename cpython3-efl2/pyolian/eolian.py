@@ -235,21 +235,25 @@ def typedecl_aliases_get_by_file(fname):
     return Iterator(_c_eolian_typedecl_to_py,
                     lib.eolian_typedecl_aliases_get_by_file(_str_to_bytes(fname)))
 
-def typedecl_structs_get_by_file(fname):
-    return Iterator(_c_eolian_typedecl_to_py,
-                    lib.eolian_typedecl_structs_get_by_file(_str_to_bytes(fname)))
-
-def typedecl_enums_get_by_file(fname):
-    return Iterator(_c_eolian_typedecl_to_py,
-                    lib.eolian_typedecl_enums_get_by_file(_str_to_bytes(fname)))
-
 def typedecl_all_aliases_get():
     return Iterator(_c_eolian_typedecl_to_py,
                     lib.eolian_typedecl_all_aliases_get())
 
+def typedecl_structs_get_by_file(fname):
+    return Iterator(_c_eolian_typedecl_to_py,
+                    lib.eolian_typedecl_structs_get_by_file(_str_to_bytes(fname)))
+
+def typedecl_struct_get_by_name(name):
+    c_tdecl = lib.eolian_typedecl_struct_get_by_name(_str_to_bytes(name))
+    return Typedecl(c_tdecl) if c_tdecl else None
+
 def typedecl_all_structs_get():
     return Iterator(_c_eolian_typedecl_to_py,
                     lib.eolian_typedecl_all_structs_get())
+
+def typedecl_enums_get_by_file(fname):
+    return Iterator(_c_eolian_typedecl_to_py,
+                    lib.eolian_typedecl_enums_get_by_file(_str_to_bytes(fname)))
 
 def typedecl_all_enums_get():
     return Iterator(_c_eolian_typedecl_to_py,

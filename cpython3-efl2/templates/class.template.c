@@ -78,64 +78,7 @@ ${CLS_OBJECT}$_init(${CLS_OBJECT}$ *self, PyObject *args, PyObject *kwds)
     return 0;
 <!--(end)-->
 }
-#!
-#! // TYPE_IN_FUNC(type)
-<!--(macro TYPE_IN_FUNC)-->
-    <!--(if type.type == Eolian_Type_Type.CLASS)-->
-        <!--(if type.full_name == 'Efl.Class')-->
-pyefl_type_to_class#!
-        <!--(else)-->
-pyefl_object_to_pointer#!
-        <!--(end)-->
-    <!--(elif type.type == Eolian_Type_Type.REGULAR)-->
-        <!--(if type.full_name == 'string')-->
-PyUnicode_AsUTF8#!
-        <!--(elif type.full_name == 'void_ptr')-->
-void_func#!
-        <!--(elif type.full_name == 'double')-->
-PyFloat_AsDouble#!
-        <!--(elif type.full_name in ('int','bool','short'))-->
-(${type.c_type}$)PyLong_AsLong#!
-        <!--(elif type.full_name in ('uint','ubyte'))-->
-(${type.c_type}$)PyLong_AsUnsignedLong#!
-        <!--(elif type.typedecl.type == Eolian_Typedecl_Type.STRUCT)-->
-// ERROR: TODO struct ${type}$ ${type.typedecl}$ //
-        <!--(else)-->
-// ERROR: UNSUPPORTED IN PARAM TYPE: ${type}$ ${type.type}$ //
-        <!--(end)-->
-    <!--(else)-->
-// ERROR: UNSUPPORTED IN PARAM TYPE.TYPE: ${type}$ ${type.type}$ //
-    <!--(end)-->
-<!--(end)-->
-#!
-#! // TYPE_OUT_FUNC(type)
-<!--(macro TYPE_OUT_FUNC)-->
-    <!--(if type.type == Eolian_Type_Type.CLASS)-->
-        <!--(if type.full_name == 'Efl.Class')-->
-TODO #!
-        <!--(else)-->
-pyefl_object_from_instance#!
-        <!--(end)-->
-    <!--(elif type.type == Eolian_Type_Type.REGULAR)-->
-        <!--(if type.full_name == 'double')-->
-PyFloat_FromDouble#!
-        <!--(elif type.full_name in ('int','short'))-->
-PyLong_FromLong#!
-        <!--(elif type.full_name in ('uint','ubyte'))-->
-PyLong_FromUnsignedLong#!
-        <!--(elif type.full_name == 'bool')-->
-PyBool_FromLong#!
-        <!--(elif type.full_name in ('string','stringshare'))-->
-PyUnicode_FromString#!
-        <!--(elif type.typedecl.type == Eolian_Typedecl_Type.STRUCT)-->
-// ERROR: TODO struct ${type}$ ${type.typedecl}$ //
-        <!--(else)-->
-// ERROR: UNSUPPORTED OUT TYPE: ${type}$ ${type.type}$ //
-        <!--(end)-->
-    <!--(else)-->
-// ERROR: UNSUPPORTED IN PARAM TYPE.TYPE: ${type}$ ${type.type}$ //
-    <!--(end)-->
-<!--(end)-->
+
 
 /* Class methods */
 <!--(for func in cls.methods)-->

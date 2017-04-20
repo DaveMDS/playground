@@ -82,14 +82,16 @@ class Template(pyratemp.Template):
                                    renderer_class=renderer_class,
                                    eval_class=eval_class)
 
-    def render(self, filename=None, cls=None, ns=None, **kargs):
+    def render(self, filename=None, cls=None, ns=None, struct=None, **kargs):
 
         # Build the context for the template
         ctx = {}
         if kargs:
-            ctx.update(data)
+            ctx.update(kargs)
         if cls:
             ctx['cls'] = eolian.Class(cls)
+        if struct:
+            ctx['struct'] = eolian.typedecl_struct_get_by_name(struct)
         if ns:
             ctx['namespace'] = ns
             ctx['namespaces'] = ns.split('.')
