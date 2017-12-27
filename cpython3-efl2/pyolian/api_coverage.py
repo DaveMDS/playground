@@ -13,10 +13,10 @@ just for development purpose
 ...adjust the following path as your needs
 
 """
-EOLIAN_HEADER = '/usr/local/include/eolian-1/Eolian.h'
+EOLIAN_HEADER = '/home/dave/e/core/efl/src/lib/eolian/Eolian.h'
 
 flags = re.S | re.M
-DEFINED_RE = re.compile('EAPI[\w\n *]*(eolian_\w*)\([\w *,]*\);', flags)
+DEFINED_RE = re.compile('^EAPI[\w\n *]*(eolian_\w*)\([\w *,]*\);', flags)
 USED_RE = re.compile('lib\.(eolian_[\w]*)\(', flags)
 
 
@@ -51,7 +51,8 @@ if __name__ == '__main__':
     # Show usage
     if len(sys.argv) < 2:
         print('Usage:')
-        print('  --list  To list all missing functions')
+        print('  --list      To list all missing functions')
+        print('  --list-all  To list all functions found in Eolian.h')
         print('')
         exit(0)
 
@@ -61,4 +62,12 @@ if __name__ == '__main__':
         print('===============================')
         for func_name in sorted(defined_funcs - used_funcs):
             print(func_name)
+        print('===============================')
+
+    # List all functions find in Eolian.h
+    if '--list-all' in sys.argv:
+        print('All the functions in Eolian.h:')
+        print('===============================')
+        for i, func_name in enumerate(sorted(defined_funcs), 1):
+            print('{:03d}. {}'.format(i, func_name))
         print('===============================')

@@ -377,8 +377,8 @@ class Eolian_Unit(object):
                         lib.eolian_variable_all_constants_get(self._obj))
 
     def variable_constant_get_by_name(self, name):
-        return Iterator(_c_eolian_variable_to_py,
-                        lib.eolian_variable_constant_get_by_name(self._obj, _str_to_bytes(name)))
+        c_var = lib.eolian_variable_constant_get_by_name(self._obj, _str_to_bytes(name))
+        return Variable(c_var) if c_var else None
 
     def variable_constants_get_by_file(self, fname):
         return Iterator(_c_eolian_variable_to_py,
@@ -390,8 +390,8 @@ class Eolian_Unit(object):
                         lib.eolian_variable_all_globals_get(self._obj))
 
     def variable_global_get_by_name(self, name):
-        return Iterator(_c_eolian_variable_to_py,
-                        lib.eolian_variable_global_get_by_name(self._obj, _str_to_bytes(name)))
+        c_var = lib.eolian_variable_global_get_by_name(self._obj, _str_to_bytes(name))
+        return Variable(c_var) if c_var else None
 
     def variable_globals_get_by_file(self, fname):
         return Iterator(_c_eolian_variable_to_py,
@@ -455,7 +455,6 @@ class Eolian(Eolian_Unit):
 #####
 
 class Class(object):
-    """ TODO DOC """
     def __init__(self, cls):
         if isinstance(cls, c_void_p):
             self._obj = c_void_p(cls.value)  # const Eolian_Class *
@@ -641,7 +640,7 @@ class Constructor(object):
             raise TypeError('Invalid constructor of type: %s ' % type(c_ctor))
 
     def __repr__(self):
-        return "<eolian.Constructor '{0.full_name}', optional: {0.is_optional}>".format(self)
+        return "<eolian.Constructor '{0.full_name}', optional={0.is_optional}>".format(self)
 
     @property
     def full_name(self):
@@ -671,7 +670,7 @@ class Event(object):
             raise TypeError('Invalid constructor of type: %s ' % type(c_event))
 
     def __repr__(self):
-        return "<eolian.Event '{0.name}', c_name: '{0.c_name}'>".format(self)
+        return "<eolian.Event '{0.name}', c_name='{0.c_name}'>".format(self)
 
     @property
     def name(self):
@@ -881,8 +880,8 @@ class Function_Parameter(object):
             raise TypeError('Invalid constructor of type: %s ' % type(c_param))
 
     def __repr__(self):
-        return "<eolian.Parameter '{0.name}', type: {0.type}," \
-               " optional: {0.is_optional}, nullable: {0.is_nullable}>".format(self)
+        return "<eolian.Function_Parameter '{0.name}', type={0.type}," \
+               " optional={0.is_optional}, nullable={0.is_nullable}>".format(self)
 
     @property
     def name(self):
@@ -992,7 +991,7 @@ class Type(object):  # OK  (4 eolian issue)
 
     def __repr__(self):
         #  return "<eolian.Type '{0.full_name}', type: {0.type!s}, c_type: '{0.c_type}'>".format(self)
-        return "<eolian.Type '{0.full_name}', type: {0.type!s}>".format(self)
+        return "<eolian.Type '{0.full_name}', type={0.type!s}>".format(self)
 
     @property
     def name(self):
@@ -1079,7 +1078,7 @@ class Typedecl(object):  # OK (2 TODO)
             raise TypeError('Invalid constructor of type: %s ' % type(c_typedecl))
 
     def __repr__(self):
-        return "<eolian.Typedecl '{0.full_name}', type: {0.type!s}>".format(self)
+        return "<eolian.Typedecl '{0.full_name}', type={0.type!s}>".format(self)
 
     @property
     def name(self):
@@ -1170,7 +1169,7 @@ class Enum_Type_Field(object):
             raise TypeError('Invalid constructor of type: %s ' % type(c_field))
 
     def __repr__(self):
-        return "<eolian.Enum_Type_Field '{0.name}', c_name: '{0.c_name}'>".format(self)
+        return "<eolian.Enum_Type_Field '{0.name}', c_name='{0.c_name}'>".format(self)
 
     @property
     def name(self):
@@ -1205,7 +1204,7 @@ class Struct_Type_Field(object):
             raise TypeError('Invalid constructor of type: %s ' % type(c_field))
 
     def __repr__(self):
-        return "<eolian.Struct_Type_Field '{0.name}', type: {0.type!s}>".format(self)
+        return "<eolian.Struct_Type_Field '{0.name}', type={0.type!s}>".format(self)
 
     @property
     def name(self):
@@ -1232,7 +1231,7 @@ class Expression(object):
             raise TypeError('Invalid constructor of type: %s ' % type(c_expr))
 
     def __repr__(self):
-        return "<eolian.Expression type: {0.type!s}, serialize: '{0.serialize}'>".format(self)
+        return "<eolian.Expression type={0.type!s}, serialize='{0.serialize}'>".format(self)
 
     @property
     def type(self):
@@ -1269,8 +1268,8 @@ class Expression(object):
 
     @property
     def unary_expression(self):
-        c_op = lib.eolian_expression_unary_expression_get(self._obj)
-        return Eolian_Unary_Operator(c_op)  if c_op is not None else None
+        c_expr = lib.eolian_expression_unary_expression_get(self._obj)
+        return Expression(c_expr) if c_expr is not None else None
 
 
 class Variable(object):
