@@ -13,14 +13,7 @@ __version_info__ = ( 0, 99, 0 )
 # TODO fetch current efl version from configure.ac
 
 
-###  module init/shutdown  ####################################################
-
-import atexit
-lib.eolian_init()
-atexit.register(lambda: lib.eolian_shutdown())
-
-
-###  enums  ###################################################################
+###  Eolian Enums  ############################################################
 
 class Eolian_Function_Type(IntEnum):
     UNRESOLVED = 0
@@ -221,25 +214,6 @@ class Eolian_Doc_Ref_Type(IntEnum):
     ENUM = 7
     ENUM_FIELD = 8
     VAR = 9
-
-
-###  internal string encode/decode  ###########################################
-
-def _str_to_bytes(s):
-    return s.encode('utf-8')
-
-def _str_to_py(s):
-    if s is None:
-        return None    
-    if isinstance(s, bytes):
-        return s.decode('utf-8')
-    if isinstance(s, c_char_p):
-        return s.value.decode('utf-8')
-    if isinstance(s, c_void_p):
-        return cast(s, c_char_p).value.decode('utf-8')
-    if isinstance(s, int):
-        return cast(s, c_char_p).value.decode('utf-8')
-    print('WARNING !!!!!!!!! Unknown type: %s' % type(s))
 
 
 ###  internal Classes  ########################################################
@@ -1201,6 +1175,10 @@ class Documentation(EolianBaseObject):
     # def __repr__(self):
         # return "<eolian.Documentation '{0.name}'>".format(self)
 
+    # this is too much for py, just use string.split('\n\n')
+    # def string_split(self, string):
+    #    c_list = lib.eolian_documentation_string_split
+
     @property
     def summary(self):
         return _str_to_py(lib.eolian_documentation_summary_get(self._obj))
@@ -1213,6 +1191,28 @@ class Documentation(EolianBaseObject):
     def since(self):
         return _str_to_py(lib.eolian_documentation_since_get(self._obj))
 
-    # this is too much for py, just use string.split('\n\n')
-    # def string_split(self, string):
-    #    c_list = lib.eolian_documentation_string_split
+
+###  internal string encode/decode  ###########################################
+
+def _str_to_bytes(s):
+    return s.encode('utf-8')
+
+def _str_to_py(s):
+    if s is None:
+        return None    
+    if isinstance(s, bytes):
+        return s.decode('utf-8')
+    if isinstance(s, c_char_p):
+        return s.value.decode('utf-8')
+    if isinstance(s, c_void_p):
+        return cast(s, c_char_p).value.decode('utf-8')
+    if isinstance(s, int):
+        return cast(s, c_char_p).value.decode('utf-8')
+    print('WARNING !!!!!!!!! Unknown type: %s' % type(s))
+
+
+###  module init/shutdown  ####################################################
+
+import atexit
+lib.eolian_init()
+atexit.register(lambda: lib.eolian_shutdown())
