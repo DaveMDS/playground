@@ -280,7 +280,7 @@ def _c_eolian_declaration_to_py(var):
     return Declaration(var)
 
 
-###  Classes  #################################################################
+###  Internal Classes  ########################################################
 
 class Iterator(object):
     """ Generic eina iterator wrapper """
@@ -306,15 +306,20 @@ class Iterator(object):
         lib.eina_iterator_free(self._iter)
 
 
-class Eolian_Unit(object):
-    def __init__(self, c_unit):
-        if isinstance(c_unit, c_void_p):
-            self._obj = c_void_p(c_unit.value)  # const Eolian_Unit *
-        elif isinstance(c_unit, int):
-            self._obj = c_void_p(c_unit)
+class EolianBaseObject(object):
+    def __init__(self, c_obj_pointer):
+        if isinstance(c_obj_pointer, c_void_p):
+            self._obj = c_void_p(c_obj_pointer.value)
+        elif isinstance(c_obj_pointer, int):
+            self._obj = c_void_p(c_obj_pointer)
         else:
-            raise TypeError('Invalid constructor of type: %s ' % type(c_unit))
+            raise TypeError('Invalid constructor of type: %s for class: %s' % (
+                            type(c_obj_pointer), self.__class__.__name__))
 
+
+###  Main Eolian Unit  ########################################################
+
+class Eolian_Unit(EolianBaseObject):
     def class_get_by_name(self, class_name):
         c_cls = lib.eolian_class_get_by_name(self._obj, _str_to_bytes(class_name))
         return Class(c_cls) if c_cls else None
@@ -449,17 +454,10 @@ class Eolian(Eolian_Unit):
     def all_eot_files_parse(self):
         return bool(lib.eolian_all_eot_files_parse(self._obj))
 
-#####
 
-class Class(object):
-    def __init__(self, cls):
-        if isinstance(cls, c_void_p):
-            self._obj = c_void_p(cls.value)  # const Eolian_Class *
-        elif isinstance(cls, int):
-            self._obj = c_void_p(cls)
-        else:
-            raise TypeError('Invalid constructor of type: %s ' % type(cls))
+###  Eolian Classes  ##########################################################
 
+class Class(EolianBaseObject):
     def __repr__(self):
         return "<eolian.Class '{0.full_name}', {0.type!s}>".format(self)
 
@@ -601,15 +599,7 @@ class Class(object):
                         lib.eolian_class_parts_get(self._obj))
 
 
-class Part(object):
-    def __init__(self, c_part):
-        if isinstance(c_part, c_void_p):
-            self._obj = c_void_p(c_part.value) # const Eolian_Part *
-        elif isinstance(c_part, int):
-            self._obj = c_void_p(c_part)
-        else:
-            raise TypeError('Invalid constructor of type: %s ' % type(c_part))
-
+class Part(EolianBaseObject):
     def __repr__(self):
         return "<eolian.Part '{0.name}'>".format(self)
 
@@ -627,15 +617,7 @@ class Part(object):
         return Documentation(c_doc) if c_doc else None
 
 
-class Constructor(object):
-    def __init__(self, c_ctor):
-        if isinstance(c_ctor, c_void_p):
-            self._obj = c_void_p(c_ctor.value) # const Eolian_Constructor *
-        elif isinstance(c_ctor, int):
-            self._obj = c_void_p(c_ctor)
-        else:
-            raise TypeError('Invalid constructor of type: %s ' % type(c_ctor))
-
+class Constructor(EolianBaseObject):
     def __repr__(self):
         return "<eolian.Constructor '{0.full_name}', optional={0.is_optional}>".format(self)
 
@@ -656,16 +638,7 @@ class Constructor(object):
         return Class(lib.eolian_constructor_class_get(self._obj))
 
 
-class Event(object):
-    """ TODO DOC """
-    def __init__(self, c_event):
-        if isinstance(c_event, c_void_p):
-            self._obj = c_void_p(c_event.value) # const Eolian_Event *
-        elif isinstance(c_event, int):
-            self._obj = c_void_p(c_event)
-        else:
-            raise TypeError('Invalid constructor of type: %s ' % type(c_event))
-
+class Event(EolianBaseObject):
     def __repr__(self):
         return "<eolian.Event '{0.name}', c_name='{0.c_name}'>".format(self)
 
@@ -707,16 +680,7 @@ class Event(object):
         return bool(lib.eolian_event_is_restart(self._obj))
 
 
-class Function(object):
-    """ TODO DOC """
-    def __init__(self, c_func):
-        if isinstance(c_func, c_void_p):
-            self._obj = c_void_p(c_func.value)  # const Eolian_Function *
-        elif isinstance(c_func, int):
-            self._obj = c_void_p(c_func)
-        else:
-            raise TypeError('Invalid constructor of type: %s ' % type(c_func))
-
+class Function(EolianBaseObject):
     def __repr__(self):
         return "<eolian.Function '{0.name}'>".format(self)
 
@@ -867,15 +831,7 @@ class Function(object):
         return Implement(c_impl) if c_impl else None
 
 
-class Function_Parameter(object):
-    def __init__(self, c_param):
-        if isinstance(c_param, c_void_p):
-            self._obj = c_void_p(c_param.value)  # const Eolian_Parameter *
-        elif isinstance(c_param, int):
-            self._obj = c_void_p(c_param)
-        else:
-            raise TypeError('Invalid constructor of type: %s ' % type(c_param))
-
+class Function_Parameter(EolianBaseObject):
     def __repr__(self):
         return "<eolian.Function_Parameter '{0.name}', type={0.type}," \
                " optional={0.is_optional}, nullable={0.is_nullable}>".format(self)
@@ -925,15 +881,7 @@ class Function_Parameter(object):
         return Expression(c_expr) if c_expr else None
 
 
-class Implement(object):
-    def __init__(self, c_impl):
-        if isinstance(c_impl, c_void_p):
-            self._obj = c_void_p(c_impl.value)  # const Eolian_Eimplement *
-        elif isinstance(c_impl, int):
-            self._obj = c_void_p(c_impl)
-        else:
-            raise TypeError('Invalid constructor of type: %s ' % type(c_impl))
-
+class Implement(EolianBaseObject):
     def __repr__(self):
         return "<eolian.Implement '{0.full_name}'>".format(self)
 
@@ -977,15 +925,7 @@ class Implement(object):
         return bool(lib.eolian_implement_is_prop_get(self._obj))
 
 
-class Type(object):  # OK  (4 eolian issue)
-    def __init__(self, c_type):
-        if isinstance(c_type, c_void_p):
-            self._obj = c_void_p(c_type.value)  # const Eolian_Type *
-        elif isinstance(c_type, int):
-            self._obj = c_void_p(c_type)
-        else:
-            raise TypeError('Invalid constructor of type: %s ' % type(c_type))
-
+class Type(EolianBaseObject):  # OK  (4 eolian issue)
     def __repr__(self):
         #  return "<eolian.Type '{0.full_name}', type: {0.type!s}, c_type: '{0.c_type}'>".format(self)
         return "<eolian.Type '{0.full_name}', type={0.type!s}>".format(self)
@@ -1065,15 +1005,7 @@ class Type(object):  # OK  (4 eolian issue)
         return bool(lib.eolian_type_is_ptr(self._obj))
 
 
-class Typedecl(object):  # OK (2 TODO)
-    def __init__(self, c_typedecl):
-        if isinstance(c_typedecl, c_void_p):
-            self._obj = c_void_p(c_typedecl.value)  # const Eolian_Typedecl *
-        elif isinstance(c_typedecl, int):
-            self._obj = c_void_p(c_typedecl)
-        else:
-            raise TypeError('Invalid constructor of type: %s ' % type(c_typedecl))
-
+class Typedecl(EolianBaseObject):  # OK (2 TODO)
     def __repr__(self):
         return "<eolian.Typedecl '{0.full_name}', type={0.type!s}>".format(self)
 
@@ -1155,16 +1087,7 @@ class Typedecl(object):  # OK (2 TODO)
         return Function(c_func) if c_func else None
 
 
-class Enum_Type_Field(object):
-    """ TODO DOC """
-    def __init__(self, c_field):
-        if isinstance(c_field, c_void_p):
-            self._obj = c_void_p(c_field.value)  # const Eolian_Enum_Type_Field *
-        elif isinstance(c_field, int):
-            self._obj = c_void_p(c_field)
-        else:
-            raise TypeError('Invalid constructor of type: %s ' % type(c_field))
-
+class Enum_Type_Field(EolianBaseObject):
     def __repr__(self):
         return "<eolian.Enum_Type_Field '{0.name}', c_name='{0.c_name}'>".format(self)
 
@@ -1190,16 +1113,7 @@ class Enum_Type_Field(object):
         return Documentation(c_doc) if c_doc else None
 
 
-class Struct_Type_Field(object):
-    """ TODO DOC """
-    def __init__(self, c_field):
-        if isinstance(c_field, c_void_p):
-            self._obj = c_void_p(c_field.value)  # const Eolian_Struct_Type_Field *
-        elif isinstance(c_field, int):
-            self._obj = c_void_p(c_field)
-        else:
-            raise TypeError('Invalid constructor of type: %s ' % type(c_field))
-
+class Struct_Type_Field(EolianBaseObject):
     def __repr__(self):
         return "<eolian.Struct_Type_Field '{0.name}', type={0.type!s}>".format(self)
 
@@ -1218,15 +1132,7 @@ class Struct_Type_Field(object):
         return Documentation(c_doc) if c_doc else None
 
 
-class Expression(object):
-    def __init__(self, c_expr):
-        if isinstance(c_expr, c_void_p):
-            self._obj = c_void_p(c_expr.value)  # const Eolian_Expression *
-        elif isinstance(c_expr, int):
-            self._obj = c_void_p(c_expr)
-        else:
-            raise TypeError('Invalid constructor of type: %s ' % type(c_expr))
-
+class Expression(EolianBaseObject):
     def __repr__(self):
         return "<eolian.Expression type={0.type!s}, serialize='{0.serialize}'>".format(self)
 
@@ -1269,15 +1175,7 @@ class Expression(object):
         return Expression(c_expr) if c_expr is not None else None
 
 
-class Variable(object):
-    def __init__(self, c_var):
-        if isinstance(c_var, c_void_p):
-            self._obj = c_void_p(c_var.value)  # Eolian_Variable *
-        elif isinstance(c_var, int):
-            self._obj = c_void_p(c_var)
-        else:
-            raise TypeError('Invalid constructor of type: %s ' % type(c_doc))
-
+class Variable(EolianBaseObject):
     def __repr__(self):
         return "<eolian.Variable '{0.full_name}', type={0.type!s}, file={0.file}>".format(self)
 
@@ -1323,15 +1221,7 @@ class Variable(object):
         return Documentation(c_doc) if c_doc else None
 
 
-class Declaration(object):
-    def __init__(self, c_dec):
-        if isinstance(c_dec, c_void_p):
-            self._obj = c_void_p(c_dec.value)  # const Eolian_Declaration *
-        elif isinstance(c_dec, int):
-            self._obj = c_void_p(c_dec)
-        else:
-            raise TypeError('Invalid constructor of type: %s ' % type(c_doc))
-
+class Declaration(EolianBaseObject):
     def __repr__(self):
         return "<eolian.Declaration '{0.name}'>".format(self)
 
@@ -1359,16 +1249,7 @@ class Declaration(object):
         return Variable(c_var) if c_var else None
 
 
-class Documentation(object):
-    """ TODO DOC """
-    def __init__(self, c_doc):
-        if isinstance(c_doc, c_void_p):
-            self._obj = c_void_p(c_doc.value)  # const Eolian_Documentation *
-        elif isinstance(c_doc, int):
-            self._obj = c_void_p(c_doc)
-        else:
-            raise TypeError('Invalid constructor of type: %s ' % type(c_doc))
-
+class Documentation(EolianBaseObject):
     # def __repr__(self):
         # return "<eolian.Documentation '{0.name}'>".format(self)
 
