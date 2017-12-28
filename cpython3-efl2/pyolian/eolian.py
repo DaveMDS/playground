@@ -223,64 +223,26 @@ class Eolian_Doc_Ref_Type(IntEnum):
     VAR = 9
 
 
-###  internal type converters  ################################################
+###  internal string encode/decode  ###########################################
 
 def _str_to_bytes(s):
     return s.encode('utf-8')
 
 def _str_to_py(s):
-    if s:
-        if isinstance(s, bytes):
-            return s.decode('utf-8')
-        if isinstance(s, c_char_p):
-            return s.value.decode('utf-8')
-        if isinstance(s, c_void_p):
-            return cast(s, c_char_p).value.decode('utf-8')
-        if isinstance(s, int):
-            return cast(s, c_char_p).value.decode('utf-8')
-        print('WARNING !!!!!!!!! Unknown type: %s' % type(s))
-
-def _c_str_to_class(class_name):
-    return Class(_str_to_py(class_name)) if class_name else None
-
-def _c_eolian_class_to_py(cls):
-    return Class(cls)
-
-def _c_eolian_function_to_py(func):
-    return Function(func)
-
-def _c_eolian_implement_to_py(impl):
-    return Implement(impl)
-
-def _c_eolian_function_parameter_to_py(param):
-    return Function_Parameter(param)
-
-def _c_eolian_event_to_py(event):
-    return Event(event)
-
-def _c_eolian_constructor_to_py(ctor):
-    return Constructor(ctor)
-
-def _c_eolian_part_to_py(part):
-    return Part(part)
-
-def _c_eolian_typedecl_to_py(tdecl):
-    return Typedecl(tdecl)
-
-def _c_eolian_enum_field_to_py(field):
-    return Enum_Type_Field(field)
-
-def _c_eolian_struct_field_to_py(field):
-    return Struct_Type_Field(field)
-
-def _c_eolian_variable_to_py(var):
-    return Variable(var)
-
-def _c_eolian_declaration_to_py(var):
-    return Declaration(var)
+    if s is None:
+        return None    
+    if isinstance(s, bytes):
+        return s.decode('utf-8')
+    if isinstance(s, c_char_p):
+        return s.value.decode('utf-8')
+    if isinstance(s, c_void_p):
+        return cast(s, c_char_p).value.decode('utf-8')
+    if isinstance(s, int):
+        return cast(s, c_char_p).value.decode('utf-8')
+    print('WARNING !!!!!!!!! Unknown type: %s' % type(s))
 
 
-###  Internal Classes  ########################################################
+###  internal Classes  ########################################################
 
 class Iterator(object):
     """ Generic eina iterator wrapper """
@@ -330,85 +292,78 @@ class Eolian_Unit(EolianBaseObject):
 
     @property
     def all_classes(self):
-        return Iterator(_c_eolian_class_to_py,
-                        lib.eolian_all_classes_get(self._obj))
+        return Iterator(Class, lib.eolian_all_classes_get(self._obj))
 
     @property
     def typedecl_all_enums(self):
-        return Iterator(_c_eolian_typedecl_to_py,
-                        lib.eolian_typedecl_all_enums_get(self._obj))
+        return Iterator(Typedecl, lib.eolian_typedecl_all_enums_get(self._obj))
 
     def typedecl_enum_get_by_name(self, name):
         c_tdecl = lib.eolian_typedecl_enum_get_by_name(self._obj, _str_to_bytes(name))
         return Typedecl(c_tdecl) if c_tdecl else None
 
     def typedecl_enums_get_by_file(self, fname):
-        return Iterator(_c_eolian_typedecl_to_py,
+        return Iterator(Typedecl,
             lib.eolian_typedecl_enums_get_by_file(self._obj, _str_to_bytes(fname)))
 
     @property
     def typedecl_all_structs(self):
-        return Iterator(_c_eolian_typedecl_to_py,
-                        lib.eolian_typedecl_all_structs_get(self._obj))
+        return Iterator(Typedecl, lib.eolian_typedecl_all_structs_get(self._obj))
 
     def typedecl_struct_get_by_name(self, name):
         c_tdecl = lib.eolian_typedecl_struct_get_by_name(self._obj, _str_to_bytes(name))
         return Typedecl(c_tdecl) if c_tdecl else None
 
     def typedecl_structs_get_by_file(self, fname):
-        return Iterator(_c_eolian_typedecl_to_py,
+        return Iterator(Typedecl,
             lib.eolian_typedecl_structs_get_by_file(self._obj, _str_to_bytes(fname)))
 
     @property
     def typedecl_all_aliases(self):
-        return Iterator(_c_eolian_typedecl_to_py,
-                        lib.eolian_typedecl_all_aliases_get(self._obj))
+        return Iterator(Typedecl, lib.eolian_typedecl_all_aliases_get(self._obj))
 
     def typedecl_alias_get_by_name(self, name):
         c_tdecl = lib.eolian_typedecl_alias_get_by_name(self._obj, _str_to_bytes(name))
         return Typedecl(c_tdecl) if c_tdecl else None
 
     def typedecl_aliases_get_by_file(self, fname):
-        return Iterator(_c_eolian_typedecl_to_py,
+        return Iterator(Typedecl,
             lib.eolian_typedecl_aliases_get_by_file(self._obj, _str_to_bytes(fname)))
 
     @property
     def variable_all_constants(self):
-        return Iterator(_c_eolian_variable_to_py,
-                        lib.eolian_variable_all_constants_get(self._obj))
+        return Iterator(Variable, lib.eolian_variable_all_constants_get(self._obj))
 
     def variable_constant_get_by_name(self, name):
         c_var = lib.eolian_variable_constant_get_by_name(self._obj, _str_to_bytes(name))
         return Variable(c_var) if c_var else None
 
     def variable_constants_get_by_file(self, fname):
-        return Iterator(_c_eolian_variable_to_py,
+        return Iterator(Variable,
             lib.eolian_variable_constants_get_by_file(self._obj, _str_to_bytes(fname)))
 
     @property
     def variable_all_globals(self):
-        return Iterator(_c_eolian_variable_to_py,
-                        lib.eolian_variable_all_globals_get(self._obj))
+        return Iterator(Variable, lib.eolian_variable_all_globals_get(self._obj))
 
     def variable_global_get_by_name(self, name):
         c_var = lib.eolian_variable_global_get_by_name(self._obj, _str_to_bytes(name))
         return Variable(c_var) if c_var else None
 
     def variable_globals_get_by_file(self, fname):
-        return Iterator(_c_eolian_variable_to_py,
+        return Iterator(Variable,
             lib.eolian_variable_globals_get_by_file(self._obj, _str_to_bytes(fname)))
 
     @property
     def all_declarations(self):
-        return Iterator(_c_eolian_declaration_to_py,
-                        lib.eolian_all_declarations_get(self._obj))
+        return Iterator(Declaration, lib.eolian_all_declarations_get(self._obj))
 
     def declaration_get_by_name(self, name):
         c_decl = lib.eolian_declaration_get_by_name(self._obj, _str_to_bytes(name))
         return Declaration(c_decl) if c_decl else None
 
     def declarations_get_by_file(self, fname):
-        return Iterator(_c_eolian_declaration_to_py,
+        return Iterator(Declaration,
             lib.eolian_declarations_get_by_file(self._obj, _str_to_bytes(fname)))
 
 
@@ -517,13 +472,11 @@ class Class(EolianBaseObject):
 
     @property
     def constructors(self):
-        return Iterator(_c_eolian_constructor_to_py,
-                        lib.eolian_class_constructors_get(self._obj))
+        return Iterator(Constructor, lib.eolian_class_constructors_get(self._obj))
 
     @property
     def events(self):
-        return Iterator(_c_eolian_event_to_py,
-                        lib.eolian_class_events_get(self._obj))
+        return Iterator(Event, lib.eolian_class_events_get(self._obj))
 
     def event_get_by_name(self, event_name):
         c_event = lib.eolian_class_event_get_by_name(self._obj,
@@ -532,8 +485,7 @@ class Class(EolianBaseObject):
 
     @property
     def inherits(self):
-        return Iterator(_c_eolian_class_to_py,
-                        lib.eolian_class_inherits_get(self._obj))
+        return Iterator(Class, lib.eolian_class_inherits_get(self._obj))
 
     @property
     def inherits_full(self):
@@ -555,8 +507,7 @@ class Class(EolianBaseObject):
 
     @property
     def namespaces(self):
-        return Iterator(_str_to_py,
-                        lib.eolian_class_namespaces_get(self._obj))
+        return Iterator(_str_to_py, lib.eolian_class_namespaces_get(self._obj))
 
     @property
     def file(self):
@@ -578,8 +529,7 @@ class Class(EolianBaseObject):
         return Function(f) if f else None
 
     def functions_get(self, ftype):
-        return Iterator(_c_eolian_function_to_py,
-                        lib.eolian_class_functions_get(self._obj, ftype))
+        return Iterator(Function, lib.eolian_class_functions_get(self._obj, ftype))
     @property
     def methods(self):
         return self.functions_get(Eolian_Function_Type.METHOD)
@@ -590,13 +540,11 @@ class Class(EolianBaseObject):
 
     @property
     def implements(self):
-        return Iterator(_c_eolian_implement_to_py,
-                        lib.eolian_class_implements_get(self._obj))
+        return Iterator(Implement, lib.eolian_class_implements_get(self._obj))
 
     @property
     def parts(self):
-        return Iterator(_c_eolian_part_to_py,
-                        lib.eolian_class_parts_get(self._obj))
+        return Iterator(Part, lib.eolian_class_parts_get(self._obj))
 
 
 class Part(EolianBaseObject):
@@ -769,11 +717,11 @@ class Function(EolianBaseObject):
 
     @property
     def parameters(self):
-        return Iterator(_c_eolian_function_parameter_to_py,
+        return Iterator(Function_Parameter,
                         lib.eolian_function_parameters_get(self._obj))
 
     def values_get(self, ftype):
-        return Iterator(_c_eolian_function_parameter_to_py,
+        return Iterator(Function_Parameter,
                         lib.eolian_property_values_get(self._obj, ftype))
 
     @property
@@ -1045,7 +993,7 @@ class Typedecl(EolianBaseObject):  # OK (2 TODO)
 
     @property
     def enum_fields(self):
-        return Iterator(_c_eolian_enum_field_to_py,
+        return Iterator(Enum_Type_Field,
                         lib.eolian_typedecl_enum_fields_get(self._obj))
 
     def enum_field_get(self, field):
@@ -1054,7 +1002,7 @@ class Typedecl(EolianBaseObject):  # OK (2 TODO)
 
     @property
     def struct_fields(self):
-        return Iterator(_c_eolian_struct_field_to_py,
+        return Iterator(Struct_Type_Field,
                         lib.eolian_typedecl_struct_fields_get(self._obj)) 
 
     def struct_field_get(self, field):
