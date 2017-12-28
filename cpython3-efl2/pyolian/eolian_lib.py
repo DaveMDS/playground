@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# This Python file uses the following encoding: utf-8
+# encoding: utf-8
 
 from ctypes import CDLL, c_bool, c_int, c_uint, c_char_p, c_void_p
 from ctypes.util import find_library
@@ -8,7 +8,6 @@ from ctypes.util import find_library
 lib = CDLL(find_library('eolian'))
 
 
-### NEW - NEW - NEW - NEW - NEW - NEW - NEW - NEW - NEW - NEW - NEW
 # EAPI int eolian_init(void);
 lib.eolian_init.argtypes = []
 lib.eolian_init.restype = c_int
@@ -576,18 +575,6 @@ lib.eolian_type_namespaces_get.restype = c_void_p
 lib.eolian_type_free_func_get.argtypes = [c_void_p,]
 lib.eolian_type_free_func_get.restype = c_char_p
 
-# 
-#  lib.XXXX.argtypes = [c_void_p,]
-#  lib.XXXX.restype = None
-
-# 
-#  lib.XXXX.argtypes = [c_void_p,]
-#  lib.XXXX.restype = None
-
-# 
-#  lib.XXXX.argtypes = [c_void_p,]
-#  lib.XXXX.restype = None
-
 # EAPI Eina_Stringshare *eolian_expression_serialize(const Eolian_Expression *expr);
 lib.eolian_expression_serialize.argtypes = [c_void_p,]
 lib.eolian_expression_serialize.restype = c_void_p  # Stringshare TO BE FREED
@@ -615,10 +602,6 @@ lib.eolian_expression_unary_operator_get.restype = c_int
 # EAPI const Eolian_Expression *eolian_expression_unary_expression_get(const Eolian_Expression *expr);
 lib.eolian_expression_unary_expression_get.argtypes = [c_void_p,]
 lib.eolian_expression_unary_expression_get.restype = c_void_p
-
-# 
-#  lib.XXXX.argtypes = [c_void_p,]
-#  lib.XXXX.restype = 
 
 # EAPI const Eolian_Variable *eolian_variable_global_get_by_name(const Eolian_Unit *unit, const char *name);
 lib.eolian_variable_global_get_by_name.argtypes = [c_void_p, c_char_p]

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# This Python file uses the following encoding: utf-8
+# encoding: utf-8
 #
 # Just a simple playground for testing eolian functionalities.
 #

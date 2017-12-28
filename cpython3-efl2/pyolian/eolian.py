@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
-# This Python file uses the following encoding: utf-8
+# encoding: utf-8
 
-from enum import IntEnum as Enum
+from enum import IntEnum
 from ctypes import cast, byref, c_uint, c_char_p, c_void_p
-
-# Temporary import hack to be importable from tests/*.py
-try:
-    from .eolian_lib import lib
-except:
-    from eolian_lib import lib
+from eolian_lib import lib
 
 
 ### pyolian version ###########################################################
+
 __version__ = "0.99.0"
 __version_info__ = ( 0, 99, 0 )
+# TODO fetch current efl version from configure.ac
 
 
 ###  module init/shutdown  ####################################################
@@ -25,7 +22,7 @@ atexit.register(lambda: lib.eolian_shutdown())
 
 ###  enums  ###################################################################
 
-class Eolian_Function_Type(Enum):
+class Eolian_Function_Type(IntEnum):
     UNRESOLVED = 0
     PROPERTY = 1
     PROP_SET = 2
@@ -33,26 +30,26 @@ class Eolian_Function_Type(Enum):
     METHOD = 4
     FUNCTION_POINTER = 5
 
-class Eolian_Parameter_Dir(Enum):
+class Eolian_Parameter_Dir(IntEnum):
     UNKNOWN = 0
     IN = 1
     OUT = 2
     INOUT = 3
 
-class Eolian_Class_Type(Enum):
+class Eolian_Class_Type(IntEnum):
     UNKNOWN_TYPE = 0
     REGULAR = 1
     ABSTRACT = 2
     MIXIN = 3
     INTERFACE = 4
 
-class Eolian_Object_Scope(Enum):
+class Eolian_Object_Scope(IntEnum):
     UNKNOWN = 0
     PUBLIC = 1
     PRIVATE = 2
     PROTECTED = 3
 
-class Eolian_Typedecl_Type(Enum):
+class Eolian_Typedecl_Type(IntEnum):
     UNKNOWN = 0
     STRUCT = 1
     STRUCT_OPAQUE = 2
@@ -60,14 +57,14 @@ class Eolian_Typedecl_Type(Enum):
     ALIAS = 4
     FUNCTION_POINTER = 5
 
-class Eolian_Type_Type(Enum):
+class Eolian_Type_Type(IntEnum):
     UNKNOWN_TYPE = 0
     VOID = 1
     REGULAR = 2
     CLASS = 3
     UNDEFINED = 4
 
-class Eolian_Type_Builtin_Type(Enum):
+class Eolian_Type_Builtin_Type(IntEnum):
     INVALID = 0
     BYTE = 1
     UBYTE = 2
@@ -126,12 +123,12 @@ class Eolian_Type_Builtin_Type(Enum):
     VOID_PTR = 45
     FREE_CB = 46
 
-class Eolian_C_Type_Type(Enum):
+class Eolian_C_Type_Type(IntEnum):
     DEFAULT = 0
     PARAM = 1
     RETURN = 2
 
-class Eolian_Expression_Type(Enum):
+class Eolian_Expression_Type(IntEnum):
     UNKNOWN = 0
     INT = 1
     UINT = 2
@@ -149,7 +146,7 @@ class Eolian_Expression_Type(Enum):
     UNARY = 14
     BINARY = 15
 
-class Eolian_Expression_Mask(Enum):
+class Eolian_Expression_Mask(IntEnum):
     SINT   = 1 << 0
     UINT   = 1 << 1
     INT    = SINT | UINT
@@ -162,12 +159,12 @@ class Eolian_Expression_Mask(Enum):
     NUMBER = INT | FLOAT
     ALL    = NUMBER | BOOL | STRING | CHAR | NULL
 
-class Eolian_Variable_Type(Enum):
+class Eolian_Variable_Type(IntEnum):
     UNKNOWN = 0
     CONSTANT = 1
     GLOBAL = 2
 
-class Eolian_Binary_Operator(Enum):
+class Eolian_Binary_Operator(IntEnum):
     INVALID = 0
     ADD = 1  # + int, float
     SUB = 2  # - int, float
@@ -188,14 +185,14 @@ class Eolian_Binary_Operator(Enum):
     LSH =  17  # << int
     RSH =  18  # >> int
 
-class Eolian_Unary_Operator(Enum):
+class Eolian_Unary_Operator(IntEnum):
     INVALID = 0
     UNM = 1  # - sint
     UNP = 2  # + sint
     NOT = 3   # ! int, float, bool
     BNOT = 4  # ~ int
 
-class Eolian_Declaration_Type(Enum):
+class Eolian_Declaration_Type(IntEnum):
     UNKNOWN = 0
     CLASS = 1
     ALIAS = 2
@@ -203,7 +200,7 @@ class Eolian_Declaration_Type(Enum):
     ENUM = 4
     VAR = 5
 
-class Eolian_Doc_Token_Type(Enum):
+class Eolian_Doc_Token_Type(IntEnum):
     UNKNOWN = 0
     TEXT = 1
     REF = 2
@@ -213,7 +210,7 @@ class Eolian_Doc_Token_Type(Enum):
     MARK_TODO = 6
     MARKUP_MONOSPACE = 7
 
-class Eolian_Doc_Ref_Type(Enum):
+class Eolian_Doc_Ref_Type(IntEnum):
     INVALID = 0
     CLASS = 1
     FUNC = 2
@@ -311,7 +308,6 @@ class Iterator(object):
 
 class Eolian_Unit(object):
     def __init__(self, c_unit):
-        """ Function doc """
         if isinstance(c_unit, c_void_p):
             self._obj = c_void_p(c_unit.value)  # const Eolian_Unit *
         elif isinstance(c_unit, int):
@@ -382,7 +378,7 @@ class Eolian_Unit(object):
 
     def variable_constants_get_by_file(self, fname):
         return Iterator(_c_eolian_variable_to_py,
-                        lib.eolian_variable_constants_get_by_file(self._obj, _str_to_bytes(fname)))
+            lib.eolian_variable_constants_get_by_file(self._obj, _str_to_bytes(fname)))
 
     @property
     def variable_all_globals(self):
@@ -395,7 +391,7 @@ class Eolian_Unit(object):
 
     def variable_globals_get_by_file(self, fname):
         return Iterator(_c_eolian_variable_to_py,
-                        lib.eolian_variable_globals_get_by_file(self._obj, _str_to_bytes(fname)))
+            lib.eolian_variable_globals_get_by_file(self._obj, _str_to_bytes(fname)))
 
     @property
     def all_declarations(self):
@@ -408,7 +404,7 @@ class Eolian_Unit(object):
 
     def declarations_get_by_file(self, fname):
         return Iterator(_c_eolian_declaration_to_py,
-                        lib.eolian_declarations_get_by_file(self._obj, _str_to_bytes(fname)))
+            lib.eolian_declarations_get_by_file(self._obj, _str_to_bytes(fname)))
 
 
 class Eolian(Eolian_Unit):
@@ -416,9 +412,10 @@ class Eolian(Eolian_Unit):
         self._obj = lib.eolian_new()  # Eolian *
 
     def __del__(self):
-        print("del 1")
+        # TODO I'm not sure about this, It is automatically called on gc, that
+        #      is fired after atexit (eolian_shutdown). Thus causing a segfault
+        #      if the user do not call del before exit.
         lib.eolian_free(self._obj)
-        print("del 2")
 
     def file_parse(self, filepath):
         c_unit = lib.eolian_file_parse(self._obj, _str_to_bytes(filepath))
