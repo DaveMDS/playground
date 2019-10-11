@@ -1,11 +1,11 @@
 <!--(include)-->macros.include<!--(end)-->#!
 
 ================================================================================
-Class:        ${cls.full_name}$
+Class:        ${cls.name}$
 ================================================================================
 Class type:   ${cls.type}$
-Base Class:   ${cls.base_class.full_name if cls.base_class else None}$
-Inherits:     ${list(cls.inherits)}$
+Base Class:   ${cls.parent.name if cls.parent else None}$
+Hierarchy:     ${list(cls.hierarchy)}$
 InheritsFull: ${cls.inherits_full}$
 Namespaces:   ${list(cls.namespaces)}$
 File:         ${cls.file}$
@@ -36,20 +36,12 @@ Properties:
  no properties available
 <!--(end)-->
 
-Getters:
+Methods:
 ========
-<!--(for func in cls.getters)-->
+<!--(for func in cls.methods)-->
  * ${func.name}$ (<!--(for v in func.getter_values)-->${v.type.c_type}$ ${v.name}$, <!--(end)-->)
 <!--(else)-->
  no getters available
-<!--(end)-->
-
-Setters:
-========
-<!--(for func in cls.setters)-->
- * ${func.name}$ (<!--(for v in func.setter_values)-->${v.type.c_type}$ ${v.name}$, <!--(end)-->)
-<!--(else)-->
- no setters available
 <!--(end)-->
 
 Events:
@@ -64,29 +56,29 @@ Events:
 
 
 ================================================================================
-Namespace:    ${namespace}$  ${namespaces}$
+Namespace:    ${namespace}$
 ================================================================================
 
 Classes:
 ========
-<!--(for cls in classes)-->
- * ${cls.full_name}$   (${cls.type}$)
+<!--(for cls in namespace.classes)-->
+ * ${cls.name}$   (${cls.type}$)
 <!--(else)-->
  no classes available
 <!--(end)-->
 
 Aliases:
 ========
-<!--(for typedecl in aliases)-->
- * ${typedecl.full_name}$
+<!--(for typedecl in namespace.aliases)-->
+ * ${typedecl.name}$
 <!--(else)-->
  no alias available
 <!--(end)-->
 
 Structs:
 ========
-<!--(for typedecl in structs)-->
- * ${typedecl.full_name}$
+<!--(for typedecl in namespace.structs)-->
+ * ${typedecl.name}$
     <!--(for field in typedecl.struct_fields)-->
     ${field}$
     <!--(end)-->
@@ -96,8 +88,8 @@ Structs:
 
 Enums:
 ======
-<!--(for typedecl in enums)-->
- * ${typedecl.full_name}$
+<!--(for typedecl in namespace.enums)-->
+ * ${typedecl.name}$
     <!--(for field in typedecl.enum_fields)-->
     ${field}$
     <!--(end)-->

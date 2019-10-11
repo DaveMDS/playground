@@ -3,7 +3,7 @@
 #!  fake cls name to reuse some class macro
 ${setvar("cls", "struct")}$ #!
 <!--(macro HEADER_GUARD)-->
-Py_${cls.full_name.upper().replace('.','_',)}$__H
+Py_${cls.name.upper().replace('.','_',)}$__H
 <!--(end)-->
 
 
@@ -14,16 +14,16 @@ extern "C" {
 #endif
 
 
-/* The ${cls.full_name}$ Type */
+/* The ${cls.name}$ Type */
 extern PyTypeObject  ${CLS_OBJECT_TYPE}$Internal;
 extern PyTypeObject *${CLS_OBJECT_TYPE}$;
 #define ${CLS_OBJECT}$_Check(v) (Py_TYPE(v) == ${CLS_OBJECT_TYPE}$)
 
 
-/* The ${cls.full_name}$ object */
+/* The ${cls.name}$ object */
 typedef struct {
     PyObject_HEAD
-    ${struct.full_name.replace('.','_')}$ *obj;
+    ${struct.name.replace('.','_')}$ *obj;
 } ${CLS_OBJECT}$;
 
 

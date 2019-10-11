@@ -7,8 +7,8 @@
 #include <Ecore.h> // EFL_LOOP_TIMER_CLASS is defined here TODO FIXME
 
 #include "../_efl.module.h"
-<!--(for cls in classes)-->
-#include "${cls.full_name.lower()}$.h"
+<!--(for cls in namespace.classes)-->
+#include "${cls.name.lower()}$.h"
 <!--(end)-->
 
 
@@ -25,13 +25,13 @@ static PyMethodDef ThisModuleMethods[] = {
 /* The module definition */
 static struct PyModuleDef ThisModule = {
    PyModuleDef_HEAD_INIT,
-   "${('.'.join(namespaces[:-1])).lower()}$._${namespaces[-1].lower()}$",   /* name of module */
+   "${('.'.join(list(cls.namespaces)[:-1])).lower()}$._${list(cls.namespaces)[-1].lower()}$",   /* name of module */
    NULL, -1, ThisModuleMethods
 };
 
 /* Module init function, func name must match module name! (PyInit_XXX) */
 PyMODINIT_FUNC
-PyInit__${namespaces[-1].lower()}$(void)
+PyInit__${list(cls.namespaces)[-1].lower()}$(void)
 {
     PyObject *m;
 
@@ -50,8 +50,8 @@ PyInit__${namespaces[-1].lower()}$(void)
 
     /* Finalize all the type objects including setting type of the new type
      * object; doing it here is required for portability, too. */
-<!--(for cls in classes)-->
-    if (!py${cls.full_name.lower().replace('.', '_')}$_object_finalize(m)) return NULL;
+<!--(for cls in namespace.classes)-->
+    if (!py${cls.name.lower().replace('.', '_')}$_object_finalize(m)) return NULL;
 <!--(end)-->
 
     return m;

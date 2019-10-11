@@ -1,0 +1,21 @@
+<!--(include)-->copyright_py.include<!--(end)-->#!
+<!--(include)-->macros.include<!--(end)-->#!
+
+import efl2 as efl
+<!--(for cls in namespace.classes)-->
+from ._${list(cls.namespaces)[-1].lower()}$ import _${cls.short_name}$
+<!--(end)-->
+
+
+<!--(for cls in namespace.classes)-->
+class ${cls.short_name}$(_${cls.short_name}$#!
+    <!--(for i, base in enumerate(cls.hierarchy))-->
+        <!--(if i > 0)-->
+, ${CLS_TP_NAME(cls=base)}$#!
+        <!--(end)-->
+    <!--(end)-->
+):  # Direct subclass of ${cls.parent.name if cls.parent else 'None'}$
+    pass
+
+
+<!--(end)-->

@@ -14,13 +14,13 @@ ${setvar("cls", "struct")}$ #!
 #include <Elementary.h>
 
 
-#include "${cls.full_name.lower()}$.h"
+#include "${cls.name.lower()}$.h"
 
 // #define DBG(...) {}
 #define DBG(_fmt_, ...) printf("[%s:%d] "_fmt_"\n", __FILE__, __LINE__, ##__VA_ARGS__);
 
 ///////////////////////////////////////////////////////////////////////////////
-//  The ${cls.full_name}$ Struct
+//  The ${cls.name}$ Struct
 ///////////////////////////////////////////////////////////////////////////////
 
 /* Class __init__ method (constructor) */
@@ -41,20 +41,20 @@ ${CLS_OBJECT}$_dealloc(${CLS_OBJECT}$ *self)
 }
 /* Struct Fields Getters */
 <!--(for field in struct.struct_fields)-->
-static PyObject *  // ${struct.full_name}$ ${field.name}$  (getter)
-${CLS_OBJECT}$_${field.name}$_get(${CLS_OBJECT}$ *self, void *closure)
+static PyObject *  // ${struct.name}$ ${field.short_name}$  (getter)
+${CLS_OBJECT}$_${field.short_name}$_get(${CLS_OBJECT}$ *self, void *closure)
 {
-    return ${TYPE_OUT_FUNC(type=field.type)}$(self->obj->${field.name}$);
+    return ${TYPE_OUT_FUNC(type=field.type)}$(self->obj->${field.short_name}$);
 }
 
 <!--(end)-->
 
 /* Struct Fields Setters */
 <!--(for field in struct.struct_fields)-->
-static PyObject *  // ${struct.full_name}$ ${field.name}$  (setter)
-${CLS_OBJECT}$_${field.name}$_set(${CLS_OBJECT}$ *self, PyObject *value, void *closure)
+static PyObject *  // ${struct.name}$ ${field.short_name}$  (setter)
+${CLS_OBJECT}$_${field.short_name}$_set(${CLS_OBJECT}$ *self, PyObject *value, void *closure)
 {
-    self->obj->${field.name}$ = ${TYPE_IN_FUNC(type=field.type)}$(value);
+    self->obj->${field.short_name}$ = ${TYPE_IN_FUNC(type=field.type)}$(value);
     return 0;
 }
 
@@ -64,9 +64,9 @@ ${CLS_OBJECT}$_${field.name}$_set(${CLS_OBJECT}$ *self, PyObject *value, void *c
 /* Class getsetter table */
 static PyGetSetDef ${CLS_OBJECT}$_getsetters[] = {
     <!--(for field in struct.struct_fields)-->
-    {"${field.name}$",
-        (getter)${CLS_OBJECT}$_${field.name}$_get,
-        (setter)${CLS_OBJECT}$_${field.name}$_set,
+    {"${field.short_name}$",
+        (getter)${CLS_OBJECT}$_${field.short_name}$_get,
+        (setter)${CLS_OBJECT}$_${field.short_name}$_set,
         NULL, NULL},
     <!--(end)-->
     {NULL, 0, 0, NULL, NULL}  /* sentinel */
@@ -136,7 +136,7 @@ ${OBJECT_FINALIZE_FUNC}$(PyObject *module)
         return EINA_FALSE;
 
     /* Put the object in the calling module namespace */
-    PyModule_AddObject(module, "${cls.name}$", (PyObject *)${CLS_OBJECT_TYPE}$);
+    PyModule_AddObject(module, "${cls.short_name}$", (PyObject *)${CLS_OBJECT_TYPE}$);
     Py_INCREF(${CLS_OBJECT_TYPE}$);
 
     return EINA_TRUE;

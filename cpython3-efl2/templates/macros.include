@@ -1,7 +1,7 @@
 #!
 #! CLS_OBJECT ex: "PyEfl_Loop_Timer"
 <!--(macro CLS_OBJECT)-->
-Py${cls.full_name.replace('.', '_')}$
+Py${cls.name.replace('.', '_')}$
 <!--(end)-->
 #!
 #! CLS_OBJECT_TYPE ex: "PyEfl_Loop_TimerType"
@@ -11,7 +11,7 @@ ${CLS_OBJECT}$Type
 #!
 #! CLS_EO_NAME ex: "EFL_LOOP_TIMER_CLASS"
 <!--(macro CLS_EO_NAME)-->
-${cls.full_name.replace('.', '_').upper()}$_CLASS
+${cls.name.replace('.', '_').upper()}$_CLASS
 <!--(end)-->
 #!
 #! CLS_TP_NAME ex: "efl.loop._Timer"
@@ -19,15 +19,15 @@ ${cls.full_name.replace('.', '_').upper()}$_CLASS
     <!--(for ns in cls.namespaces)-->
 ${ns.lower()}$.#!
     <!--(end)-->
-_${cls.name}$
+_${cls.short_name}$
 <!--(end)-->
 #!
 #! STRUCT_TP_NAME ex: "efl.gfx.Dash"
 <!--(macro STRUCT_TP_NAME)-->
-    <!--(for ns in struct.full_name.split('.')[:-1])-->
+    <!--(for ns in struct.name.split('.')[:-1])-->
 ${ns.lower()}$.#!
     <!--(end)-->
-${struct.name}$
+${struct.short_name}$
 <!--(end)-->
 #!
 #! CLS_BASE_OBJECT ex: "PyEfl_Loop_User"
@@ -35,35 +35,35 @@ ${struct.name}$
     <!--(if cls.type in (Eolian_Class_Type.INTERFACE, Eolian_Class_Type.MIXIN))-->
 PyEfl_Object#!
     <!--(else )-->
-Py${cls.base_class.full_name.replace('.', '_')}$#!
+Py${cls.parent.name.replace('.', '_')}$#!
     <!--(end)-->
 <!--(end)-->
 #!
 #! OBJECT_FINALIZE_FUNC ex: "pyefl_loop_timer_object_finalize"
 <!--(macro OBJECT_FINALIZE_FUNC)-->
-py${cls.full_name.replace('.', '_').lower()}$_object_finalize
+py${cls.name.replace('.', '_').lower()}$_object_finalize
 <!--(end)-->
 #!
 #! TYPE_IN_FUNC(type)
 <!--(macro TYPE_IN_FUNC)-->
     <!--(if type.type == Eolian_Type_Type.CLASS)-->
-        <!--(if type.full_name == 'Efl.Class')-->
+        <!--(if type.name == 'Efl.Class')-->
 pyefl_type_to_class#!
         <!--(else)-->
 pyefl_object_to_pointer#!
         <!--(end)-->
     <!--(elif type.type == Eolian_Type_Type.REGULAR)-->
-        <!--(if type.full_name == 'string')-->
+        <!--(if type.name == 'string')-->
 PyUnicode_AsUTF8#!
-        <!--(elif type.full_name == 'void_ptr')-->
+        <!--(elif type.name == 'void_ptr')-->
 void_func#!
-        <!--(elif type.full_name == 'double')-->
+        <!--(elif type.name == 'double')-->
 PyFloat_AsDouble#!
-        <!--(elif type.full_name in ('int','bool','short'))-->
+        <!--(elif type.name in ('int','bool','short'))-->
 (${type.c_type}$)PyLong_AsLong#!
-        <!--(elif type.full_name in ('uint','ubyte'))-->
+        <!--(elif type.name in ('uint','ubyte'))-->
 (${type.c_type}$)PyLong_AsUnsignedLong#!
-        <!--(elif type.typedecl.type == Eolian_Typedecl_Type.STRUCT)-->
+        <!--(elif type.typedecl and type.typedecl.type == Eolian_Typedecl_Type.STRUCT)-->
 // ERROR: TODO struct ${type}$ ${type.typedecl}$ //
         <!--(else)-->
 // ERROR: UNSUPPORTED IN PARAM TYPE: ${type}$ ${type.type}$ //
@@ -76,23 +76,23 @@ PyFloat_AsDouble#!
 #! TYPE_OUT_FUNC(type)
 <!--(macro TYPE_OUT_FUNC)-->
     <!--(if type.type == Eolian_Type_Type.CLASS)-->
-        <!--(if type.full_name == 'Efl.Class')-->
+        <!--(if type.name == 'Efl.Class')-->
 TODO #!
         <!--(else)-->
 pyefl_object_from_instance#!
         <!--(end)-->
     <!--(elif type.type == Eolian_Type_Type.REGULAR)-->
-        <!--(if type.full_name == 'double')-->
+        <!--(if type.name == 'double')-->
 PyFloat_FromDouble#!
-        <!--(elif type.full_name in ('int','short'))-->
+        <!--(elif type.name in ('int','short'))-->
 PyLong_FromLong#!
-        <!--(elif type.full_name in ('uint','ubyte'))-->
+        <!--(elif type.name in ('uint','ubyte'))-->
 PyLong_FromUnsignedLong#!
-        <!--(elif type.full_name == 'bool')-->
+        <!--(elif type.name == 'bool')-->
 PyBool_FromLong#!
-        <!--(elif type.full_name in ('string','stringshare'))-->
+        <!--(elif type.name in ('string','stringshare'))-->
 PyUnicode_FromString#!
-        <!--(elif type.typedecl.type == Eolian_Typedecl_Type.STRUCT)-->
+        <!--(elif type.typedecl and type.typedecl.type == Eolian_Typedecl_Type.STRUCT)-->
 // ERROR: TODO struct ${type}$ ${type.typedecl}$ //
         <!--(else)-->
 // ERROR: UNSUPPORTED OUT TYPE: ${type}$ ${type.type}$ //

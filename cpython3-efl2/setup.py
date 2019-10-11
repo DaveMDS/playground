@@ -7,7 +7,7 @@ import shutil
 import platform
 import subprocess
 from distutils.core import setup, Command, Extension
-from distutils.version import StrictVersion, LooseVersion
+from distutils.version import LooseVersion
 from distutils.command.build import build
 # from efl2 import __version__, __version_info__ as vers
 
@@ -21,7 +21,7 @@ RELEASE = "2.0.0-test1"
 
 # dependencies
 # EFL_MIN_VER = RELEASE
-EFL_MIN_VER = "1.19.0"
+EFL_MIN_VER = "1.23.0"
 
 
 # === Check for python ===
@@ -63,12 +63,13 @@ def pkg_config(name, require, min_vers=None):
 
         cflags = list(set(cflags))
 
-        return (cflags, libs)
+        return cflags, libs
     except (OSError, subprocess.CalledProcessError):
         raise SystemExit("Did not find " + name + " with 'pkg-config'.")
-    except (AssertionError):
+    except AssertionError:
         raise SystemExit("%s version mismatch. Found: %s  Needed %s" % (
                          name, ver, min_vers))
+
 
 # === Run all tests (setup.py test) ===
 class Test(Command):
@@ -93,7 +94,7 @@ class Test(Command):
         loader = unittest.TestLoader()
         suite = loader.discover('./tests')
         runner = unittest.TextTestRunner(verbosity=1, buffer=True)
-        result = runner.run(suite)
+        runner.run(suite)
 
 
 # === Aggressive clean command (setup.py clean) ===
@@ -118,7 +119,7 @@ class CleanALL(Command):
                     self.remove_f(full_path)
             for d in dirs:
                 full_path = os.path.join(root, d)
-                if not os.listdir(full_path): # empty dir ?
+                if not os.listdir(full_path):  # empty dir ?
                     self.remove_d(full_path)
                 elif d == '__pycache__':
                     self.remove_t(full_path)
@@ -137,15 +138,18 @@ class CleanALL(Command):
                     return True
         return False
 
-    def remove_f(self, full_path):
+    @staticmethod
+    def remove_f(full_path):
         print('removing file: %s' % os.path.relpath(full_path))
         os.remove(full_path)
 
-    def remove_d(self, full_path):
+    @staticmethod
+    def remove_d(full_path):
         print("removing empty dir: %s/" % os.path.relpath(full_path))
         os.rmdir(full_path)
 
-    def remove_t(self, full_path):
+    @staticmethod
+    def remove_t(full_path):
         if os.path.isdir(full_path):
             print("pruning dir: %s/" % os.path.relpath(full_path))
             shutil.rmtree(full_path)
@@ -164,124 +168,96 @@ class Generate(Command):
 
     def run(self):
         print('generating bindings source code using pyolian')
+
+        # Use pyolian from efl tree (temporary hack, until merged in efl tree)
+        pyolian_path = os.path.join('/', 'home', 'dave', 'e', 'core', 'efl', 'src', 'scripts')
+        sys.path.insert(0, pyolian_path)
         from pyolian.generator import Template
 
         # # #  T E S T  # # #
-        TEST_tmpl = Template('templates/TESTING.template')
-        TEST_tmpl.render('TESTING.OUT', cls='Efl.Gfx', ns='Efl.Gfx')
+        test_tmpl = Template('templates/TESTING.template')
+        test_tmpl.render('TESTING.OUT', cls='Efl.Loop', ns='Efl.Ui')
         # # #  T E S T  # # #
 
         extra_context = {
             'excludes': [
                 # Efl.Loop
-                'efl_loop_job',                         #  futures
-                'efl_loop_timeout',                     #  futures
-                'efl_loop_app_efl_version_get',         #  Efl.Version (struct)
-                'efl_loop_efl_version_get',             #  Efl.Version (struct)
+                'efl_loop_job',                         # futures
+                'efl_loop_timeout',                     # futures
+                'efl_loop_app_efl_version_get',         # Efl.Version (struct)
+                'efl_loop_efl_version_get',             # Efl.Version (struct)
                 # Efl.Config        
-                'efl_config_set',                       #  Eina_Value *
-                'efl_config_get',                       #  Eina_Value *
-                'efl_config_list_get',                  #  Eina_Iterator *
+                'efl_config_set',                       # Eina_Value *
+                'efl_config_get',                       # Eina_Value *
+                'efl_config_list_get',                  # Eina_Iterator *
                 # Efl.Part      
-                'efl_part',                             #  special lifetime ??
+                'efl_part',                             # special lifetime ??
                 # Efl.Config.Global     
-                'efl_config_profile_iterate',           #  Eina_Iterator
+                'efl_config_profile_iterate',           # Eina_Iterator
                 # Efl.Gfx       
-                'efl_gfx_color_part_get',               #  keyed property
-                'efl_gfx_color_part_set',               #  keyed property
+                'efl_gfx_color_part_get',               # keyed property
+                'efl_gfx_color_part_set',               # keyed property
                 # Efl.Gfx.Path      
-                'efl_gfx_path_bounds_get',              #  Eina.Rectangle
-                # Efl.Gfx.Buffer        
-                'efl_gfx_buffer_map',                   #  Eina.Rw_Slice
-                'efl_gfx_buffer_unmap',                 #  Eina.Rw_Slice
-                'efl_gfx_buffer_copy_set',              #  Eina.Slice
-                'efl_gfx_buffer_managed_set',           #  Eina.Slice
-                'efl_gfx_buffer_managed_get',           #  Eina.Slice
+                'efl_gfx_path_bounds_get',              # Eina.Rectangle
+                # Efl.Gfx.Buffer
+                'efl_gfx_buffer_map',                   # Eina.Rw_Slice
+                'efl_gfx_buffer_unmap',                 # Eina.Rw_Slice
+                'efl_gfx_buffer_copy_set',              # Eina.Slice
+                'efl_gfx_buffer_managed_set',           # Eina.Slice
+                'efl_gfx_buffer_managed_get',           # Eina.Slice
                 # Efl.Gfx.Map       
-                'efl_gfx_map_point_coord_get',          #  keyed property
-                'efl_gfx_map_point_image_uv_get',       #  keyed property
-                'efl_gfx_map_color_get',                #  keyed property
-                'efl_gfx_map_color_set',                #  keyed property
-                'efl_gfx_map_point_z_get',              #  keyed property
-                'efl_gfx_map_point_coord_set',          #  keyed property
-                'efl_gfx_map_point_image_uv_set',       #  keyed property
+                'efl_gfx_map_point_coord_get',          # keyed property
+                'efl_gfx_map_point_image_uv_get',       # keyed property
+                'efl_gfx_map_color_get',                # keyed property
+                'efl_gfx_map_color_set',                # keyed property
+                'efl_gfx_map_point_z_get',              # keyed property
+                'efl_gfx_map_point_coord_set',          # keyed property
+                'efl_gfx_map_point_image_uv_set',       # keyed property
             ]
         }
 
         # Warm-up the templates
-        clsc_tmpl = Template('templates/class.template.c', data=extra_context)
-        clsh_tmpl = Template('templates/class.template.h', data=extra_context)
-        strc_tmpl = Template('templates/struct.template.c', data=extra_context)
-        strh_tmpl = Template('templates/struct.template.h', data=extra_context)
-        init_tmpl = Template('templates/module.__init__.template.py', data=extra_context)
-        modc_tmpl = Template('templates/module.template.c', data=extra_context)
+        clsc_tmpl = Template('templates/class.c.template', context=extra_context)
+        clsh_tmpl = Template('templates/class.h.template', context=extra_context)
+        strc_tmpl = Template('templates/struct.c.template', context=extra_context)
+        strh_tmpl = Template('templates/struct.h.template', context=extra_context)
+        init_tmpl = Template('templates/module.__init__.py.template', context=extra_context)
+        modc_tmpl = Template('templates/module.c.template', context=extra_context)
 
         # Efl
-        clsc_tmpl.render('efl2/efl.loop.c', cls='Efl.Loop')  # Class
+        clsc_tmpl.render('efl2/efl.app.c', cls='Efl.App')  # AbstractClass
+        clsh_tmpl.render('efl2/efl.app.h', cls='Efl.App')
+
+        clsc_tmpl.render('efl2/efl.loop.c', cls='Efl.Loop')  # AbstractClass
         clsh_tmpl.render('efl2/efl.loop.h', cls='Efl.Loop')
 
-        clsc_tmpl.render('efl2/efl.loop_user.c', cls='Efl.Loop_User')  # Class
-        clsh_tmpl.render('efl2/efl.loop_user.h', cls='Efl.Loop_User')
+        clsc_tmpl.render('efl2/efl.loop_user.c', cls='Efl.Loop_Consumer')  # AbstractClass
+        clsh_tmpl.render('efl2/efl.loop_user.h', cls='Efl.Loop_Consumer')
 
-        clsc_tmpl.render('efl2/efl.animator.c', cls='Efl.Animator')  # Iface
-        clsh_tmpl.render('efl2/efl.animator.h', cls='Efl.Animator')
+        clsc_tmpl.render('efl2/efl.loop_timer.c', cls='Efl.Loop_Timer')  # Class
+        clsh_tmpl.render('efl2/efl.loop_timer.h', cls='Efl.Loop_Timer')
 
-        clsc_tmpl.render('efl2/efl.config.c', cls='Efl.Config')  # Iface
-        clsh_tmpl.render('efl2/efl.config.h', cls='Efl.Config')
-
-        clsc_tmpl.render('efl2/efl.part.c', cls='Efl.Part')  # Iface
-        clsh_tmpl.render('efl2/efl.part.h', cls='Efl.Part')
-
-        clsh_tmpl.render('efl2/efl.gfx.h', cls='Efl.Gfx')  # Iface
-        clsc_tmpl.render('efl2/efl.gfx.c', cls='Efl.Gfx')
-
-        # Efl.Loop
-        init_tmpl.render('efl2/loop/__init__.py', ns='Efl.Loop')  # Namespace
-        modc_tmpl.render('efl2/loop/_loop.module.c', ns='Efl.Loop')
-        
-        clsc_tmpl.render('efl2/loop/efl.loop.timer.c', cls='Efl.Loop.Timer')  # Class
-        clsh_tmpl.render('efl2/loop/efl.loop.timer.h', cls='Efl.Loop.Timer')
-
-        clsc_tmpl.render('efl2/loop/efl.loop.fd.c', cls='Efl.Loop.Fd')  # Class
-        clsh_tmpl.render('efl2/loop/efl.loop.fd.h', cls='Efl.Loop.Fd')
-
-        # Efl.Config
-        init_tmpl.render('efl2/config/__init__.py', ns='Efl.Config')  # Namespace
-        modc_tmpl.render('efl2/config/_config.module.c', ns='Efl.Config')
-
-        clsc_tmpl.render('efl2/config/efl.config.global.c', cls='Efl.Config.Global')  # Class
-        clsh_tmpl.render('efl2/config/efl.config.global.h', cls='Efl.Config.Global')
+        clsc_tmpl.render('efl2/efl.loop_fd.c', cls='Efl.Loop_Fd')  # Class
+        clsh_tmpl.render('efl2/efl.loop_fd.h', cls='Efl.Loop_Fd')
 
         # Efl.Gfx
         init_tmpl.render('efl2/gfx/__init__.py', ns='Efl.Gfx')  # Namespace
         modc_tmpl.render('efl2/gfx/_gfx.module.c', ns='Efl.Gfx')
 
-        clsc_tmpl.render('efl2/gfx/efl.gfx.stack.c', cls='Efl.Gfx.Stack')  # Iface
-        clsh_tmpl.render('efl2/gfx/efl.gfx.stack.h', cls='Efl.Gfx.Stack')
+        clsc_tmpl.render('efl2/gfx/efl.gfx.color.c', cls='Efl.Gfx.Color')  # Mixin
+        clsh_tmpl.render('efl2/gfx/efl.gfx.color.h', cls='Efl.Gfx.Color')
 
-        clsc_tmpl.render('efl2/gfx/efl.gfx.map.c', cls='Efl.Gfx.Map')  # Mixin
-        clsh_tmpl.render('efl2/gfx/efl.gfx.map.h', cls='Efl.Gfx.Map')
+        clsc_tmpl.render('efl2/gfx/efl.gfx.mapping.c', cls='Efl.Gfx.Mapping')  # Mixin
+        clsh_tmpl.render('efl2/gfx/efl.gfx.mapping.h', cls='Efl.Gfx.Mapping')
 
-        clsc_tmpl.render('efl2/gfx/efl.gfx.fill.c', cls='Efl.Gfx.Fill')  # Iface
-        clsh_tmpl.render('efl2/gfx/efl.gfx.fill.h', cls='Efl.Gfx.Fill')
+        clsc_tmpl.render('efl2/gfx/efl.gfx.hint.c', cls='Efl.Gfx.Hint')  # Iface
+        clsh_tmpl.render('efl2/gfx/efl.gfx.hint.h', cls='Efl.Gfx.Hint')
 
-        clsc_tmpl.render('efl2/gfx/efl.gfx.view.c', cls='Efl.Gfx.View')  # Iface
-        clsh_tmpl.render('efl2/gfx/efl.gfx.view.h', cls='Efl.Gfx.View')
+        clsc_tmpl.render('efl2/gfx/efl.gfx.image.c', cls='Efl.Gfx.Image')  # Iface
+        clsh_tmpl.render('efl2/gfx/efl.gfx.image.h', cls='Efl.Gfx.Image')
 
-        clsc_tmpl.render('efl2/gfx/efl.gfx.shape.c', cls='Efl.Gfx.Shape')  # Mixin
-        clsh_tmpl.render('efl2/gfx/efl.gfx.shape.h', cls='Efl.Gfx.Shape')
-
-        clsc_tmpl.render('efl2/gfx/efl.gfx.gradient.c', cls='Efl.Gfx.Gradient')  # Iface
-        clsh_tmpl.render('efl2/gfx/efl.gfx.gradient.h', cls='Efl.Gfx.Gradient')
-
-        clsc_tmpl.render('efl2/gfx/efl.gfx.path.c', cls='Efl.Gfx.Path')  # Mixin
-        clsh_tmpl.render('efl2/gfx/efl.gfx.path.h', cls='Efl.Gfx.Path')
-
-        clsc_tmpl.render('efl2/gfx/efl.gfx.buffer.c', cls='Efl.Gfx.Buffer')  # Iface
-        clsh_tmpl.render('efl2/gfx/efl.gfx.buffer.h', cls='Efl.Gfx.Buffer')
-
-        clsc_tmpl.render('efl2/gfx/efl.gfx.filter.c', cls='Efl.Gfx.Filter')  # Iface
-        clsh_tmpl.render('efl2/gfx/efl.gfx.filter.h', cls='Efl.Gfx.Filter')
+        clsc_tmpl.render('efl2/gfx/efl.stack.c', cls='Efl.Gfx.Stack')  # Iface
+        clsh_tmpl.render('efl2/gfx/efl.stack.h', cls='Efl.Gfx.Stack')
 
         strc_tmpl.render('efl2/gfx/efl.gfx.dash.c', struct='Efl.Gfx.Dash')  # Struct
         strh_tmpl.render('efl2/gfx/efl.gfx.dash.h', struct='Efl.Gfx.Dash')
@@ -298,29 +274,30 @@ class Build(build):
         build.run(self)
 
 
-cflags, libs = pkg_config('EFL', 'eina evas ecore elementary', EFL_MIN_VER)
+eflcflags, efllibs = pkg_config('EFL', 'efl', EFL_MIN_VER)
 
 ext_modules = []
 packages = [
     'efl2',
-    'efl2.loop',
-    # 'efl2.config', (CRASH on import)
+    'efl2.gfx',
 ]
+
 
 def efl_module(name, sources):
     mod = Extension(name,
-            define_macros = [('EFL_BETA_API_SUPPORT', 1),
-                             ('EFL_EO_API_SUPPORT', 1),
-                             # ('EFL_NOLEGACY_API_SUPPORT', 1),
-                            ],
-            # include_dirs = ['/usr/local/include'],
-            # libraries = ['tcl83'],
-            # library_dirs = ['/usr/local/lib'],
-            # extra_compile_args = cflags + common_cflags,
-            # extra_link_args = libs + eina_libs
-            extra_compile_args = cflags,
-            extra_link_args = libs,
-            sources = sources)
+                    define_macros=[
+                        ('EFL_BETA_API_SUPPORT', 1),
+                        ('EFL_EO_API_SUPPORT', 1),
+                        # ('EFL_NOLEGACY_API_SUPPORT', 1),
+                    ],
+                    # include_dirs = ['/usr/local/include'],
+                    # libraries = ['tcl83'],
+                    # library_dirs = ['/usr/local/lib'],
+                    # extra_compile_args = cflags + common_cflags,
+                    # extra_link_args = libs + eina_libs
+                    extra_compile_args=eflcflags,
+                    extra_link_args=efllibs,
+                    sources=sources)
     ext_modules.append(mod)
 
 
@@ -330,54 +307,33 @@ efl_module('efl2._efl', [
     'efl2/_efl.module.c',
     'efl2/efl.object.c',
     'efl2/efl.loop.c',
-    'efl2/efl.loop_user.c',
-    'efl2/efl.animator.c',
-    'efl2/efl.config.c',
-    'efl2/efl.part.c',
+    'efl2/efl.loop_consumer.c',
     'efl2/efl.gfx.c',
 ])
 
-# efl.loop namespace module
-efl_module('efl2.loop._loop', [
-    'efl2/loop/_loop.module.c',
-    'efl2/loop/efl.loop.timer.c',
-    'efl2/loop/efl.loop.fd.c',
-])
-
-# efl.config namespace module (CRASH on import)
-# efl_module('efl2.config._config', [
-    # 'efl2/config/_config.module.c',
-    # 'efl2/config/efl.config.global.c',
-# ])
-
 # efl.gfx namespace module (not complete)
-# efl_module('efl2.gfx._gfx', [
-    # 'efl2/gfx/_gfx.module.c',
-    # 'efl2/gfx/efl.gfx.stack.c',
-    # 'efl2/gfx/efl.gfx.map.c',
-    # 'efl2/gfx/efl.gfx.fill.c',
-    # 'efl2/gfx/efl.gfx.view.c',
-    # 'efl2/gfx/efl.gfx.shape.c',
-    # 'efl2/gfx/efl.gfx.gradient.c',
-    # 'efl2/gfx/efl.gfx.path.c',
-    # 'efl2/gfx/efl.gfx.buffer.c',
-    # 'efl2/gfx/efl.gfx.filter.c',
-    # 'efl2/gfx/efl.gfx.dash.c', # struct
-# ])
+efl_module('efl2.gfx._gfx', [
+    'efl2/gfx/_gfx.module.c',
+    'efl2/gfx/efl.gfx.stack.c',
+    'efl2/gfx/efl.gfx.mapping.c',
+    'efl2/gfx/efl.gfx.hint.c',
+    'efl2/gfx/efl.gfx.image.c',
+    'efl2/gfx/efl.gfx.dash.c',  # struct
+])
 
 
 setup(
     name="python-efl2",
-    version = '0.0.0',
-    description = 'This is a demo package',
-    author = 'davemds',
-    author_email = 'dave@gurumeditation.it',
-    url = 'https://www.enlightenment.org',
-    long_description = ''' This is really just a demo package.''',
-    packages = packages,
+    version='0.0.0',
+    description='This is a demo package',
+    author='davemds',
+    author_email='dave@gurumeditation.it',
+    url='https://www.enlightenment.org',
+    long_description=''' This is really just a demo package.''',
+    packages=packages,
     # ext_package = "efl2",
-    ext_modules = ext_modules,
-    cmdclass = {
+    ext_modules=ext_modules,
+    cmdclass={
         'clean': CleanALL,
         'generate': Generate,
         'build': Build,
